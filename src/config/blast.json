@@ -1,0 +1,372 @@
+{
+  "chainId": 81457,
+  "chainName": "blast",
+  "nativeToken": "ETH",
+  "blockExplorerUrl": "https://blastscan.io/",
+  "blockTime": 1000,
+  "wrappedNativeAddress": "0x4300000000000000000000000000000000000004",
+  "subgraph": "https://api.studio.thegraph.com/query/872/synfutures-v3-blast/version/latest",
+  "subgraphProxy": "https://api.synfutures.com/thegraph/v3-blast",
+  "commit": "26d8f273b2a5013cf70422ac8881dbe215415c25",
+  "contractAddress": {
+    "config": "0x03f2E7452095a708ff19516eDe92F757adE2816c",
+    "gate": "0x6A372dBc1968f4a07cf2ce352f410962A972c257",
+    "observer": "0x730D6aaD0DD58f5d5d25AfEbD13d5A2bf76aC194",
+    "guardian": "0xB85b77f32DBDb7e4895b288e70770C90E232C751",
+    "market": {
+      "LINK": {
+        "beacon": "0x245bb4abB5c7f09b785E3483057C130a52FAbb7A",
+        "market": "0x19BAC642e72A15ac87920d4ABf972c120aaaf33a"
+      },
+      "DEXV2": {
+        "beacon": "0x245bb4abB5c7f09b785E3483057C130a52FAbb7A",
+        "market": "0x409204744A267Df16Ed2a96F7686EDe029e6fba7"
+      },
+      "EMG": {
+        "beacon": "0x245bb4abB5c7f09b785E3483057C130a52FAbb7A",
+        "market": "0x29c4C77feDa2Bd90933fcFaEaF531612F51c3F26"
+      },
+      "PYTH": {
+        "beacon": "0x245bb4abB5c7f09b785E3483057C130a52FAbb7A",
+        "market": "0x938FBB079CA6CF07943110F18984b53b3A07840f"
+      }
+    },
+    "feederFactory": {
+      "PYTH": {
+        "beacon": "0x855a3CA18341446f194e1a41FA1fd0Fca7BCBf89",
+        "factory": "0x4A5EF7Ba050D7988A4A78020EEAD7202E05ADc08"
+      },
+      "EMG": {
+        "beacon": "0xA27c779C2788B9a85f60EFF181C66fc58ce95b0F",
+        "factory": "0x3BC7AD40aADc425CD670F8DcAE013E7c5eee3B76"
+      }
+    }
+  },
+  "marketConfig": {
+    "LINK": {
+      "dailyInterestRate": 3,
+      "feederSource": []
+    },
+    "DEXV2": {
+      "dailyInterestRate": 3,
+      "feederSource": [
+        {
+          "name": "ThrusterV2-030",
+          "factory": "0xb4A7D971D0ADea1c73198C97d7ab3f9CE4aaFA13",
+          "router": "0x98994a9A7a2570367554589189dC9772241650f6"
+        },
+        {
+          "name": "ThrusterV2-100",
+          "factory": "0x37836821a2c03c171fB1a595767f4a16e2b93Fc4",
+          "router": "0x44889b52b71E60De6ed7dE82E2939fcc52fB2B4E"
+        }
+      ]
+    },
+    "EMG": {
+      "dailyInterestRate": 3,
+      "feederSource": [
+        {
+          "baseSymbol": "YES",
+          "quoteSymbol": "WETH",
+          "ftype": 0,
+          "aggregator0": "0xfD7B607E136f62AfA2Eaa0D4Cdf55BD68E896cde",
+          "heartBeat0": 129600,
+          "aggregator1": "0x0000000000000000000000000000000000000000",
+          "heartBeat1": 0
+        },
+        {
+          "baseSymbol": "WIF",
+          "quoteSymbol": "WETH",
+          "ftype": 0,
+          "aggregator0": "0x2ea06F6ee4Be3Dc1F095995F3fD4D92E51BCFD0E",
+          "heartBeat0": 129600,
+          "aggregator1": "0x0000000000000000000000000000000000000000",
+          "heartBeat1": 0
+        },
+        {
+          "baseSymbol": "BODEN",
+          "quoteSymbol": "WETH",
+          "ftype": 0,
+          "aggregator0": "0x01C9C9f70759978Af81fd3a01846C177da86F206",
+          "heartBeat0": 129600,
+          "aggregator1": "0x0000000000000000000000000000000000000000",
+          "heartBeat1": 0
+        },
+        {
+          "baseSymbol": "NICK",
+          "quoteSymbol": "WETH",
+          "ftype": 0,
+          "aggregator0": "0x66386BE064aAdFcd0F843039246D3B26aA9F3e3B",
+          "heartBeat0": 129600,
+          "aggregator1": "0x0000000000000000000000000000000000000000",
+          "heartBeat1": 0
+        },
+        {
+          "baseSymbol": "TREMP",
+          "quoteSymbol": "WETH",
+          "ftype": 0,
+          "aggregator0": "0xf398494a5587d449978dba376fb8232267de747b",
+          "heartBeat0": 129600,
+          "aggregator1": "0x0000000000000000000000000000000000000000",
+          "heartBeat1": 0
+        },
+        {
+          "baseSymbol": "BOME",
+          "quoteSymbol": "WETH",
+          "ftype": 0,
+          "aggregator0": "0x45bc0b88dC5ceD11a50E89052FcFCc864060b837",
+          "heartBeat0": 129600,
+          "aggregator1": "0x0000000000000000000000000000000000000000",
+          "heartBeat1": 0
+        },
+        {
+          "baseSymbol": "SLERF",
+          "quoteSymbol": "WETH",
+          "ftype": 0,
+          "aggregator0": "0xE32DE3705030E55EF080fe9fF4480c5c37a60eC1",
+          "heartBeat0": 129600,
+          "aggregator1": "0x0000000000000000000000000000000000000000",
+          "heartBeat1": 0
+        },
+        {
+          "baseSymbol": "WAI",
+          "quoteSymbol": "WETH",
+          "ftype": 0,
+          "aggregator0": "0x30aA853316A45b0F2cDD3ca331ca7b82f94863b0",
+          "heartBeat0": 129600,
+          "aggregator1": "0x0000000000000000000000000000000000000000",
+          "heartBeat1": 0
+        },
+        {
+          "baseSymbol": "SMOLE",
+          "quoteSymbol": "USDB",
+          "ftype": 1,
+          "aggregator0": "0x1fE8f12906F00064Af87D1B0deC93F1baA96bd9D",
+          "heartBeat0": 129600,
+          "aggregator1": "0x0000000000000000000000000000000000000000",
+          "heartBeat1": 0
+        },
+        {
+          "baseSymbol": "BRETT",
+          "quoteSymbol": "WETH",
+          "ftype": 0,
+          "aggregator0": "0xD108e6565bE1BDC780C363F817733300f327a67B",
+          "heartBeat0": 129600,
+          "aggregator1": "0x0000000000000000000000000000000000000000",
+          "heartBeat1": 0
+        },
+        {
+          "baseSymbol": "LADYF",
+          "quoteSymbol": "WETH",
+          "ftype": 0,
+          "aggregator0": "0x039FB84045bFe76685485d5b842239D21be88907",
+          "heartBeat0": 129600,
+          "aggregator1": "0x81c73EE3AC8cd2Ce9B077d0111a0961dC8929a91",
+          "heartBeat1": 129600
+        },
+        {
+          "baseSymbol": "DEGEN",
+          "quoteSymbol": "WETH",
+          "ftype": 0,
+          "aggregator0": "0x131fb2f7C0b9571baA87688915A77c229aef13f6",
+          "heartBeat0": 129600,
+          "aggregator1": "0x0000000000000000000000000000000000000000",
+          "heartBeat1": 0
+        },
+        {
+          "baseSymbol": "ETH",
+          "quoteSymbol": "FWWETH",
+          "ftype": 0,
+          "aggregator0": "0x81c73EE3AC8cd2Ce9B077d0111a0961dC8929a91",
+          "heartBeat0": 129600,
+          "aggregator1": "0x24c0B30b4951f7308fcaA57732Bb252998C428e1",
+          "heartBeat1": 129600
+        },
+        {
+          "baseSymbol": "WETH",
+          "quoteSymbol": "PAC",
+          "ftype": 0,
+          "aggregator0": "0xe7DB007a465e2FFF383f0c53f76f705278442fe3",
+          "heartBeat0": 129600,
+          "aggregator1": "0x0000000000000000000000000000000000000000",
+          "heartBeat1": 0
+        },
+        {
+          "baseSymbol": "MEW",
+          "quoteSymbol": "WETH",
+          "ftype": 0,
+          "aggregator0": "0x33C241faEE8A7DF7B7b245cbC5e310F26ed5AC03",
+          "heartBeat0": 129600,
+          "aggregator1": "0x0000000000000000000000000000000000000000",
+          "heartBeat1": 0
+        },
+        {
+          "baseSymbol": "MANEKI",
+          "quoteSymbol": "WETH",
+          "ftype": 0,
+          "aggregator0": "0x9F50403bD12A0ea4018245f6dE58FDfbfFcf036F",
+          "heartBeat0": 129600,
+          "aggregator1": "0x0000000000000000000000000000000000000000",
+          "heartBeat1": 0
+        }
+      ]
+    },
+    "PYTH": {
+      "dailyInterestRate": 3,
+      "feederSource": [
+        {
+          "baseSymbol": "BTC",
+          "quoteSymbol": "USDB",
+          "ftype": 1,
+          "aggregator0": "0x88868555244731123822a9468BefBBe0396Ff546",
+          "heartBeat0": 129600,
+          "aggregator1": "0x6D2dD3254bC736A1Fe21Baf0f66998dD1A3515AD",
+          "heartBeat1": 129600
+        },
+        {
+          "baseSymbol": "USDB",
+          "quoteSymbol": "WETH",
+          "ftype": 2,
+          "aggregator0": "0x6D2dD3254bC736A1Fe21Baf0f66998dD1A3515AD",
+          "heartBeat0": 129600,
+          "aggregator1": "0x81c73EE3AC8cd2Ce9B077d0111a0961dC8929a91",
+          "heartBeat1": 129600
+        },
+        {
+          "baseSymbol": "USDC",
+          "quoteSymbol": "USDB",
+          "ftype": 3,
+          "aggregator0": "0x054e00f966D53fBF018dC8bda8FCb5F06A367B7b",
+          "heartBeat0": 129600,
+          "aggregator1": "0x6D2dD3254bC736A1Fe21Baf0f66998dD1A3515AD",
+          "heartBeat1": 129600
+        },
+        {
+          "baseSymbol": "STETH",
+          "quoteSymbol": "WETH",
+          "ftype": 0,
+          "aggregator0": "0xEda54Cfe25E0ae12702807267A21FdEB88972fe6",
+          "heartBeat0": 129600,
+          "aggregator1": "0x0000000000000000000000000000000000000000",
+          "heartBeat1": 0
+        },
+        {
+          "baseSymbol": "BTC",
+          "quoteSymbol": "WETH",
+          "ftype": 0,
+          "aggregator0": "0x88868555244731123822a9468BefBBe0396Ff546",
+          "heartBeat0": 129600,
+          "aggregator1": "0x81c73EE3AC8cd2Ce9B077d0111a0961dC8929a91",
+          "heartBeat1": 129600
+        },
+        {
+          "baseSymbol": "ETH",
+          "quoteSymbol": "ezETH",
+          "ftype": 0,
+          "aggregator0": "0x81c73EE3AC8cd2Ce9B077d0111a0961dC8929a91",
+          "heartBeat0": 129600,
+          "aggregator1": "0xA156F0d346c5C5B138b758797f580e22C9E99043",
+          "heartBeat1": 129600
+        },
+        {
+          "baseSymbol": "USDB",
+          "quoteSymbol": "ezETH",
+          "ftype": 2,
+          "aggregator0": "0x6D2dD3254bC736A1Fe21Baf0f66998dD1A3515AD",
+          "heartBeat0": 129600,
+          "aggregator1": "0xA156F0d346c5C5B138b758797f580e22C9E99043",
+          "heartBeat1": 129600
+        },
+        {
+          "baseSymbol": "MERL",
+          "quoteSymbol": "USDB",
+          "ftype": 1,
+          "aggregator0": "0x5A12A9f4f008e8d1e9E4895cA36bcf178BA28dB9",
+          "heartBeat0": 129600,
+          "aggregator1": "0x6D2dD3254bC736A1Fe21Baf0f66998dD1A3515AD",
+          "heartBeat1": 129600
+        },
+        {
+          "baseSymbol": "ETH",
+          "quoteSymbol": "weETH",
+          "ftype": 0,
+          "aggregator0": "0x81c73EE3AC8cd2Ce9B077d0111a0961dC8929a91",
+          "heartBeat0": 129600,
+          "aggregator1": "0xF2D9EdeB173e23c65d2a8DeBeE1b8C93F48008aD",
+          "heartBeat1": 129600
+        }
+      ]
+    }
+  },
+  "quotesParam": {
+    "USDB": {
+      "tradingFeeRatio": 30,
+      "stabilityFeeRatioParam": "14415916854096691200",
+      "protocolFeeRatio": 20,
+      "qtype": 1,
+      "minMarginAmount": "10000000000000000000",
+      "tip": "200000000000000000"
+    },
+    "WETH": {
+      "tradingFeeRatio": 30,
+      "stabilityFeeRatioParam": "14415916854096691200",
+      "protocolFeeRatio": 20,
+      "qtype": 2,
+      "minMarginAmount": "2000000000000000",
+      "tip": "100000000000000"
+    },
+    "fwWETH": {
+      "tradingFeeRatio": 30,
+      "stabilityFeeRatioParam": "14415916854096691200",
+      "protocolFeeRatio": 20,
+      "qtype": 2,
+      "minMarginAmount": "2000000000000000",
+      "tip": "100000000000000"
+    },
+    "PAC": {
+      "tradingFeeRatio": 30,
+      "stabilityFeeRatioParam": "14415916854096691200",
+      "protocolFeeRatio": 20,
+      "qtype": 2,
+      "minMarginAmount": "300000000000000000000",
+      "tip": "10000000000000000000"
+    },
+    "ezETH": {
+      "tradingFeeRatio": 30,
+      "stabilityFeeRatioParam": "14415916854096691200",
+      "protocolFeeRatio": 20,
+      "qtype": 2,
+      "minMarginAmount": "2000000000000000",
+      "tip": "100000000000000"
+    },
+    "weETH": {
+      "tradingFeeRatio": 30,
+      "stabilityFeeRatioParam": "14415916854096691200",
+      "protocolFeeRatio": 20,
+      "qtype": 2,
+      "minMarginAmount": "2000000000000000",
+      "tip": "100000000000000"
+    }
+  },
+  "tokenInfo":[
+    {
+      "symbol": "ezETH",
+      "name": "Renzo Restaked ETH",
+      "decimals": 18,
+      "address": "0x2416092f143378750bb29b79eD961ab195CcEea5"
+    },
+    {
+      "symbol": "JUICE",
+      "name": "Juice",
+      "decimals": 18,
+      "address": "0x818a92bc81Aad0053d72ba753fb5Bc3d0C5C0923"
+    },
+    {
+      "symbol": "YIELD",
+      "name": "Yield Token",
+      "decimals": 18,
+      "address": "0x67fa2887914fa3729e9eed7630294fe124f417a0"
+    }
+  ],
+  "instrumentProxyByteCode": "0x6080604052604051610799380380610799833981016040819052610022916104b9565b80604051806020016040528060008152506100458282600061012460201b60201c565b50506000336001600160a01b0316634fe128d36040518163ffffffff1660e01b8152600401600060405180830381865afa158015610087573d6000803e3d6000fd5b505050506040513d6000823e601f3d908101601f191682016040526100af919081019061051c565b905061011c826001600160a01b0316635c60da1b6040518163ffffffff1660e01b8152600401602060405180830381865afa1580156100f2573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061011691906104b9565b826101e5565b505050610617565b61012d83610211565b6040516001600160a01b038416907f1cf3b03a6cf19fa2baba4df148e9dcabedea7f8a5c07840e207e5c089be95d3e90600090a260008251118061016e5750805b156101e0576101de836001600160a01b0316635c60da1b6040518163ffffffff1660e01b8152600401602060405180830381865afa1580156101b4573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906101d891906104b9565b836101e5565b505b505050565b606061020a838360405180606001604052806027815260200161077260279139610395565b9392505050565b6001600160a01b0381163b61027b5760405162461bcd60e51b815260206004820152602560248201527f455243313936373a206e657720626561636f6e206973206e6f74206120636f6e6044820152641d1c9858dd60da1b60648201526084015b60405180910390fd5b6102ef816001600160a01b0316635c60da1b6040518163ffffffff1660e01b8152600401602060405180830381865afa1580156102bc573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906102e091906104b9565b6001600160a01b03163b151590565b6103545760405162461bcd60e51b815260206004820152603060248201527f455243313936373a20626561636f6e20696d706c656d656e746174696f6e206960448201526f1cc81b9bdd08184818dbdb9d1c9858dd60821b6064820152608401610272565b7fa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d5080546001600160a01b0319166001600160a01b0392909216919091179055565b6060600080856001600160a01b0316856040516103b291906105c8565b600060405180830381855af49150503d80600081146103ed576040519150601f19603f3d011682016040523d82523d6000602084013e6103f2565b606091505b5090925090506104048683838761040e565b9695505050505050565b6060831561047d578251600003610476576001600160a01b0385163b6104765760405162461bcd60e51b815260206004820152601d60248201527f416464726573733a2063616c6c20746f206e6f6e2d636f6e74726163740000006044820152606401610272565b5081610487565b610487838361048f565b949350505050565b81511561049f5781518083602001fd5b8060405162461bcd60e51b815260040161027291906105e4565b6000602082840312156104cb57600080fd5b81516001600160a01b038116811461020a57600080fd5b634e487b7160e01b600052604160045260246000fd5b60005b838110156105135781810151838201526020016104fb565b50506000910152565b60006020828403121561052e57600080fd5b81516001600160401b038082111561054557600080fd5b818401915084601f83011261055957600080fd5b81518181111561056b5761056b6104e2565b604051601f8201601f19908116603f01168101908382118183101715610593576105936104e2565b816040528281528760208487010111156105ac57600080fd5b6105bd8360208301602088016104f8565b979650505050505050565b600082516105da8184602087016104f8565b9190910192915050565b60208152600082518060208401526106038160408501602087016104f8565b601f01601f19169190910160400192915050565b61014c806106266000396000f3fe60806040523661001357610011610017565b005b6100115b610027610022610029565b6100c2565b565b600061005c7fa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50546001600160a01b031690565b6001600160a01b0316635c60da1b6040518163ffffffff1660e01b8152600401602060405180830381865afa158015610099573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906100bd91906100e6565b905090565b3660008037600080366000845af43d6000803e8080156100e1573d6000f35b3d6000fd5b6000602082840312156100f857600080fd5b81516001600160a01b038116811461010f57600080fd5b939250505056fea2646970667358221220197f6b097d44a52479fabf25701b03d286488b2b844775cd235027385c4832ab64736f6c63430008130033416464726573733a206c6f772d6c6576656c2064656c65676174652063616c6c206661696c6564"
+}

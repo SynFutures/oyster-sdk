@@ -1,0 +1,69 @@
+{
+  "chainId":137,
+  "chainName":"Polygon Mainnet",
+  "nativeToken":"MATIC",
+  "blockExplorerUrl":"https://polygonscan.com/",
+  "blockTime":2000,
+  "subgraph":"https://api.thegraph.com/subgraphs/name/synfutures/v3-goerli",
+  "subgraphProxy":"https://api.synfutures.com/thegraph/v3-goerli",
+  "contractAddress":{
+    "gate": "0x",
+    "config": "0x",
+    "factory":"0x",
+    "observer":"0x",
+    "guardian": "",
+    "market":{
+      "LINK":{
+        "beacon":"0x",
+        "market":"0x"
+      },
+      "DEXV2":{
+        "beacon":"0x",
+        "market":"0x"
+      }
+    },
+    "feederFactory": {
+      "PYTH": {
+        "beacon": "",
+        "factory": ""
+      },
+      "EMG": {
+        "beacon": "",
+        "factory": ""
+      }
+    }
+  },
+  "marketConfig":{
+    "LINK":{
+      "dailyInterestRate":3,
+      "feederSource": []
+    },
+    "DEXV2":{
+      "dailyInterestRate":3,
+      "feederSource": []
+    }
+  },
+  "quotesParam":{
+    "USDC":{
+      "tradingFeeRatio": 30,
+      "protocolFeeRatio": 10,
+      "initialMarginRatio": 1000,
+      "maintenanceMarginRatio": 500,
+      "stabilityFeeRatioParam": "1370113808827263642",
+      "qtype": 1,
+      "minMarginAmount": "1000000000000000000",
+      "tip": "100000000000000"
+    },
+    "WETH":{
+      "tradingFeeRatio": 30,
+      "protocolFeeRatio": 10,
+      "initialMarginRatio": 1000,
+      "maintenanceMarginRatio": 500,
+      "stabilityFeeRatioParam": "1370113808827263642",
+      "qtype": 2,
+      "minMarginAmount": "1000000000000000000",
+      "tip": "100000000000000"
+    }
+  },
+  "instrumentProxyByteCode": "0x"
+}
