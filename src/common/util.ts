@@ -166,6 +166,10 @@ export function encodeAdjustParam(expiry: number, net: BigNumber, deadline: numb
     return encodeTradeParam(expiry, ZERO, net, 0, deadline);
 }
 
+export function encodeAdjustWithReferralParam(expiry: number, net: BigNumber, deadline: number, referral: string): [string, string] {
+    return encodeTradeWithReferralParam(expiry, ZERO, net, 0, deadline, referral);
+}
+
 /// encode add param to contract input format (bytes32)
 export function encodeAddParam(addParam: AddParam): [string, string] {
     const uTick = asUint48(addParam.limitTicks.toNumber());
