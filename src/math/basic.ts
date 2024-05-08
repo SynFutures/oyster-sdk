@@ -229,8 +229,6 @@ export function sqrtX96ToWad(sqrtPX96: BigNumberish): BigNumber {
 }
 
 export function wadToSqrtX96(price: BigNumber): BigNumber {
-    // todo: find out reason mulDiv breaks, simply mul div just work
-    // const x96 = mulDiv(price, Q96, WAD);
     const x96 = price.mul(Q96).div(WAD);
     return sqrt(x96.mul(Q96));
 }

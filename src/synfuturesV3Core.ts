@@ -156,11 +156,9 @@ export class SynFuturesV3 {
 
     gateState: GateState;
     configState: ConfigState;
-    // todo: rename to cachedInstrument
     // update <-- new block info
     instrumentMap: Map<string, InstrumentModel> = new Map(); // lowercase address => instrument
 
-    // todo: refactor accountCache: add blockInfo feature in PairLevelAccountModel
     // lowercase address user => lowercase instrument address => expiry => PairLevelAccountModel
     accountCache: Map<string, Map<string, Map<number, PairLevelAccountModel>>> = new Map();
 
@@ -237,8 +235,6 @@ export class SynFuturesV3 {
                 this.registerQuoteInfo(token);
             }
         }
-        // todo by wwc: registerContractParser for each quote token
-        //              registerContractParser for each chainlink aggregator, etc.
     }
 
     private _initContracts(provider: Provider, contractAddress: ContractAddress): void {
@@ -506,7 +502,6 @@ export class SynFuturesV3 {
             );
             for (let i = 0; i < rawInstrument.amms.length; i++) {
                 const rawAmm = rawInstrument.amms[i];
-                // TODO: use graph here to filter
                 if (rawAmm.expiry === 0) {
                     continue;
                 }
@@ -551,7 +546,6 @@ export class SynFuturesV3 {
         overrides?: CallOverrides,
     ): Promise<InstrumentLevelAccountModel[]> {
         const allInstrumentAddr = [...this.instrumentMap.keys()];
-        // todo: clear warning "possible undefined" here
         const quotes = Array.from(
             new Set(
                 allInstrumentAddr.map(
@@ -638,10 +632,13 @@ export class SynFuturesV3 {
         target: string,
         instrument: string,
         expiry: number,
+        useCache = false,
     ): Promise<PairLevelAccountModel> {
         instrument = instrument.toLowerCase();
         target = target.toLowerCase();
-
+        if (!useCache) {
+            return this.updatePairLevelAccount(target, instrument, expiry);
+        }
         // check whether cache has the info
         const targetInstrumentMap = this.accountCache.get(target);
         if (targetInstrumentMap) {
@@ -755,6 +752,19 @@ export class SynFuturesV3 {
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
         const unsignedTx = await this.contracts.gate.populateTransaction.deposit(
             encodeDepositParam(quoteAddr, amount),
+            overrides ?? {},
+        );
+        return this.ctx.sendTx(signer, unsignedTx);
+    }
+
+    async withdraw(
+        signer: Signer,
+        quoteAddr: string,
+        amount: BigNumber,
+        overrides?: Overrides,
+    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
+        const unsignedTx = await this.contracts.gate.populateTransaction.withdraw(
+            encodeWithdrawParam(quoteAddr, amount),
             overrides ?? {},
         );
         return this.ctx.sendTx(signer, unsignedTx);
@@ -1496,7 +1506,6 @@ export class SynFuturesV3 {
         let instrument = this.instrumentMap.get(instrumentAddress.toLowerCase());
         if (!instrument || !instrument.state.pairStates.has(expiry)) {
             // need uncreated instrument
-            // TODO: create instrument data
             const benchmarkPrice = await this.simulateBenchmarkPrice(instrumentIdentifier, expiry);
             const { quoteTokenInfo } = await this.getTokenInfo(instrumentIdentifier);
             quoteInfo = quoteTokenInfo;
