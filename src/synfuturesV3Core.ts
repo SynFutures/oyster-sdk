@@ -30,7 +30,6 @@ import { ChainContext } from '@derivation-tech/web3-core';
 import {
     alphaWadToTickDelta,
     calcBenchmarkPrice,
-    encodeAdjustParam,
     encodeRemoveParam,
     encodeFillParam,
     encodeCancelParam,
