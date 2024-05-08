@@ -119,7 +119,7 @@ export interface LiquidateParam {
 
 export interface PlaceParam {
     expiry: number;
-    tick: number; // todo: correct price to nearest tick
+    tick: number;
     size: BigNumber;
     amount: BigNumber;
     deadline: number;

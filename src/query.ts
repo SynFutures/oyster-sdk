@@ -68,7 +68,6 @@ export async function getSizeToTargetTick(
             // tick has been found
             const delta = SqrtPriceMath.getDeltaBaseAutoRoundUp(sqrtPX96, targetPX96, liquidity);
             // for now, add extra 1 to cover precision loss
-            // todo by wwc: improve accuracy
             size = long ? size.add(delta).add(1) : size.sub(delta).sub(1);
             break;
         }

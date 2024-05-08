@@ -334,7 +334,6 @@ export class OrderModel implements Order {
     }
 
     public toPositionModel(): PositionModel {
-        // todo: cannot be done yet until PairModel has tick and record info
         return new PositionModel(
             this.rootPair,
             this.balance,

@@ -34,8 +34,6 @@ export function fillOrderToPosition(
     fillSize: BigNumber,
     record: ContractRecord,
 ): Position {
-    // TODO: check pearlSocialLoss this is correct
-
     if (fillSize.eq(ZERO)) {
         fillSize = order.size;
     }

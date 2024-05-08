@@ -7,22 +7,19 @@ SDK for SynFutures V3
 npm:
 
 ```
-npm install @synfutures/v3-sdk
+npm install @synfutures/oyster-sdk
 ```
 
 yarn:
 
 ```
-yarn add @synfutures/v3-sdk
+yarn add @synfutures/oyster-sdk
 ```
 
 ## 📝 Environment Variables Requirement
 
 This package depends on the more fundamental package `@derivation-tech/web3-core`. Therefore, some environment variables need to be provided as required during runtime. Please refer to [here](https://www.npmjs.com/package/@derivation-tech/web3-core).
 
-## 📖 Resources
-
--   [API Reference](./docs/README.md)
 
 ## 👀 Note
 
@@ -31,10 +28,10 @@ This package depends on the more fundamental package `@derivation-tech/web3-core
 
 ## Examples
 
-1. [Query accout onchain information](#query-accout-onchain-information)
-2. [Deposit to `Gate`](#deposit-to-gate)
-3. [Withdraw from `Gate`](#withdraw-from-gate)
-4. [Query the price of `ETH-USDC-LINK` trading pair](#query-the-price-of-eth-usdc-link-trading-pair)
+1. [Query instruments and pairs information](#query-instruments-and-pairs-information)
+2. [Query accout information](#query-accout-information)
+3. [Deposit to `Gate`](#deposit-to-gate)
+4. [Withdraw from `Gate`](#withdraw-from-gate)
 5. [Trade](#trade)
 6. [Adjust position, withdraw half of the available margin](#adjust-position-withdraw-half-of-the-available-margin)
 7. [Place order](#place-order)
@@ -44,16 +41,52 @@ This package depends on the more fundamental package `@derivation-tech/web3-core
 11. [Remove liquidity](#remove-liquidity)
 12. [Query user operation history](#query-user-operation-history)
 
-### Query accout onchain information
+### Prerequisites
+To successfully run the blew examples:
+
+- Please put BLAST_RPC=https://rpc.ankr.com/blast into the .env file where you run your command.
+- Also set your private key ALICE_PRIVATE_KEY=your_own_private_key if you want to send transactions.
+
+### Query instruments and pairs information
 
 ```ts
 import { ethers } from 'ethers';
-import { SynFuturesV3, PERP_EXPIRY } from '@synfutures/v3-sdk';
+import { InstrumentCondition, SynFuturesV3 } from '@synfutures/oyster-sdk';
 
 async function main() {
-    const sdk = SynFuturesV3.getInstance('goerli');
+    const sdk = SynFuturesV3.getInstance('blast');
 
-    await sdk.init();
+    const instruments = await sdk.getAllInstruments();
+
+    for (const instrument of instruments) {
+        // only show instruments spot price in NORMAL condition 
+        if (instrument.state.condition === InstrumentCondition.NORMAL) {
+            console.log(instrument.info.symbol, ethers.utils.formatEther(instrument.spotPrice));
+        }
+        // show all pairs symbol, mark price and fair price
+        for (const [expiry, pair] of instrument.pairs) {
+            console.log(
+                pair.symbol,
+                expiry,
+                ethers.utils.formatEther(pair.markPrice),
+                ethers.utils.formatEther(pair.fairPriceWad),
+            );
+        }
+    }
+}
+
+// ts-node src/demo.ts
+main().catch(console.error);
+```
+
+### Query accout information
+
+```ts
+import { ethers } from 'ethers';
+import { SynFuturesV3, PERP_EXPIRY } from '@synfutures/oyster-sdk';
+
+async function main() {
+    const sdk = SynFuturesV3.getInstance('blast');
 
     // get signer address
     const signer = process.argv[2];
@@ -68,7 +101,7 @@ async function main() {
         return instrument;
     }
 
-    const instrument = getInstrumentBySymbol('ETH-USDC-LINK');
+    const instrument = getInstrumentBySymbol('BTC-USDB-PYTH');
 
     // get user account
     const account = await sdk.getPairLevelAccount(signer, instrument.info.addr, PERP_EXPIRY);
@@ -99,13 +132,9 @@ async function main() {
             }, to: ${range.tickLower}`,
         );
     }
-
-    // output example:
-    // Position balance: 199.960140545507496997, size: 0.003549563116507925, entryNotional: 5.854431236643761468, entrySocialLossIndex: 0.0, entryFundingIndex: -2.553961029268679555
-    // Order id: 1242101186560, size: 1.0, balance: 328.222567343894200353, tick: 74035, nonce: 0
-    // Range id: 1054448110750, size: 1000.0, from: 62850, to: 62850
 }
 
+// ts-node src/demo.ts 0x0e038f13d9d5732223cf9b4b61eed264ccd44641
 main().catch(console.error);
 ```
 
@@ -113,27 +142,29 @@ main().catch(console.error);
 
 ```ts
 import { ethers } from 'ethers';
-import { SynFuturesV3 } from '@synfutures/v3-sdk';
+import { SynFuturesV3 } from '@synfutures/oyster-sdk';
 
 async function main() {
-    const sdk = SynFuturesV3.getInstance('goerli');
+    const sdk = SynFuturesV3.getInstance('blast');
 
-    await sdk.init();
+    // get your own signer
+    const signer = new ethers.Wallet(process.env.ALICE_PRIVATE_KEY as string, sdk.ctx.provider);
 
-    // get signer
-    const signer = await sdk.ctx.getSigner(process.argv[2]);
+    // get USDB token info
+    const usdb = await sdk.ctx.getTokenInfo('USDB');
 
     // approve
     await sdk.ctx.erc20.approveIfNeeded(
         signer,
-        await sdk.ctx.getAddress('USDC'),
+        usdb.address,
         sdk.config.contractAddress.gate,
         ethers.constants.MaxUint256,
     );
 
-    await sdk.deposit(signer, await sdk.ctx.getAddress('USDC'), ethers.utils.parseUnits('100', 6));
+    // deposit
+    await sdk.deposit(signer, usdb.address, ethers.utils.parseUnits('10', usdb.decimals));
 
-    console.log('Deposit 100 USDC to gate');
+    console.log('Deposit 10 USDB to gate');
 }
 
 main().catch(console.error);
@@ -142,78 +173,40 @@ main().catch(console.error);
 ### Withdraw from `Gate`
 
 ```ts
-import { SynFuturesV3 } from '@synfutures/v3-sdk';
-
-async function main() {
-    const sdk = SynFuturesV3.getInstance('goerli');
-
-    await sdk.init();
-
-    // get signer
-    const signer = await sdk.ctx.getSigner(process.argv[2]);
-
-    await sdk.contracts.gate.withdraw(
-        await sdk.ctx.getAddress('USDC'),
-        await sdk.contracts.gate.reserveOf(await sdk.ctx.getAddress('USDC'), await signer.getAddress()),
-    );
-
-    console.log('Withdraw all balances from the gate');
-}
-
-main().catch(console.error);
-```
-
-### Query the price of `ETH-USDC-LINK` trading pair
-
-```ts
+import { SynFuturesV3 } from '@synfutures/oyster-sdk';
 import { ethers } from 'ethers';
-import { SynFuturesV3, PERP_EXPIRY, TickMath } from '@synfutures/v3-sdk';
 
 async function main() {
-    const sdk = SynFuturesV3.getInstance('goerli');
+    const sdk = SynFuturesV3.getInstance('blast');
 
-    await sdk.init();
+    // get your own signer
+    const signer = new ethers.Wallet(process.env.ALICE_PRIVATE_KEY as string, sdk.ctx.provider);
 
-    const instruments = await sdk.getAllInstruments();
+    // get USDB token info
+    const usdb = await sdk.ctx.getTokenInfo('USDB');
 
-    function getInstrumentBySymbol(symbol: string) {
-        const instrument = instruments.find((i) => i.info.symbol === symbol);
-        if (!instrument) {
-            throw new Error('unknown symbol: ' + symbol);
-        }
-        return instrument;
-    }
+    await sdk.withdraw(signer, usdb.address, ethers.utils.parseUnits('10', usdb.decimals));
 
-    const instrument = getInstrumentBySymbol('ETH-USDC-LINK');
-
-    const pair = instrument.state.pairs.get(PERP_EXPIRY)!;
-
-    console.log(
-        'ETH-USDC-LINK-PERP fair price:',
-        ethers.utils.formatUnits(TickMath.getWadAtTick(pair.amm.tick)),
-        'mark price:',
-        ethers.utils.formatUnits(pair.markPrice),
-    );
-
-    // output example: ETH-USDC-LINK-PERP fair price: 1648.019659473575245172 mark price: 1640.335551941453399394
+    console.log('Withdraw 10 USDB from the gate');
 }
 
 main().catch(console.error);
+
 ```
 
 ### Trade
 
 ```ts
 import { ethers } from 'ethers';
-import { SynFuturesV3, PERP_EXPIRY, Side } from '@synfutures/v3-sdk';
+import { SynFuturesV3, PERP_EXPIRY, Side } from '@synfutures/oyster-sdk';
 
 async function main() {
-    const sdk = SynFuturesV3.getInstance('goerli');
+    const sdk = SynFuturesV3.getInstance('blast');
 
     await sdk.init();
 
-    // get signer
-    const signer = await sdk.ctx.getSigner(process.argv[2]);
+    // get your own signer
+    const signer = new ethers.Wallet(process.env.ALICE_PRIVATE_KEY as string, sdk.ctx.provider);
 
     const instruments = await sdk.getAllInstruments();
 
@@ -225,12 +218,12 @@ async function main() {
         return instrument;
     }
 
-    const instrument = getInstrumentBySymbol('ETH-USDC-LINK');
+    const instrument = getInstrumentBySymbol('BTC-USDB-PYTH');
 
-    const pair = instrument.state.pairs.get(PERP_EXPIRY)!;
+    const pair = instrument.pairs.get(PERP_EXPIRY)!;
 
-    // inquire quotation and how much ETH is equivalent to 100 USDC
-    const { baseAmount, quotation } = await sdk.inquireByQuote(pair, Side.LONG, ethers.utils.parseUnits('100', 18));
+    // inquire quotation and how much BTC is equivalent to 500 USDB
+    const { baseAmount, quotation } = await sdk.inquireByQuote(pair, Side.LONG, ethers.utils.parseUnits('500', 18));
 
     // update cache for signer
     await sdk.syncVaultCacheWithAllQuotes(await signer.getAddress());
@@ -261,30 +254,29 @@ async function main() {
     console.log(
         `Open a long position of ${ethers.utils.formatEther(
             baseAmount,
-        )} ETH(≈ 100 USDC) with ${ethers.utils.formatUnits(result.margin, 18)} USDC and ${ethers.utils.formatUnits(
+        )} BTC(≈ 500 USDB) with ${ethers.utils.formatUnits(result.margin, 18)} USDB and ${ethers.utils.formatUnits(
             result.leverageWad,
         )} leverage`,
     );
-
-    // output example: Open a long position of 0.059073156132254917 ETH(≈100 USDC) with 25.963689100629764104 USDC and 4.0 leverage
 }
 
 main().catch(console.error);
+
 ```
 
 ### Adjust position, withdraw half of the available margin
 
 ```ts
 import { ethers } from 'ethers';
-import { SynFuturesV3, PERP_EXPIRY } from '@synfutures/v3-sdk';
+import { SynFuturesV3, PERP_EXPIRY } from '@synfutures/oyster-sdk';
 
 async function main() {
-    const sdk = SynFuturesV3.getInstance('goerli');
+    const sdk = SynFuturesV3.getInstance('blast');
 
     await sdk.init();
 
-    // get signer
-    const signer = await sdk.ctx.getSigner(process.argv[2]);
+    // get your own signer
+    const signer = new ethers.Wallet(process.env.ALICE_PRIVATE_KEY as string, sdk.ctx.provider);
 
     const instruments = await sdk.getAllInstruments();
 
@@ -296,9 +288,9 @@ async function main() {
         return instrument;
     }
 
-    const instrument = getInstrumentBySymbol('ETH-USDC-LINK');
+    const instrument = getInstrumentBySymbol('BTC-USDB-PYTH');
 
-    const pair = instrument.state.pairs.get(PERP_EXPIRY)!;
+    const pair = instrument.pairs.get(PERP_EXPIRY)!;
 
     const account = await sdk.getPairLevelAccount(await signer.getAddress(), instrument.info.addr, PERP_EXPIRY);
 
@@ -313,27 +305,26 @@ async function main() {
         Math.floor(Date.now() / 1000) + 300, // deadline, set to 5 minutes later
     );
 
-    console.log(`Withdraw ${ethers.utils.formatUnits(available.div(2), 18)} USDC margin`);
-
-    // output example: Withdraw 19.991426485430327823 USDC margin
+    console.log(`Withdraw ${ethers.utils.formatUnits(available.div(2), 18)} USDB margin`);
 }
 
 main().catch(console.error);
+
 ```
 
 ### Place order
 
 ```ts
 import { ethers } from 'ethers';
-import { SynFuturesV3, PERP_EXPIRY, Side, TickMath } from '@synfutures/v3-sdk';
+import { SynFuturesV3, PERP_EXPIRY, Side, TickMath } from '@synfutures/oyster-sdk';
 
 async function main() {
-    const sdk = SynFuturesV3.getInstance('goerli');
+    const sdk = SynFuturesV3.getInstance('blast');
 
     await sdk.init();
 
-    // get signer
-    const signer = await sdk.ctx.getSigner(process.argv[2]);
+    // get your own signer
+    const signer = new ethers.Wallet(process.env.ALICE_PRIVATE_KEY as string, sdk.ctx.provider);
 
     const instruments = await sdk.getAllInstruments();
 
@@ -345,9 +336,9 @@ async function main() {
         return instrument;
     }
 
-    const instrument = getInstrumentBySymbol('ETH-USDC-LINK');
+    const instrument = getInstrumentBySymbol('BTC-USDB-PYTH');
 
-    const pair = instrument.state.pairs.get(PERP_EXPIRY)!;
+    const pair = instrument.pairs.get(PERP_EXPIRY)!;
 
     // update cache for signer
     await sdk.syncVaultCacheWithAllQuotes(await signer.getAddress());
@@ -377,30 +368,30 @@ async function main() {
     );
 
     console.log(
-        `Place a 4 leveraged limit order of 0.2 ETH at ${ethers.utils.formatUnits(
+        `Place a 4 leveraged limit order of 0.2 BTC at ${ethers.utils.formatUnits(
             TickMath.getWadAtTick(targetTick),
             18,
         )}`,
     );
-
-    // output example: Placed a 4 leveraged limit order of 0.2 ETH at 1742.588359609033834188
 }
 
 main().catch(console.error);
+
 ```
 
 ### Cancel order
 
 ```ts
-import { SynFuturesV3, PERP_EXPIRY } from '@synfutures/v3-sdk';
+import { SynFuturesV3, PERP_EXPIRY } from '@synfutures/oyster-sdk';
+import { ethers } from 'ethers';
 
 async function main() {
-    const sdk = SynFuturesV3.getInstance('goerli');
+    const sdk = SynFuturesV3.getInstance('blast');
 
     await sdk.init();
 
-    // get signer
-    const signer = await sdk.ctx.getSigner(process.argv[2]);
+    // get your own signer
+    const signer = new ethers.Wallet(process.env.ALICE_PRIVATE_KEY as string, sdk.ctx.provider);
 
     const instruments = await sdk.getAllInstruments();
 
@@ -412,7 +403,7 @@ async function main() {
         return instrument;
     }
 
-    const instrument = getInstrumentBySymbol('ETH-USDC-LINK');
+    const instrument = getInstrumentBySymbol('BTC-USDB-PYTH');
 
     const account = await sdk.getPairLevelAccount(await signer.getAddress(), instrument.info.addr, PERP_EXPIRY);
 
@@ -420,25 +411,25 @@ async function main() {
     await sdk.batchCancelOrder(signer, account, account.orders, Math.floor(Date.now() / 1000) + 300);
 
     console.log('Cancel all orders:', account.orders.map((order) => order.oid).join(','));
-
-    // output: Cancel all orders: 1252167516160
 }
 
 main().catch(console.error);
+
 ```
 
 ### Fill order
 
 ```ts
-import { SynFuturesV3, PERP_EXPIRY } from '@synfutures/v3-sdk';
+import { SynFuturesV3, PERP_EXPIRY } from '@synfutures/oyster-sdk';
+import { ethers } from 'ethers';
 
 async function main() {
-    const sdk = SynFuturesV3.getInstance('goerli');
+    const sdk = SynFuturesV3.getInstance('blast');
 
     await sdk.init();
 
-    // get signer
-    const signer = await sdk.ctx.getSigner(process.argv[2]);
+    // get your own signer
+    const signer = new ethers.Wallet(process.env.ALICE_PRIVATE_KEY as string, sdk.ctx.provider);
 
     const instruments = await sdk.getAllInstruments();
 
@@ -450,7 +441,7 @@ async function main() {
         return instrument;
     }
 
-    const instrument = getInstrumentBySymbol('ETH-USDC-LINK');
+    const instrument = getInstrumentBySymbol('BTC-USDB-PYTH');
 
     const account = await sdk.getPairLevelAccount(await signer.getAddress(), instrument.info.addr, PERP_EXPIRY);
 
@@ -464,26 +455,25 @@ async function main() {
     });
 
     console.log('Fill order:', targetOrder.oid);
-
-    // output: Fill order: 1252167516160
 }
 
 main().catch(console.error);
+
 ```
 
 ### Add liquidity
 
 ```ts
 import { ethers } from 'ethers';
-import { SynFuturesV3, PERP_EXPIRY, TickMath } from '@synfutures/v3-sdk';
+import { SynFuturesV3, PERP_EXPIRY, TickMath } from '@synfutures/oyster-sdk';
 
 async function main() {
-    const sdk = SynFuturesV3.getInstance('goerli');
+    const sdk = SynFuturesV3.getInstance('blast');
 
     await sdk.init();
 
-    // get signer
-    const signer = await sdk.ctx.getSigner(process.argv[2]);
+    // get your own signer
+    const signer = new ethers.Wallet(process.env.ALICE_PRIVATE_KEY as string, sdk.ctx.provider);
 
     const instruments = await sdk.getAllInstruments();
 
@@ -495,10 +485,13 @@ async function main() {
         return instrument;
     }
 
-    const instrument = getInstrumentBySymbol('ETH-USDC-LINK');
+    const instrument = getInstrumentBySymbol('BTC-USDB-PYTH');
 
     // update cache for signer
     await sdk.syncVaultCacheWithAllQuotes(await signer.getAddress());
+
+    // margin to add liquidity
+    const margin = ethers.utils.parseUnits('1000', 18);
 
     const result = await sdk.simulateAddLiquidity(
         await signer.getAddress(),
@@ -509,7 +502,7 @@ async function main() {
         },
         PERP_EXPIRY,
         ethers.utils.parseUnits('1.8', 18), // alpha, liquidity range factor, 1.8 means ± 80%
-        ethers.utils.parseUnits('100', 18), // margin
+        margin,
         100, // // slippage, 100 means 100 / 10000 = 1%
     );
 
@@ -522,36 +515,36 @@ async function main() {
         },
         PERP_EXPIRY,
         result.tickDelta,
-        ethers.utils.parseUnits('100', 18),
+        margin,
         result.sqrtStrikeLowerPX96,
         result.sqrtStrikeUpperPX96,
+        Math.floor(Date.now() / 1000) + 300, // deadline, set to 5 minutes later
     );
 
     console.log(
-        `Add 100 USDC liquidity from tick ${TickMath.getTickAtSqrtRatio(
+        `Add 1000 USDB liquidity from tick ${TickMath.getTickAtSqrtRatio(
             result.sqrtStrikeLowerPX96,
         )} to tick ${TickMath.getTickAtSqrtRatio(result.sqrtStrikeUpperPX96)}`,
     );
-
-    // output example: Add 100 USDC liquidity from tick 73782 to tick 74183
 }
 
 main().catch(console.error);
+
 ```
 
 ### Remove liquidity
 
 ```ts
 import { ethers } from 'ethers';
-import { SynFuturesV3, PERP_EXPIRY } from '@synfutures/v3-sdk';
+import { SynFuturesV3, PERP_EXPIRY } from '@synfutures/oyster-sdk';
 
 async function main() {
-    const sdk = SynFuturesV3.getInstance('goerli');
+    const sdk = SynFuturesV3.getInstance('blast');
 
     await sdk.init();
 
-    // get signer
-    const signer = await sdk.ctx.getSigner(process.argv[2]);
+    // get your own signer
+    const signer = new ethers.Wallet(process.env.ALICE_PRIVATE_KEY as string, sdk.ctx.provider);
 
     const instruments = await sdk.getAllInstruments();
 
@@ -563,7 +556,7 @@ async function main() {
         return instrument;
     }
 
-    const instrument = getInstrumentBySymbol('ETH-USDC-LINK');
+    const instrument = getInstrumentBySymbol('BTC-USDB-PYTH');
 
     // update cache for signer
     await sdk.syncVaultCacheWithAllQuotes(await signer.getAddress());
@@ -577,7 +570,7 @@ async function main() {
 
     await sdk.removeLiquidity(
         signer,
-        instrument.state.pairs.get(PERP_EXPIRY)!,
+        instrument.pairs.get(PERP_EXPIRY)!,
         await signer.getAddress(),
         range,
         result.sqrtStrikeLowerPX96,
@@ -586,24 +579,23 @@ async function main() {
     );
 
     console.log(
-        `Remove ${ethers.utils.formatUnits(range.balance, 18)} USDC liquidity from tick ${range.tickLower} to tick ${
+        `Remove ${ethers.utils.formatUnits(range.balance, 18)} USDB liquidity from tick ${range.tickLower} to tick ${
             range.tickUpper
         }`,
     );
-
-    // output example: Remove 100.0 USDC liquidity from tick 68100 to tick 79850
 }
 
 main().catch(console.error);
+
 ```
 
 ### Query user operation history
 
 ```ts
-import { SynFuturesV3 } from '@synfutures/v3-sdk';
+import { SynFuturesV3 } from '@synfutures/oyster-sdk';
 
 async function main() {
-    const sdk = SynFuturesV3.getInstance('goerli');
+    const sdk = SynFuturesV3.getInstance('blast');
 
     await sdk.init();
 
