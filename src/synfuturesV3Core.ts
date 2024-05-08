@@ -46,6 +46,7 @@ import {
     encodeTradeWithReferralParam,
     encodeAddWithReferralParam,
     encodePlaceWithReferralParam,
+    encodeAdjustWithReferralParam,
 } from './common/util';
 import {
     AddParam,
@@ -775,10 +776,11 @@ export class SynFuturesV3 {
         instrumentAddr: string,
         param: AdjustParam,
         overrides?: Overrides,
+        referralCode = DEFAULT_REFERRAL_CODE,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
         const instrument = this.getInstrumentContract(instrumentAddr, signer);
         const unsignedTx = await instrument.populateTransaction.trade(
-            encodeAdjustParam(param.expiry, param.net, param.deadline),
+            encodeAdjustWithReferralParam(param.expiry, param.net, param.deadline, referralCode),
             overrides ?? {},
         );
         return this.ctx.sendTx(signer, unsignedTx);
@@ -1638,12 +1640,13 @@ export class SynFuturesV3 {
         margin: BigNumber,
         deadline: number,
         overrides?: PayableOverrides,
+        referralCode = DEFAULT_REFERRAL_CODE,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
         const sign: number = transferIn ? 1 : -1;
         const instrument = this.getInstrumentContract(pair.rootInstrument.info.addr, signer);
 
         const unsignedTx = await instrument.populateTransaction.trade(
-            encodeAdjustParam(pair.amm.expiry, margin.mul(sign), deadline),
+            encodeAdjustWithReferralParam(pair.amm.expiry, margin.mul(sign), deadline, referralCode),
             overrides ?? {},
         );
         return this.ctx.sendTx(signer, unsignedTx);
