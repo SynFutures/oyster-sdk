@@ -34,7 +34,7 @@ This package depends on the more fundamental package `@derivation-tech/web3-core
 5. [Trade](#trade)
 6. [Adjust position, withdraw half of the available margin](#adjust-position-withdraw-half-of-the-available-margin)
 7. [Place order](#place-order)
-8. [Cancel order](#cancel-order)
+8. [Bulk cancel order](#bulk-cancel-order)
 9. [Fill order](#fill-order)
 10. [Add liquidity](#add-liquidity)
 11. [Remove liquidity](#remove-liquidity)
@@ -44,6 +44,13 @@ This package depends on the more fundamental package `@derivation-tech/web3-core
 15. [Query pair funding rate data](#query-pair-funding-rate)
 16. [Query user single pair info](#query-user-single-pair-info)
 17. [Query market info](#query-market-info)
+18. [Direct trade interface](#direct-trade-interface)
+19. [Direct place interface](#direct-place-interface)
+20. [Direct add interface](#direct-add-interface)
+21. [Direct remove interface](#direct-remove-interface)
+22. [Direct cancel interface](#direct-cancel-interface)
+23. [Update pair](#update-pair)
+24. [Settle trader](#settle-trader)
 
 ### Prerequisites
 
@@ -380,7 +387,7 @@ async function main() {
 main().catch(console.error);
 ```
 
-### Cancel order
+### Bulk Cancel order
 
 ```ts
 import { SynFuturesV3, PERP_EXPIRY } from '@synfutures/oyster-sdk';
@@ -897,4 +904,279 @@ export async function demoMarketInfoPage(): Promise<void> {
 }
 
 demoMarketInfoPage().catch(console.error);
+```
+
+### Direct trade interface
+
+```ts
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { ethers } from 'ethers';
+import { INT24_MAX, INT24_MIN, NULL_DDL, PERP_EXPIRY } from './constants';
+import { SynFuturesV3 } from './synfuturesV3Core';
+import { Side } from './types';
+import { parseEther } from 'ethers/lib/utils';
+import { ZERO } from '@derivation-tech/web3-core';
+
+export async function demoTrade(): Promise<void> {
+    const synfV3 = SynFuturesV3.getInstance('blast');
+    const allInstruments = await synfV3.getAllInstruments();
+    const instrument = allInstruments.find((i) => i.info.symbol.includes('BTC-USDB'))!;
+    const pair = instrument.getPairModel(PERP_EXPIRY);
+    // get your own signer
+    const signer = new ethers.Wallet(process.env.ALICE_PRIVATE_KEY as string, synfV3.ctx.provider);
+    // want to open a long position with 1 BTC, inquire the quotation first
+    const side = Side.LONG;
+    const size = parseEther('0.1');
+    await synfV3.syncVaultCacheWithAllQuotes(signer.address); // get signer's account
+    const account = await synfV3.getPairLevelAccount(signer.address, instrument.info.addr, pair.amm.expiry);
+    const { quotation } = await synfV3.inquireByBase(pair, side, size);
+
+    // margin and leverage are optional
+    // 1. undefined margin, margin will be calculated based on leverage
+    // 2. undefined leverage, leverage will be calculated based on margin
+    // 3. both undefined, leverage will be calculated based on new size and equity
+    const { margin } = synfV3.simulateTrade(
+        account,
+        quotation,
+        side,
+        size,
+        undefined,
+        parseEther('4'), // leverage in WAD format
+        100, // slippage in bps, 100 bps = 1%
+    );
+
+    await synfV3.trade(signer, instrument.info.addr, {
+        expiry: pair.amm.expiry,
+        size,
+        amount: margin,
+        // if the traded average price exceeds the limit price represented in tick format, trade would revert
+        // say I want to long btc with 1 btc, and I don't want average trade price to exceed 60k, then set limitTick to
+        // TickMath.getTickAtPWad(parseEther('60000'))
+        limitTick: size.gt(ZERO) ? INT24_MAX : INT24_MIN,
+        deadline: NULL_DDL, // set tx deadline, if desire 10 minutes ddl, use now() + 10 * 60
+    });
+}
+
+demoTrade().catch(console.error);
+```
+
+### Direct place interface
+
+```ts
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { ethers } from 'ethers';
+import { PEARL_SPACING, PERP_EXPIRY } from './constants';
+import { SynFuturesV3 } from './synfuturesV3Core';
+import { Side } from './types';
+import { parseEther } from 'ethers/lib/utils';
+import { formatWad, now } from '@derivation-tech/web3-core';
+import { alignTick } from './common';
+import { TickMath } from './math';
+
+export async function demoPlace(): Promise<void> {
+    const synfV3 = SynFuturesV3.getInstance('blast');
+    const allInstruments = await synfV3.getAllInstruments();
+    const instrument = allInstruments.find((i) => i.info.symbol.includes('BTC-USDB'))!;
+    const pair = instrument.getPairModel(PERP_EXPIRY);
+    // get your own signer
+    const signer = new ethers.Wallet(process.env.ALICE_PRIVATE_KEY as string, synfV3.ctx.provider);
+    // say you want to place an short limit order of size 1 BTC at price 5% higher from current fair price with 10x leverage
+    // order cannot be placed too far from mark price, which is 2 * imr, and order cannot be too trivial
+    // to get minOrderValue
+    const minOrderValue = instrument.minOrderValue;
+    console.log(formatWad(minOrderValue));
+    const size = parseEther('1').mul(-1);
+    const leverage = parseEther('10');
+    const placePrice = pair.fairPriceWad.mul(105).div(100);
+    const tick = alignTick(TickMath.getTickAtPWad(placePrice), PEARL_SPACING); // tick needs to be aligned with pearl spacing
+    await synfV3.syncVaultCacheWithAllQuotes(signer.address);
+    const account = await synfV3.getPairLevelAccount(signer.address, instrument.info.addr, PERP_EXPIRY);
+    const { balance: margin } = synfV3.simulateOrder(account, tick, size, Side.SHORT, leverage);
+    await synfV3.place(signer, instrument.info.addr, {
+        expiry: pair.amm.expiry,
+        tick, // the price you want to place your order in tick format
+        size: size,
+        amount: margin,
+        deadline: now() + 10 * 60,
+    });
+}
+
+demoPlace().catch(console.error);
+```
+
+### Direct add liquidity interface
+
+```ts
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { ethers } from 'ethers';
+import { NULL_DDL, PERP_EXPIRY, RATIO_BASE } from './constants';
+import { SynFuturesV3 } from './synfuturesV3Core';
+import { parseEther } from 'ethers/lib/utils';
+import { formatWad, fromWad } from '@derivation-tech/web3-core';
+import { tickDeltaToAlphaWad } from './common';
+import { TICK_DELTA_MAX } from './math';
+
+export async function demoAdd(): Promise<void> {
+    const synfV3 = SynFuturesV3.getInstance('blast');
+    const allInstruments = await synfV3.getAllInstruments();
+    const instrument = allInstruments.find((i) => i.info.symbol.includes('BTC-USDB'))!;
+    const pair = instrument.getPairModel(PERP_EXPIRY);
+    // get your own signer
+    const signer = new ethers.Wallet(process.env.ALICE_PRIVATE_KEY as string, synfV3.ctx.provider);
+    const margin = parseEther('1000'); // margin to add liquidity, has to be larger than minRangeValue
+    console.log(formatWad(instrument.minRangeValue));
+    // alphaWad has to be larger than (1 + imr) and less than maxAlphaWad which is round +- 500%
+    const minAlphaWad = parseEther(((RATIO_BASE + instrument.setting.initialMarginRatio) / RATIO_BASE).toString());
+    const maxAlphaWad = tickDeltaToAlphaWad(TICK_DELTA_MAX);
+    console.log(fromWad(minAlphaWad), fromWad(maxAlphaWad));
+    const alphaWad = parseEther('1.8'); // liquidity range factor, 1.8 means ± 80%
+    await synfV3.syncVaultCacheWithAllQuotes(signer.address);
+    const rangeSimulation = await synfV3.simulateAddLiquidity(
+        signer.address,
+        {
+            marketType: instrument.marketType,
+            baseSymbol: instrument.info.base.symbol,
+            quoteSymbol: instrument.info.quote.symbol,
+        },
+        pair.amm.expiry,
+        alphaWad,
+        margin,
+        100, // slippage, 100 means 100 / 10000 = 1%
+    );
+    // limit tick is calculated based on sqrtStrikeLowerPX96 and sqrtStrikeUpperPX96, which are calculated based on slippage
+    const limitTicks = synfV3.encodeLimitTicks(
+        rangeSimulation.sqrtStrikeLowerPX96,
+        rangeSimulation.sqrtStrikeUpperPX96,
+    );
+    await synfV3.add(signer, instrument.info.addr, {
+        expiry: pair.amm.expiry,
+        // can use tickDelta larger than calcMinTickDelta(imr) and smaller than TICK_DELTA_MAX
+        tickDelta: rangeSimulation.tickDelta,
+        amount: margin,
+        limitTicks,
+        deadline: NULL_DDL,
+    });
+}
+
+demoAdd().catch(console.error);
+```
+
+### Direct remove liquidity interface
+
+almost the same with `removeLiquidity` interface
+
+```ts
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { ethers } from 'ethers';
+import { PERP_EXPIRY } from './constants';
+import { SynFuturesV3 } from './synfuturesV3Core';
+import { now } from '@derivation-tech/web3-core';
+
+export async function demoRemove(): Promise<void> {
+    const synfV3 = SynFuturesV3.getInstance('blast');
+    const allInstruments = await synfV3.getAllInstruments();
+    const instrument = allInstruments.find((i) => i.info.symbol.includes('BTC-USDB'))!;
+    const pair = instrument.getPairModel(PERP_EXPIRY);
+    // get your own signer
+    const signer = new ethers.Wallet(process.env.ALICE_PRIVATE_KEY as string, synfV3.ctx.provider);
+    await synfV3.syncVaultCacheWithAllQuotes(signer.address);
+    const account = await synfV3.getPairLevelAccount(signer.address, instrument.info.addr, pair.amm.expiry);
+    const range = account.ranges[0];
+
+    const result = synfV3.simulateRemoveLiquidity(account, range, 100);
+
+    await synfV3.remove(signer, instrument.info.addr, {
+        expiry: pair.amm.expiry,
+        target: signer.address,
+        tickLower: range.tickLower,
+        tickUpper: range.tickUpper,
+        limitTicks: synfV3.encodeLimitTicks(result.sqrtStrikeLowerPX96, result.sqrtStrikeUpperPX96), // calculated based on slippage
+        deadline: now() + 60,
+    });
+}
+
+demoRemove().catch(console.error);
+```
+
+### Direct cancel order interface
+
+```ts
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { ethers } from 'ethers';
+import { PERP_EXPIRY } from './constants';
+import { SynFuturesV3 } from './synfuturesV3Core';
+import { now } from '@derivation-tech/web3-core';
+
+export async function demoCancel(): Promise<void> {
+    const synfV3 = SynFuturesV3.getInstance('blast');
+    const allInstruments = await synfV3.getAllInstruments();
+    const instrument = allInstruments.find((i) => i.info.symbol.includes('BTC-USDB'))!;
+    const pair = instrument.getPairModel(PERP_EXPIRY);
+    // get your own signer
+    const signer = new ethers.Wallet(process.env.ALICE_PRIVATE_KEY as string, synfV3.ctx.provider);
+    await synfV3.syncVaultCacheWithAllQuotes(signer.address);
+
+    const account = await synfV3.getPairLevelAccount(signer.address, instrument.info.addr, pair.amm.expiry);
+
+    await synfV3.cancel(signer, instrument.info.addr, {
+        expiry: pair.amm.expiry,
+        tick: account.orders[0].tick, // the price of the order you want to cancel in tick format
+        deadline: now() + 60,
+    });
+}
+
+demoCancel().catch(console.error);
+```
+
+### Update pair
+
+```ts
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { ethers } from 'ethers';
+import { PERP_EXPIRY } from './constants';
+import { SynFuturesV3 } from './synfuturesV3Core';
+
+export async function demoUpdate(): Promise<void> {
+    const synfV3 = SynFuturesV3.getInstance('blast');
+    const allInstruments = await synfV3.getAllInstruments();
+    const instrument = allInstruments.find((i) => i.info.symbol.includes('BTC-USDB'))!;
+    const pair = instrument.getPairModel(PERP_EXPIRY);
+
+    // get your own signer
+    const signer = new ethers.Wallet(process.env.ALICE_PRIVATE_KEY as string, synfV3.ctx.provider);
+
+    await synfV3.update(signer, instrument.info.addr, pair.amm.expiry);
+}
+
+demoUpdate().catch(console.error);
+```
+
+### Settle User
+
+```ts
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { ethers } from 'ethers';
+import { PERP_EXPIRY } from './constants';
+import { SynFuturesV3 } from './synfuturesV3Core';
+
+export async function demoSettle(): Promise<void> {
+    const synfV3 = SynFuturesV3.getInstance('blast');
+    const allInstruments = await synfV3.getAllInstruments();
+    const instrument = allInstruments.find((i) => i.info.symbol.includes('BTC-USDB'))!;
+    const pair = instrument.getPairModel(PERP_EXPIRY);
+
+    // get your own signer
+    const signer = new ethers.Wallet(process.env.ALICE_PRIVATE_KEY as string, synfV3.ctx.provider);
+
+    const trader = '';
+
+    await synfV3.settle(
+        signer,
+        instrument.info.addr,
+        pair.amm.expiry,
+        trader, // trader to settle
+    );
+}
+
+demoSettle().catch(console.error);
 ```
