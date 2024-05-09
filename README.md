@@ -152,7 +152,7 @@ async function main() {
     }
 }
 
-// ts-node src/demo.ts 0x0e038f13d9d5732223cf9b4b61eed264ccd44641
+// ts-node src/demo.ts 0xYOUR_ACCOUNT_ADDRESS_HERE
 main().catch(console.error);
 ```
 
@@ -762,7 +762,7 @@ import { formatUnits } from 'ethers/lib/utils';
 
 async function main() {
     const sdk = SynFuturesV3.getInstance('blast');
-    const accAddr = '0x59097072a3fe55625ef43f5428002828b701d1a3';
+    const accAddr = '0xYOUR_ACCOUNT_ADDRESS_HERE';
 
     function now() {
         return Math.floor(Date.now() / 1000);
