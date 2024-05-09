@@ -43,14 +43,20 @@ This package depends on the more fundamental package `@derivation-tech/web3-core
 14. [Query pair depth chart data](#query-pair-depth)
 15. [Query pair funding rate data](#query-pair-funding-rate)
 16. [Query user single pair info](#query-user-single-pair-info)
-17. [Query market info](#query-market-info)
-18. [Direct trade interface](#direct-trade-interface)
-19. [Direct place interface](#direct-place-interface)
-20. [Direct add interface](#direct-add-interface)
-21. [Direct remove interface](#direct-remove-interface)
-22. [Direct cancel interface](#direct-cancel-interface)
-23. [Update pair](#update-pair)
-24. [Settle trader](#settle-trader)
+17. [Get Volume Chart](#get-volume-chart)
+18. [Query Account Portfolio Info](#query-account-portfolio-info)
+19. [Query Account Range History](#query-account-range-history)
+20. [Query Asset Transfer History](#query-asset-transfer-history)
+21. [Query Deposit Withdraw History](#query-deposit-withdraw-history)
+22. [Estimate Earning APY](#estimate-earning-apy)
+23. [Query market info](#query-market-info)
+24. [Direct trade interface](#direct-trade-interface)
+25. [Direct place interface](#direct-place-interface)
+26. [Direct add interface](#direct-add-interface)
+27. [Direct remove interface](#direct-remove-interface)
+28. [Direct cancel interface](#direct-cancel-interface)
+29. [Update pair](#update-pair)
+30. [Settle trader](#settle-trader)
 
 ### Prerequisites
 
@@ -592,6 +598,241 @@ async function main() {
 
 main().catch(console.error);
 ```
+
+
+### Get Volume Chart
+
+```ts
+import { PERP_EXPIRY, SynFuturesV3, VolumeChartDataProvider } from '@synfutures/oyster-sdk';
+async function main() {
+    function now() {
+        return Math.floor(Date.now() / 1000);
+    }
+    function getInstrumentBySymbol(symbol: string) {
+        const instrument = instruments.find((i) => i.info.symbol === symbol);
+        if (!instrument) {
+            throw new Error('unknown symbol: ' + symbol);
+        }
+        return instrument;
+    }
+
+    const sdk = SynFuturesV3.getInstance('blast');
+    const instruments = await sdk.getAllInstruments();
+    const instrument = getInstrumentBySymbol('BTC-USDB-PYTH');
+
+    const dataProvider = new VolumeChartDataProvider(sdk.ctx.chainId);
+    const volumeChartData = await dataProvider.getVolumeData(instrument.info.addr, PERP_EXPIRY, 0, now());
+    for (const data of volumeChartData) {
+        console.log('timestamp:', data.timestamp, 'baseVolume:', data.baseVolume, 'quoteVolume:', data.quoteVolume);
+    }
+
+}
+main().catch(console.error);
+```
+
+### Query Account Portfolio Info
+
+```ts
+import { SynFuturesV3, PERP_EXPIRY, InstrumentLevelAccountModel, sqrtX96ToWad, TickMath, ZERO } from '@synfutures/oyster-sdk';
+import { formatEther } from 'ethers/lib/utils';
+import { ethers } from 'ethers';
+
+async function main() {
+    const sdk = SynFuturesV3.getInstance('blast');
+    await sdk.initInstruments();
+    const accAddr = '0xYOUR_ACCOUNT_ADDRESS_HERE';
+    await sdk.syncVaultCacheWithAllQuotes(accAddr);
+
+    console.log('print balance in gate contract');
+    for (const symbol of Object.keys(sdk.config.quotesParam)) {
+        const tokenInfo = await sdk.ctx.getTokenInfo(symbol);
+        const tokenBalanceInVault = await sdk.getCachedVaultBalance(tokenInfo.address, accAddr);
+        console.log(
+            `Token ${symbol} balance in vault: ${ethers.utils.formatUnits(tokenBalanceInVault, tokenInfo.decimals)}`,
+        );
+    }
+
+    const allInstrumentLevelAccount: InstrumentLevelAccountModel[] = await sdk.getInstrumentLevelAccounts(accAddr);
+    for (const instrumentLevelAccount of allInstrumentLevelAccount) {
+        for (const [, pairLevelAccountModel] of instrumentLevelAccount.portfolios) {
+            if (pairLevelAccountModel.ranges.length > 0) {
+                console.log('print ranges for pair:', pairLevelAccountModel.rootPair.symbol);
+                for (const range of pairLevelAccountModel.ranges) {
+                    console.log('range:', range.tickLower, range.tickUpper, 'enterPrice', formatEther(sqrtX96ToWad(range.sqrtEntryPX96)), 'fees Earned', formatEther(range.feeEarned), 'value locked', formatEther(range.valueLocked);
+                    console.log('lowerPrice', formatEther(TickMath.getWadAtTick(range.tickLower)), 'upperPrice', formatEther(TickMath.getWadAtTick(range.tickUpper)));
+                    console.log('lowerLiquidationPrice', formatEther(range.lowerPositionModelIfRemove.liquidationPrice), 'upperLiquidationPrice', formatEther(range.upperPositionModelIfRemove.liquidationPrice));
+                }
+            }
+            if (pairLevelAccountModel.position.size !== ZERO) {
+                console.log('print position for pair:', pairLevelAccountModel.rootPair.symbol);
+                console.log('position size:', formatEther(pairLevelAccountModel.position.size), 'side:', pairLevelAccountModel.position.side, 'leverage:', formatEther(pairLevelAccountModel.position.leverageWad),
+                    'position value', formatEther(pairLevelAccountModel.position.getEquity()), 'margin', formatEther(pairLevelAccountModel.position.balance), 'maxWithdrawableMargin', formatEther(pairLevelAccountModel.position.getMaxWithdrawableMargin()));
+                console.log('unrealized Pnl', formatEther(pairLevelAccountModel.position.unrealizedPnl));
+                console.log('unrealized Funding', formatEther(pairLevelAccountModel.position.unrealizedFundingFee));
+                console.log('liquidate price', formatEther(pairLevelAccountModel.position.liquidationPrice));
+            }
+
+            if (pairLevelAccountModel.orders.length > 0) {
+                console.log('print orders for pair:', pairLevelAccountModel.rootPair.symbol);
+                for (const order of pairLevelAccountModel.orders) {
+                    console.log('order price:', order.limitPrice, 'size:', formatEther(order.size), 'taken', formatEther(order.taken), 'margin:', formatEther(order.balance), 'leverage:', formatEther(order.leverageWad), 'side:', order.side);
+                }
+            }
+
+        }
+    }
+}
+
+main().catch(console.error);
+```
+
+### Query Account Range History
+```ts
+import { SynFuturesV3, TickMath, formatExpiry } from '@synfutures/oyster-sdk';
+import { formatEther } from 'ethers/lib/utils';
+async function main() {
+    const sdk = SynFuturesV3.getInstance('blast');
+    const accAddr = '0xYOUR_ACCOUNT_ADDRESS_HERE';
+
+    function now() {
+        return Math.floor(Date.now() / 1000);
+    }
+
+    // get user range history
+    const userFundingHistory = await sdk.subgraph.getTransactionEvents({
+        eventNames: ['Add', 'Remove'],
+        traders: [accAddr],
+        // instrumentAddr: instrument.info.addr, // optional
+        // expiry: pair.amm.expiry, // optional
+        // to get all history, just ignore startTs and endTs
+        startTs: now() - 3600 * 24 * 30, // 30 days ago, get 1 month history
+        endTs: now(),
+    });
+
+    // print user range history
+    for (const event of userFundingHistory) {
+        console.log('instrumentAddress', event.address, 'expiry', formatExpiry(parseInt(event.args.expiry)), 'event:', event.name, 'timestamp:', event.timestamp, 'tickLowerPrice', formatEther(TickMath.getWadAtTick(parseInt(event.args.tickLower))), 'tickUpperPrice', formatEther(TickMath.getWadAtTick(parseInt(event.args.tickUpper))));
+    }
+
+}
+main().catch(console.error);
+```
+
+### Query Asset Transfer History
+```ts
+import { SynFuturesV3, TickMath, formatExpiry } from '@synfutures/oyster-sdk';
+import { formatUnits } from 'ethers/lib/utils';
+
+async function main() {
+    const sdk = SynFuturesV3.getInstance('blast');
+    const accAddr = '0xYOUR_ACCOUNT_ADDRESS_HERE';
+
+    function now() {
+        return Math.floor(Date.now() / 1000);
+    }
+
+    // get user transfer history
+    const userTransferHistory = await sdk.subgraph.getTransactionEvents({
+        eventNames: ['Gather', 'Scatter'],
+        traders: [accAddr],
+        // instrumentAddr: instrument.info.addr, // optional
+        // expiry: pair.amm.expiry, // optional
+        // to get all history, just ignore startTs and endTs
+        startTs: now() - 3600 * 24 * 30, // 30 days ago, get 1 month history
+        endTs: now(),
+    });
+
+    // print user transfer history
+    for (const event of userTransferHistory) {
+        console.log('instrumentAddress', event.address, 'expiry', formatExpiry(parseInt(event.args.expiry)), 'event:', event.name, 'timestamp:', event.timestamp);
+        const quoteAddr = event.args.quote;
+        const tokenInfo = await sdk.ctx.getTokenInfo(quoteAddr);
+        console.log('Type', event.name === 'Gather' ? 'Transfer In' : 'Transfer Out', 'Token', tokenInfo.symbol, 'amount', formatUnits(event.args.quantity, tokenInfo.decimals));
+    }
+
+}
+
+main().catch(console.error);
+```
+
+### Query Deposit Withdraw History
+```ts
+import { NATIVE_TOKEN_ADDRESS, SynFuturesV3, TickMath, formatExpiry } from '@synfutures/oyster-sdk';
+import { formatUnits } from 'ethers/lib/utils';
+
+async function main() {
+    const sdk = SynFuturesV3.getInstance('blast');
+    const accAddr = '0x59097072a3fe55625ef43f5428002828b701d1a3';
+
+    function now() {
+        return Math.floor(Date.now() / 1000);
+    }
+
+    // get user transfer history
+    const userDWHistory = await sdk.subgraph.getTransactionEvents({
+        eventNames: ['Deposit', 'Withdraw'],
+        traders: [accAddr],
+        // instrumentAddr: instrument.info.addr, // optional
+        // expiry: pair.amm.expiry, // optional
+        // to get all history, just ignore startTs and endTs
+        startTs: now() - 3600 * 24 * 30, // 30 days ago, get 1 month history
+        endTs: now(),
+    });
+
+    // print user transfer history
+    for (const event of userDWHistory) {
+        console.log('event:', event.name, 'timestamp:', event.timestamp);
+        const quoteAddr = event.args.quote;
+        const tokenInfo = quoteAddr.toLowerCase() === NATIVE_TOKEN_ADDRESS.toLowerCase() ? await sdk.ctx.wrappedNativeToken : await sdk.ctx.getTokenInfo(quoteAddr);
+        console.log('Token', tokenInfo.symbol, 'amount', formatUnits(event.args.quantity, tokenInfo.decimals));
+    }
+
+}
+
+main().catch(console.error);
+```
+
+### Estimate Earning APY
+
+```ts
+
+import { SynFuturesV3, PERP_EXPIRY } from '@synfutures/oyster-sdk';
+import { parseEther } from 'ethers/lib/utils';
+
+
+async function main() {
+    function getInstrumentBySymbol(symbol: string) {
+        const instrument = instruments.find((i) => i.info.symbol === symbol);
+        if (!instrument) {
+            throw new Error('unknown symbol: ' + symbol);
+        }
+        return instrument;
+    }
+
+    const sdk = SynFuturesV3.getInstance('blast');
+    const instruments = await sdk.getAllInstruments();
+    const instrument = getInstrumentBySymbol('BTC-USDB-PYTH');
+    const pair = instrument.pairs.get(PERP_EXPIRY)!;
+    // alpha means the width of the range -> 1.5 means  +- 50% of the current price
+    const alpha = "1.5";
+    // compute APY need pairs data
+    const pairDatas = await sdk.subgraph.getPairsData();
+    // get the pair data for the instrument
+    const pairData = pairDatas.find((pd) => pd.instrumentAddr.toLowerCase() === instrument.info.addr.toLowerCase() &&
+        pd.expiry === PERP_EXPIRY);
+    //can estimate the apy
+    const fee_24hrs = pairData!.poolFee24h;
+    const apy = sdk.estimateAPY(pair, fee_24hrs, parseEther(alpha));
+    console.log('estimated apy:', apy);
+}
+
+main().catch(console.error);
+
+```
+
+
+
+
 
 ### Query user operation history
 
