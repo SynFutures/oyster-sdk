@@ -1,11 +1,11 @@
 import { BigNumber, Overrides, PayableOverrides, Signer, ethers } from 'ethers';
 import { SynFuturesV3 } from './synfuturesV3Core';
-import { ChainContext, CHAIN_ID } from '@derivation-tech/web3-core';
+import { ChainContext, CHAIN_ID, ZERO } from '@derivation-tech/web3-core';
 import { Q96, TickMath, WAD, r2w, wadToSqrtX96, wmul } from './math';
-import { AddParam, InstrumentIdentifier, PairModel, PlaceParam, Side, TradeParam, signOfSide } from './types';
+import { AddParam, InstrumentIdentifier, InstrumentLevelAccountModel, InstrumentPointConfigParam, PairModel, PlaceParam, Side, TradeParam, signOfSide } from './types';
 import { INITIAL_MARGIN_RATIO } from './constants';
 import { formatEther, parseEther } from 'ethers/lib/utils';
-import { encodeAddWithReferralParam, encodePlaceWithReferralParam, encodeTradeWithReferralParam } from './common/util';
+import { encodeAddWithReferralParam, encodePlaceWithReferralParam, encodeTradeWithReferralParam, tickDeltaToAlphaWad } from './common/util';
 import { InstrumentParser } from './common/parser';
 
 export class SynFuturesV3Front {
@@ -38,6 +38,60 @@ export class SynFuturesV3Front {
 
     capAlphaWad(alphaWad: BigNumber): BigNumber {
         return alphaWad.gt(this.TWO_WAD) ? this.TWO_WAD : alphaWad;
+    }
+
+    public async simulatePortfolioPointPerDay(
+        portfolio: InstrumentLevelAccountModel[],
+        accountBoost: number,
+        pointConfigMetaMap: Map<string, InstrumentPointConfigParam>
+    ): Promise<BigNumber> {
+        let totalPointPerDay = ZERO;
+        const lowerCaseConfigMap = new Map<string, InstrumentPointConfigParam>();
+        pointConfigMetaMap.forEach((value, key) => {
+            lowerCaseConfigMap.set(key.toLowerCase(), value);
+        });
+
+        for (let i = 0; i < portfolio.length; i++) {
+            const ilaModel = portfolio[i];
+            let pointConf = lowerCaseConfigMap.get(ilaModel.rootInstrument.info.addr.toLowerCase());
+            if (!pointConf) {
+                pointConf = { isStable: false, quotePriceWad: ZERO, poolFactorMap: new Map<number, number>() };
+            }
+            for (const [expiry, plaModel] of ilaModel.portfolios) {
+                // get all ranges 
+                const poolFactor = pointConf!.poolFactorMap.get(expiry) ? pointConf!.poolFactorMap.get(expiry) : 0;
+                const quotePriceWad = pointConf!.quotePriceWad;
+                const isStable = pointConf!.isStable;
+
+                if (poolFactor === 0 || quotePriceWad === ZERO) continue;
+                for (const range of plaModel.ranges) {
+                    const equivalentAlpha = tickDeltaToAlphaWad(~~(range.tickUpper - range.tickLower) / 2);
+                    const pointPerDay = await this.calculateRangePointPerDay(
+                        range.liquidity,
+                        range.sqrtEntryPX96,
+                        range.balance,
+                        equivalentAlpha,
+                        ilaModel.rootInstrument.setting.initialMarginRatio,
+                        accountBoost,
+                        poolFactor!,
+                        quotePriceWad,
+                        isStable,
+                    );
+                    totalPointPerDay = totalPointPerDay.add(pointPerDay);
+                }
+                for(const order of plaModel.orders) {
+                    const pointPerDay = await this.calculateOrderPointPerDay(
+                        order.tick,
+                        order.size,
+                        accountBoost,
+                        poolFactor!,
+                        quotePriceWad,
+                    );
+                    totalPointPerDay = totalPointPerDay.add(pointPerDay);
+                }
+            }
+        }
+        return totalPointPerDay;
     }
 
     // @param alphaWad: decimal 18 units 1.3e18 means 1.3
@@ -76,10 +130,61 @@ export class SynFuturesV3Front {
             initialMarginRatio = instrument.setting.initialMarginRatio;
             currentSqrtPX96 = instrument.getPairModel(expiry).amm.sqrtPX96;
         }
+        return this.calculateRangePointPerDay(
+            liquidity, currentSqrtPX96, balance, alphaWad, initialMarginRatio, accountBoost, poolFactor, quotePriceWad, isStable);
+    }
+
+
+
+    // @param accountBoost : 10000 means 1
+    // @param poolFactor : 10000 means 1
+    // @param quotePriceWad : 1e18 means price 1 usd
+    public async simulateOrderPointPerDay(
+        targetTick: number,
+        baseSize: BigNumber,
+        accountBoost: number,
+        poolFactor: number,
+        quotePriceWad: BigNumber,
+    ): Promise<BigNumber> {
+        return this.calculateOrderPointPerDay(targetTick, baseSize, accountBoost, poolFactor, quotePriceWad);
+    }
+
+    private calculateOrderPointPerDay(
+        targetTick: number,
+        baseSize: BigNumber,
+        accountBoost: number,
+        poolFactor: number,
+        quotePriceWad: BigNumber,): BigNumber {
+        const pointPower = wmul(TickMath.getWadAtTick(targetTick), baseSize.abs()).div(86400).div(365);
+        console.log(
+            'orderDetails: price',
+            formatEther(TickMath.getWadAtTick(targetTick)),
+            'baseSize',
+            formatEther(baseSize),
+            ' pointPower',
+            formatEther(pointPower),
+        );
+        let pointPerDay = pointPower.mul(86400); // 1 day
+        pointPerDay = wmul(pointPerDay, r2w(accountBoost));
+        pointPerDay = wmul(pointPerDay, r2w(poolFactor));
+        pointPerDay = wmul(pointPerDay, quotePriceWad);
+        return pointPerDay;
+    }
+
+    private calculateRangePointPerDay(
+        liquidity: BigNumber, 
+        entrySqrtX96: BigNumber, 
+        balance: BigNumber, 
+        alphaWad: BigNumber,
+        initialMarginRatio: number, 
+        accountBoost: number, 
+        poolFactor: number, 
+        quotePriceWad: BigNumber, 
+        isStable: boolean): BigNumber {
         // liquidity = sqrt(vx * vy) = sqrt(vx * vy)  = sqrt(vy*vy/ entryPrice)
         // liquidity = vy/ sqrt(entryPrice)
         // vy = liquidity * sqrt(entryPrice) = liquidity * sqrtPriceX96 / 2^96
-        const vy = liquidity.mul(currentSqrtPX96).div(Q96);
+        const vy = liquidity.mul(entrySqrtX96).div(Q96);
         // we can directly use wad here, because mul then div will not change the value
         let pointPower = BigNumber.from(0);
         if (initialMarginRatio === 100 || isStable) {
@@ -105,32 +210,6 @@ export class SynFuturesV3Front {
             formatEther(pointPower),
         );
         let pointPerDay = pointPower.mul(86400);
-        pointPerDay = wmul(pointPerDay, r2w(accountBoost));
-        pointPerDay = wmul(pointPerDay, r2w(poolFactor));
-        pointPerDay = wmul(pointPerDay, quotePriceWad);
-        return pointPerDay;
-    }
-
-    // @param accountBoost : 10000 means 1
-    // @param poolFactor : 10000 means 1
-    // @param quotePriceWad : 1e18 means price 1 usd
-    public async simulateOrderPointPerDay(
-        targetTick: number,
-        baseSize: BigNumber,
-        accountBoost: number,
-        poolFactor: number,
-        quotePriceWad: BigNumber,
-    ): Promise<BigNumber> {
-        const pointPower = wmul(TickMath.getWadAtTick(targetTick), baseSize.abs()).div(86400).div(365);
-        console.log(
-            'orderDetails: price',
-            formatEther(TickMath.getWadAtTick(targetTick)),
-            'baseSize',
-            formatEther(baseSize),
-            ' pointPower',
-            formatEther(pointPower),
-        );
-        let pointPerDay = pointPower.mul(86400); // 1 day
         pointPerDay = wmul(pointPerDay, r2w(accountBoost));
         pointPerDay = wmul(pointPerDay, r2w(poolFactor));
         pointPerDay = wmul(pointPerDay, quotePriceWad);
@@ -229,10 +308,10 @@ export class SynFuturesV3Front {
             this.ctx.registerAddress(
                 instrumentAddress,
                 instrumentIdentifier.baseSymbol +
-                    '-' +
-                    instrumentIdentifier.quoteSymbol +
-                    '-' +
-                    instrumentIdentifier.marketType,
+                '-' +
+                instrumentIdentifier.quoteSymbol +
+                '-' +
+                instrumentIdentifier.marketType,
             );
             // need to create instrument
             unsignedTx = await gate.populateTransaction.launch(
