@@ -6,10 +6,11 @@ import {
     SECS_PER_HOUR,
     TokenInfo,
     ZERO_ADDRESS,
+    fromWad,
     now,
 } from '@derivation-tech/web3-core';
 import { BigNumber } from 'ethers';
-import { WAD, ZERO, sqrtX96ToWad, wadToTick, wdiv } from './math';
+import { TickMath, WAD, ZERO, r2w, sqrtX96ToWad, wadToTick, wdiv, wmul } from './math';
 import {
     FeederType,
     InstrumentCondition,
@@ -107,6 +108,15 @@ export interface PairData {
     low24h: BigNumber;
 }
 
+export interface DailyVolumeDetail {
+    timestamp: number;
+    symbol: string;
+    takerVolume: number;
+    takerFee: number;
+    makerVolume: number;
+    makerRebate: number;
+}
+
 export interface Pagination {
     page?: number;
     size?: number;
@@ -150,12 +160,17 @@ export interface QueryRangeParam extends Pagination {
     expiry?: number;
     traders?: string[];
 }
-
 export interface ExtendedRange extends Range {
     instrumentAddr: string;
     expiry: number;
     tickLower: number;
     tickUpper: number;
+}
+
+export interface QueryDailyVolumeDetailParam {
+    trader: string;
+    startTs: number;
+    endTs: number;
 }
 
 export class Subgraph extends Graph {
@@ -895,33 +910,84 @@ export class Subgraph extends Graph {
         }
         return result;
     }
+
+    async getDailyVolumeDetails(param: QueryDailyVolumeDetailParam): Promise<DailyVolumeDetail[]> {
+        const fn = (str: string): string => `"${str}"`;
+        const condition = `where: {trader: ${fn(param.trader.toLowerCase())} timestamp_gte: ${
+            param.startTs
+        } timestamp_lte: ${param.endTs} name_in: [${['Trade', 'Sweep', 'Fill', 'Cancel']
+            .map((e) => fn(e))
+            .join(',')}]}`;
+
+        const graphQL = `query($skip: Int, $first: Int, $lastID: String){
+            transactionEvents(skip: $skip, first: $first, ${condition}){
+                id
+                name
+                args
+                timestamp
+                trader
+                amm {
+                    symbol
+                }
+            }
+        }`;
+        console.info(graphQL);
+        const transactionEvents = await this.queryAll(graphQL, GRAPH_PAGE_SIZE, true);
+        const details: Record<string, DailyVolumeDetail> = {};
+        for (const trade of transactionEvents) {
+            const ts = dayIdFromTimestamp(Number(trade.timestamp));
+            const detail = details[concatId(trade.amm.symbol, ts)] || {
+                timestamp: ts,
+                symbol: trade.amm.symbol,
+                takerVolume: 0,
+                takerFee: 0,
+                makerVolume: 0,
+                makerRebate: 0,
+            };
+            const args = JSON.parse(trade.args);
+            if (trade.name === 'Trade' || trade.name === 'Sweep') {
+                detail.takerVolume += fromWad(args.entryNotional);
+                detail.takerFee += fromWad(wmul(r2w(args.feeRatio), BigNumber.from(args.entryNotional)));
+            } else if (trade.name === 'Fill' || trade.name === 'Cancel') {
+                detail.makerVolume += fromWad(
+                    wmul(BigNumber.from(args.pic[1]).abs(), TickMath.getWadAtTick(Number(args.tick))),
+                );
+                detail.makerRebate += fromWad(args.fee);
+            }
+            details[concatId(trade.amm.symbol, ts)] = detail;
+        }
+        // newest first
+        let result = Object.values(details);
+        result = _orderBy(result, ['timestamp'], ['desc']);
+        return result;
+    }
 }
 
-// async function main(): Promise<void> {
-//     const subgraph = new Subgraph('https://api.synfutures.com/thegraph/v3-blast');
-//     const events = await subgraph.getTransactionEvents({
-//         instrumentAddr: '0xeb9e8822142Fc10C38FaAB7bB6c635D22eb20Ff8',
-//         startTs: 1710028800,
-//         endTs: 1710115200,
-//         page: 1,
-//         size: 1000,
-//         eventNames: ['Trade', 'Sweep'],
-//     });
-//     console.log(events.length);
+async function main(): Promise<void> {
+    const subgraph = new Subgraph(
+        'http://Subgraph-Balance-Loader-1586504016.ap-east-1.elb.amazonaws.com:8000/subgraphs/name/blast-mainnet-20240510-subgraph-remove-fair-px',
+    );
+    // const events = await subgraph.getTransactionEvents({
+    //     instrumentAddr: '0xeb9e8822142Fc10C38FaAB7bB6c635D22eb20Ff8',
+    //     startTs: 1710028800,
+    //     endTs: 1710115200,
+    //     page: 1,
+    //     size: 1000,
+    //     eventNames: ['Trade', 'Sweep'],
+    // });
+    // console.log(events.length);
 
-//     const volume = events.map((e) => e.args.entryNotional).reduce((a, b) => a.add(b), ZERO);
-//     console.log(volume.toString());
+    // const volume = events.map((e) => e.args.entryNotional).reduce((a, b) => a.add(b), ZERO);
+    // console.log(volume.toString());
 
-//     const events2 = await subgraph.getUserOrders({
-//         instrumentAddr: '0xeb9e8822142Fc10C38FaAB7bB6c635D22eb20Ff8',
-//         startTs: 1710028800,
-//         endTs: 1710115200,
-//         page: 0,
-//         size: 1000,
-//     });
-//     console.info(events2);
-// }
+    const events2 = await subgraph.getDailyVolumeDetails({
+        trader: '0x53fa150e5974e1d9700a610e348d001ecf6f01ea',
+        startTs: now() - 3 * 30 * SECS_PER_DAY,
+        endTs: now(),
+    });
+    console.info(events2);
+}
 
-// main()
-//     .then()
-//     .catch((e) => console.log(e));
+main()
+    .then()
+    .catch((e) => console.log(e));
