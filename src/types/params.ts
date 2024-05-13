@@ -125,6 +125,13 @@ export interface PlaceParam {
     deadline: number;
 }
 
+export interface InstrumentPointConfigParam {
+    isStable:boolean
+    quotePriceWad: BigNumber;
+    // expiry -> PoolFactor
+    poolFactorMap: Map<number, number>;
+}
+
 export interface FetchInstrumentParam {
     instrument: string;
     expiries: number[];
