@@ -1,6 +1,6 @@
 {
     "name": "@synfutures/oyster-sdk",
-    "version": "0.1.5",
+    "version": "0.1.6",
     "description": "SynFutures V3 SDK",
     "author": "SynFutures",
     "license": "MIT",
@@ -11,6 +11,11 @@
         "build": "tsc -p tsconfig.json",
         "prepack": "npm run build",
         "typedoc": "rimraf docs && npx typedoc --options typedoc.json"
+    },
+    "homepage": "https://oyster.synfutures.com/",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/SynFutures/oyster-sdk"
     },
     "dependencies": {
         "@derivation-tech/web3-core": "1.0.30",
