@@ -173,6 +173,26 @@ export interface QueryDailyVolumeDetailParam {
     endTs: number;
 }
 
+export function convertVolumeDetailsToUSD(
+    details: DailyVolumeDetail[],
+    prices: Record<string, Record<number, number>>,
+): DailyVolumeDetail[] {
+    const result = details.map((d) => {
+        if (!prices[d.symbol] || !prices[d.symbol][d.timestamp]) {
+            throw new Error(`Price not found for ${d.symbol} at ${d.timestamp}`);
+        }
+        const price = prices[d.symbol][d.timestamp];
+        return {
+            ...d,
+            takerVolume: d.takerVolume * price,
+            takerFee: d.takerFee * price,
+            makerVolume: d.makerVolume * price,
+            makerRebate: d.makerRebate * price,
+        };
+    });
+    return result;
+}
+
 export class Subgraph extends Graph {
     // query instruments from graph, note: below fields are not available from graph thus set to zero:
     // instrument.spotPrice = ZERO
@@ -913,7 +933,7 @@ export class Subgraph extends Graph {
 
     async getDailyVolumeDetails(param: QueryDailyVolumeDetailParam): Promise<DailyVolumeDetail[]> {
         const fn = (str: string): string => `"${str}"`;
-        const condition = `where: {trader: ${fn(param.trader.toLowerCase())} timestamp_gte: ${
+        const condition = `where: {id_gt: $lastID, trader: ${fn(param.trader.toLowerCase())} timestamp_gte: ${
             param.startTs
         } timestamp_lte: ${param.endTs} name_in: [${['Trade', 'Sweep', 'Fill', 'Cancel']
             .map((e) => fn(e))
@@ -931,7 +951,6 @@ export class Subgraph extends Graph {
                 }
             }
         }`;
-        console.info(graphQL);
         const transactionEvents = await this.queryAll(graphQL, GRAPH_PAGE_SIZE, true);
         const details: Record<string, DailyVolumeDetail> = {};
         for (const trade of transactionEvents) {
@@ -963,31 +982,31 @@ export class Subgraph extends Graph {
     }
 }
 
-async function main(): Promise<void> {
-    const subgraph = new Subgraph(
-        'http://Subgraph-Balance-Loader-1586504016.ap-east-1.elb.amazonaws.com:8000/subgraphs/name/blast-mainnet-20240510-subgraph-remove-fair-px',
-    );
-    // const events = await subgraph.getTransactionEvents({
-    //     instrumentAddr: '0xeb9e8822142Fc10C38FaAB7bB6c635D22eb20Ff8',
-    //     startTs: 1710028800,
-    //     endTs: 1710115200,
-    //     page: 1,
-    //     size: 1000,
-    //     eventNames: ['Trade', 'Sweep'],
-    // });
-    // console.log(events.length);
+// async function main(): Promise<void> {
+//     const subgraph = new Subgraph(
+//         'http://Subgraph-Balance-Loader-1586504016.ap-east-1.elb.amazonaws.com:8000/subgraphs/name/blast-mainnet-20240510-subgraph-remove-fair-px',
+//     );
+//     const events = await subgraph.getTransactionEvents({
+//         instrumentAddr: '0xeb9e8822142Fc10C38FaAB7bB6c635D22eb20Ff8',
+//         startTs: 1710028800,
+//         endTs: 1710115200,
+//         page: 1,
+//         size: 1000,
+//         eventNames: ['Trade', 'Sweep'],
+//     });
+//     console.log(events.length);
 
-    // const volume = events.map((e) => e.args.entryNotional).reduce((a, b) => a.add(b), ZERO);
-    // console.log(volume.toString());
+//     const volume = events.map((e) => e.args.entryNotional).reduce((a, b) => a.add(b), ZERO);
+//     console.log(volume.toString());
 
-    const events2 = await subgraph.getDailyVolumeDetails({
-        trader: '0x53fa150e5974e1d9700a610e348d001ecf6f01ea',
-        startTs: now() - 3 * 30 * SECS_PER_DAY,
-        endTs: now(),
-    });
-    console.info(events2);
-}
+//     const events2 = await subgraph.getDailyVolumeDetails({
+//         trader: '0x5db201ae15f9702f0a0ff9f00b8c1c18355373d0',
+//         startTs: now() - 3 * 30 * SECS_PER_DAY,
+//         endTs: now(),
+//     });
+//     console.info(events2);
+// }
 
-main()
-    .then()
-    .catch((e) => console.log(e));
+// main()
+//     .then()
+//     .catch((e) => console.log(e));
