@@ -460,20 +460,6 @@ export class Subgraph extends Graph {
         // console.info(timestamp, dayId, hourId, _7d, _24h);
         const graphQL = `
             query($skip: Int, $first: Int, $lastID: String){
-              ranges(first: $first, where: { status: "OPEN", id_gt: $lastID}){
-                id
-                balance
-                entryFeeIndex
-                liquidity
-                sqrtEntryPX96
-                status
-                tickLower
-                tickUpper
-                trader
-                amm {
-                    id
-                  }
-                }
               amms(first: $first, where: {${statusCondition} id_gt: $lastID}){
                 id
                 symbol
