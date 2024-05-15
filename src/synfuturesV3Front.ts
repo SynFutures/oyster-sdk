@@ -2,10 +2,25 @@ import { BigNumber, Overrides, PayableOverrides, Signer, ethers } from 'ethers';
 import { SynFuturesV3 } from './synfuturesV3Core';
 import { ChainContext, CHAIN_ID, ZERO } from '@derivation-tech/web3-core';
 import { Q96, TickMath, WAD, r2w, wadToSqrtX96, wmul } from './math';
-import { AddParam, InstrumentIdentifier, InstrumentLevelAccountModel, InstrumentPointConfigParam, PairModel, PlaceParam, Side, TradeParam, signOfSide } from './types';
+import {
+    AddParam,
+    InstrumentIdentifier,
+    InstrumentLevelAccountModel,
+    InstrumentPointConfigParam,
+    PairModel,
+    PlaceParam,
+    Side,
+    TradeParam,
+    signOfSide,
+} from './types';
 import { INITIAL_MARGIN_RATIO } from './constants';
 import { formatEther, parseEther } from 'ethers/lib/utils';
-import { encodeAddWithReferralParam, encodePlaceWithReferralParam, encodeTradeWithReferralParam, tickDeltaToAlphaWad } from './common/util';
+import {
+    encodeAddWithReferralParam,
+    encodePlaceWithReferralParam,
+    encodeTradeWithReferralParam,
+    tickDeltaToAlphaWad,
+} from './common/util';
 import { InstrumentParser } from './common/parser';
 
 export class SynFuturesV3Front {
@@ -43,7 +58,7 @@ export class SynFuturesV3Front {
     public async simulatePortfolioPointPerDay(
         portfolio: InstrumentLevelAccountModel[],
         accountBoost: number,
-        pointConfigMetaMap: Map<string, InstrumentPointConfigParam>
+        pointConfigMetaMap: Map<string, InstrumentPointConfigParam>,
     ): Promise<BigNumber> {
         let totalPointPerDay = ZERO;
         const lowerCaseConfigMap = new Map<string, InstrumentPointConfigParam>();
@@ -58,7 +73,7 @@ export class SynFuturesV3Front {
                 pointConf = { isStable: false, quotePriceWad: ZERO, poolFactorMap: new Map<number, number>() };
             }
             for (const [expiry, plaModel] of ilaModel.portfolios) {
-                // get all ranges 
+                // get all ranges
                 const poolFactor = pointConf!.poolFactorMap.get(expiry) ? pointConf!.poolFactorMap.get(expiry) : 0;
                 const quotePriceWad = pointConf!.quotePriceWad;
                 const isStable = pointConf!.isStable;
@@ -79,7 +94,7 @@ export class SynFuturesV3Front {
                     );
                     totalPointPerDay = totalPointPerDay.add(pointPerDay);
                 }
-                for(const order of plaModel.orders) {
+                for (const order of plaModel.orders) {
                     const pointPerDay = await this.calculateOrderPointPerDay(
                         order.tick,
                         order.size,
@@ -131,10 +146,17 @@ export class SynFuturesV3Front {
             currentSqrtPX96 = instrument.getPairModel(expiry).amm.sqrtPX96;
         }
         return this.calculateRangePointPerDay(
-            liquidity, currentSqrtPX96, balance, alphaWad, initialMarginRatio, accountBoost, poolFactor, quotePriceWad, isStable);
+            liquidity,
+            currentSqrtPX96,
+            balance,
+            alphaWad,
+            initialMarginRatio,
+            accountBoost,
+            poolFactor,
+            quotePriceWad,
+            isStable,
+        );
     }
-
-
 
     // @param accountBoost : 10000 means 1
     // @param poolFactor : 10000 means 1
@@ -154,7 +176,8 @@ export class SynFuturesV3Front {
         baseSize: BigNumber,
         accountBoost: number,
         poolFactor: number,
-        quotePriceWad: BigNumber,): BigNumber {
+        quotePriceWad: BigNumber,
+    ): BigNumber {
         const pointPower = wmul(TickMath.getWadAtTick(targetTick), baseSize.abs()).div(86400).div(365);
         console.log(
             'orderDetails: price',
@@ -172,15 +195,16 @@ export class SynFuturesV3Front {
     }
 
     private calculateRangePointPerDay(
-        liquidity: BigNumber, 
-        entrySqrtX96: BigNumber, 
-        balance: BigNumber, 
+        liquidity: BigNumber,
+        entrySqrtX96: BigNumber,
+        balance: BigNumber,
         alphaWad: BigNumber,
-        initialMarginRatio: number, 
-        accountBoost: number, 
-        poolFactor: number, 
-        quotePriceWad: BigNumber, 
-        isStable: boolean): BigNumber {
+        initialMarginRatio: number,
+        accountBoost: number,
+        poolFactor: number,
+        quotePriceWad: BigNumber,
+        isStable: boolean,
+    ): BigNumber {
         // liquidity = sqrt(vx * vy) = sqrt(vx * vy)  = sqrt(vy*vy/ entryPrice)
         // liquidity = vy/ sqrt(entryPrice)
         // vy = liquidity * sqrt(entryPrice) = liquidity * sqrtPriceX96 / 2^96
@@ -308,10 +332,10 @@ export class SynFuturesV3Front {
             this.ctx.registerAddress(
                 instrumentAddress,
                 instrumentIdentifier.baseSymbol +
-                '-' +
-                instrumentIdentifier.quoteSymbol +
-                '-' +
-                instrumentIdentifier.marketType,
+                    '-' +
+                    instrumentIdentifier.quoteSymbol +
+                    '-' +
+                    instrumentIdentifier.marketType,
             );
             // need to create instrument
             unsignedTx = await gate.populateTransaction.launch(
