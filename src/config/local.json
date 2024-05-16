@@ -10,35 +10,35 @@
   "commit": "",
   "contractAddress": {
     "config": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
-    "gate": "0x0165878A594ca255338adfa4d48449f69242Eb8F",
-    "observer": "0xa85233C63b9Ee964Add6F2cffe00Fd84eb32338f",
+    "gate": "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
+    "observer": "0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1",
     "guardian": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
     "market": {
       "LINK": {
-        "beacon": "0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82",
-        "market": "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE"
-      },
-      "DEXV2": {
-        "beacon": "0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82",
+        "beacon": "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e",
         "market": "0x0B306BF915C4d645ff596e518fAf3F9669b97016"
       },
+      "DEXV2": {
+        "beacon": "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e",
+        "market": "0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82"
+      },
       "EMG": {
-        "beacon": "0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82",
-        "market": "0x3Aa5ebB10DC797CAC828524e59A333d0A371443c"
+        "beacon": "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e",
+        "market": "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE"
       },
       "PYTH": {
-        "beacon": "0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82",
-        "market": "0x59b670e9fA9D0A427751Af201D676719a970857b"
+        "beacon": "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e",
+        "market": "0x3Aa5ebB10DC797CAC828524e59A333d0A371443c"
       }
     },
     "feederFactory": {
       "PYTH": {
-        "beacon": "0x1A7A3e29c3c4b3C858f2DeD8bE6ed51A07589ecF",
-        "factory": "0xc5a5C42992dECbae36851359345FE25997F5C42d"
-      },
-      "EMG": {
         "beacon": "0x2C477DFdB744E3BAf87bbdE078e21D382bc40700",
         "factory": "0x7a2088a1bFc9d81c55368AE168C2C02570cB814F"
+      },
+      "EMG": {
+        "beacon": "0x46682cA783d96a4A65390211934D5714CDb788E4",
+        "factory": "0xa85233C63b9Ee964Add6F2cffe00Fd84eb32338f"
       }
     }
   },
@@ -111,36 +111,36 @@
           "baseSymbol": "BTC",
           "quoteSymbol": "USDC",
           "ftype": 2,
-          "aggregator0": "0xeB27B4cB7446CE8d77E2fD71d25a7356cF363361",
+          "aggregator0": "0x0A41804810f008e5EE565aa4B95a6a7c50a09082",
           "heartBeat0": 3600,
-          "aggregator1": "0x6fd9a6940a9Dc7574C7377855991ddfFf7F27718",
+          "aggregator1": "0x46Ce97D6a4e26b143769c199e13E754B45b3e8E6",
           "heartBeat1": 86400
         },
         {
           "baseSymbol": "ETH",
           "quoteSymbol": "USDC",
           "ftype": 2,
-          "aggregator0": "0x571E3b2066630896D994FA8521Ba654BfD3c93eE",
+          "aggregator0": "0x700A1a868CA4CD1530f877B7B9f0745be63f30b5",
           "heartBeat0": 3600,
-          "aggregator1": "0x6fd9a6940a9Dc7574C7377855991ddfFf7F27718",
+          "aggregator1": "0x46Ce97D6a4e26b143769c199e13E754B45b3e8E6",
           "heartBeat1": 86400
         },
         {
           "baseSymbol": "BTC",
           "quoteSymbol": "USDT",
           "ftype": 2,
-          "aggregator0": "0xeB27B4cB7446CE8d77E2fD71d25a7356cF363361",
+          "aggregator0": "0x0A41804810f008e5EE565aa4B95a6a7c50a09082",
           "heartBeat0": 3600,
-          "aggregator1": "0x5c2D64Cb57a5F05DA44FBE16a9bff70AA49c66cE",
+          "aggregator1": "0x9083ADFE1674f031c5d9F243ea779CFA82E47d2a",
           "heartBeat1": 86400
         },
         {
           "baseSymbol": "ETH",
           "quoteSymbol": "USDT",
           "ftype": 2,
-          "aggregator0": "0x571E3b2066630896D994FA8521Ba654BfD3c93eE",
+          "aggregator0": "0x700A1a868CA4CD1530f877B7B9f0745be63f30b5",
           "heartBeat0": 3600,
-          "aggregator1": "0x5c2D64Cb57a5F05DA44FBE16a9bff70AA49c66cE",
+          "aggregator1": "0x9083ADFE1674f031c5d9F243ea779CFA82E47d2a",
           "heartBeat1": 86400
         }
       ]
@@ -152,9 +152,9 @@
           "baseSymbol": "BTC",
           "quoteSymbol": "USDC",
           "ftype": 1,
-          "aggregator0": "0xBF908677c54510FE1b47FD0C212355A36417A8c7",
+          "aggregator0": "0xeB27B4cB7446CE8d77E2fD71d25a7356cF363361",
           "heartBeat0": 129600,
-          "aggregator1": "0xB97Ddb158DF3d0EDCa3ffd2b20F3b24b151F1ea7",
+          "aggregator1": "0x6fd9a6940a9Dc7574C7377855991ddfFf7F27718",
           "heartBeat1": 172800
         }
       ]
