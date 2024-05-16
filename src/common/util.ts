@@ -40,7 +40,7 @@ const amountLength = 128;
 const quantityLength = 96;
 const addressLength = 160;
 const deadlineLength = 32;
-const limitStabilityFeeLength = 16;
+const limitStabilityFeeRatioLength = 16;
 
 function bytes32ToBigNumber(str: string): BigNumber {
     str = str.startsWith('0x') ? str : '0x' + str;
@@ -315,12 +315,12 @@ export function decodeTradeParam(args: string[]): TradeParam {
     return decodeParamForTradeAndPlace(args);
 }
 
-export function decodeTradeWithStabilityFeeParam(args: string[]): TradeParam & { limitStabilityFee: number } {
+export function decodeTradeWithStabilityFeeParam(args: string[]): TradeParam & { limitStabilityFeeRatio: number } {
     const tradeParam = decodeTradeParam(args);
     const value1 = bytes32ToBigNumber(args[0]);
     const offset = expiryLength + tickLength + deadlineLength;
-    const limitStabilityFee = pickNumber(value1, offset, offset + limitStabilityFeeLength);
-    return { ...tradeParam, limitStabilityFee };
+    const limitStabilityFeeRatio = pickNumber(value1, offset, offset + limitStabilityFeeRatioLength);
+    return { ...tradeParam, limitStabilityFeeRatio };
 }
 
 function decodeParamForTradeAndPlace(args: string[]): TradeParam {
