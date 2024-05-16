@@ -21,6 +21,7 @@ export const RANGE_SPACING = PEARL_SPACING * 10;
 
 export const RATIO_BASE = 10000;
 export const STABILITY_FEE_RATIO_BASE = 100;
+export const MAX_STABILITY_FEE_RATIO = Math.pow(2, 16) - 1;
 
 export const MIN_ORDER_MULTIPLIER = 2;
 export const MIN_RANGE_MULTIPLIER = 10;
