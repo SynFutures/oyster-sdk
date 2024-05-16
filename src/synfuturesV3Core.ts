@@ -39,7 +39,6 @@ import {
     normalizeTick,
     rangeKey,
     trimObj,
-    extractFeeRatioParams,
     withinOrderLimit,
     tickDeltaToAlphaWad,
     encodeTradeWithReferralParam,
@@ -91,7 +90,6 @@ import {
 } from './types';
 import {
     r2w,
-    relativeDiffRatioWadAbs,
     sqrtX96ToWad,
     TickMath,
     wadToTick,
@@ -100,7 +98,6 @@ import {
     wmulDown,
     wmulUp,
     ZERO,
-    MAX_UINT_16,
     wdivUp,
     max,
 } from './math';
@@ -1340,12 +1337,8 @@ export class SynFuturesV3 {
             sqrtX96ToWad(quotation.sqrtFairPX96),
         );
 
-        const stabilityFeeRatio = this.getStabilityFeeRatio(
-            quotation,
-            pairAccountModel.rootPair.rootInstrument.setting.quoteParam,
-            pairAccountModel.rootPair.rootInstrument.setting.maintenanceMarginRatio,
-        );
-        const stabilityFee = wmulUp(quotation.entryNotional, r2w(stabilityFeeRatio));
+
+        const stabilityFee = this.getStabilityFee(quotation, pairAccountModel.rootPair.rootInstrument.setting.quoteParam);
         return {
             tradePrice: tradePrice,
             estimatedTradeValue: quotation.entryNotional,
@@ -1745,10 +1738,10 @@ export class SynFuturesV3 {
             this.ctx.registerAddress(
                 instrumentAddress,
                 instrumentIdentifier.baseSymbol +
-                    '-' +
-                    instrumentIdentifier.quoteSymbol +
-                    '-' +
-                    instrumentIdentifier.marketType,
+                '-' +
+                instrumentIdentifier.quoteSymbol +
+                '-' +
+                instrumentIdentifier.marketType,
             );
             // need to create instrument
             unsignedTx = await gate.populateTransaction.launch(
@@ -1915,28 +1908,24 @@ export class SynFuturesV3 {
     // }
     // return stability fee ratio in 4 decimal form
     getStabilityFeeRatio(quotation: Quotation, param: QuoteParam, maintenanceMarginRatio: number): number {
-        const prevFair = sqrtX96ToWad(quotation.sqrtFairPX96);
-        const postFair = sqrtX96ToWad(quotation.sqrtPostFairPX96);
-        const benchmarkPrice = quotation.benchmark;
-        const flipped = prevFair.sub(benchmarkPrice).mul(postFair.sub(benchmarkPrice)).lt(ZERO);
-
-        const prevDeviationRatio = relativeDiffRatioWadAbs(prevFair, benchmarkPrice);
-        const postDeviationRatio = relativeDiffRatioWadAbs(postFair, benchmarkPrice);
-
-        if (!flipped && postDeviationRatio.lte(prevDeviationRatio)) return 0;
-
-        if (postDeviationRatio.lte(r2w(maintenanceMarginRatio))) return 0;
-
-        const params: BigNumber[] = extractFeeRatioParams(param.stabilityFeeRatioParam);
-
-        let ratioTemp = wmul(postDeviationRatio, params[2]).sub(params[3]);
-        if (ratioTemp.lt(ZERO)) {
-            ratioTemp = ZERO;
-        }
-        const scaler = BigNumber.from(10).pow(14);
+        // maintenanceMarginRatio is no more needed
+        maintenanceMarginRatio;
+        const stabilityFee = this.getStabilityFee(quotation, param);
+        const ratioTemp = wdiv(stabilityFee, quotation.entryNotional);
+        const scaler = BigNumber.from(10).pow(14)
         const ratio = ratioTemp.add(scaler.sub(1)).div(scaler);
-        if (ratio.gt(MAX_UINT_16)) throw new Error('CrazyDeviation');
+
         return ratio.toNumber();
+    }
+
+    getStabilityFee(quotation: Quotation, param: QuoteParam): BigNumber {
+        const feePaid = quotation.fee;
+        const protocolFeePaid = wmulUp(quotation.entryNotional, r2w(param.protocolFeeRatio));
+        const baseFeePaid = wmulUp(quotation.entryNotional, r2w(param.tradingFeeRatio));
+
+        let stabilityFee = feePaid.sub(protocolFeePaid).sub(baseFeePaid);
+        if (stabilityFee.lt(0)) stabilityFee = ZERO;
+        return stabilityFee;
     }
 
     private async inspectDexV2MarketBenchmarkPrice(
