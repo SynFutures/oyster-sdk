@@ -22,7 +22,7 @@ import {
     decodeParamForDepositAndWithdraw,
     decodePlaceParam,
     decodeRemoveParam,
-    decodeTradeParam,
+    decodeTradeWithStabilityFeeParam,
     extractFeeRatioParams,
     formatCompactEmaParam,
     formatExpiry,
@@ -91,7 +91,7 @@ export class InstrumentParser extends ContractParser {
         } else if (description.name === 'remove' && param.name === 'args') {
             return this.formatEncodedFundctionArgs(decodeRemoveParam(value));
         } else if (description.name === 'trade' && param.name === 'args') {
-            return this.formatEncodedFundctionArgs(decodeTradeParam(value));
+            return this.formatEncodedFundctionArgs(decodeTradeWithStabilityFeeParam(value));
         } else if (description.name === 'place' && param.name === 'args') {
             return this.formatEncodedFundctionArgs(decodePlaceParam(value));
         }

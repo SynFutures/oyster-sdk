@@ -46,6 +46,7 @@ import {
     encodeAddWithReferralParam,
     encodePlaceWithReferralParam,
     encodeAdjustWithReferralParam,
+    encodeTradeWithStabilityFeeParam,
 } from './common/util';
 import {
     AddParam,
@@ -826,6 +827,31 @@ export class SynFuturesV3 {
                 param.amount,
                 param.limitTick,
                 param.deadline,
+                referralCode,
+            ),
+            overrides ?? {},
+        );
+        return this.ctx.sendTx(signer, unsignedTx);
+    }
+
+    // WARNING: this function is not recommended to use, because it may cause penalty fee during trade
+    async tradeWithStabilityFee(
+        signer: Signer,
+        instrumentAddr: string,
+        param: TradeParam,
+        limitStabilityFeeRatio: number,
+        overrides?: Overrides,
+        referralCode = DEFAULT_REFERRAL_CODE,
+    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
+        const instrument = this.getInstrumentContract(instrumentAddr, signer);
+        const unsignedTx = await instrument.populateTransaction.trade(
+            encodeTradeWithStabilityFeeParam(
+                param.expiry,
+                param.size,
+                param.amount,
+                param.limitTick,
+                param.deadline,
+                limitStabilityFeeRatio,
                 referralCode,
             ),
             overrides ?? {},
