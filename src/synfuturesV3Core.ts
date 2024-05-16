@@ -46,7 +46,7 @@ import {
     encodeAddWithReferralParam,
     encodePlaceWithReferralParam,
     encodeAdjustWithReferralParam,
-    encodeTradeWithStabilityFeeParam,
+    encodeTradeWithRiskParam,
 } from './common/util';
 import {
     AddParam,
@@ -835,7 +835,7 @@ export class SynFuturesV3 {
     }
 
     // WARNING: this function is not recommended to use, because it may cause penalty fee during trade
-    async tradeWithStabilityFee(
+    async tradeWithRisk(
         signer: Signer,
         instrumentAddr: string,
         param: TradeParam,
@@ -845,7 +845,7 @@ export class SynFuturesV3 {
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
         const instrument = this.getInstrumentContract(instrumentAddr, signer);
         const unsignedTx = await instrument.populateTransaction.trade(
-            encodeTradeWithStabilityFeeParam(
+            encodeTradeWithRiskParam(
                 param.expiry,
                 param.size,
                 param.amount,

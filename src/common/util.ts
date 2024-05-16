@@ -86,7 +86,7 @@ export function encodeTradeParam(
     return encodeParamForTradeAndPlace(expiry, size, amount, limitTick, deadline);
 }
 
-export function encodeTradeWithStabilityFeeParam(
+export function encodeTradeWithRiskParam(
     expiry: number,
     size: BigNumber,
     amount: BigNumber,
