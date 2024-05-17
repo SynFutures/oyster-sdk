@@ -111,6 +111,8 @@ export interface PairData {
 export interface DailyVolumeDetail {
     timestamp: number;
     symbol: string;
+    instrumentAddr: string;
+    expiry: number;
     takerVolume: number;
     takerFee: number;
     makerVolume: number;
@@ -933,6 +935,7 @@ export class Subgraph extends Graph {
                 timestamp
                 trader
                 amm {
+                    id
                     symbol
                 }
             }
@@ -944,6 +947,8 @@ export class Subgraph extends Graph {
             const detail = details[concatId(trade.amm.symbol, ts)] || {
                 timestamp: ts,
                 symbol: trade.amm.symbol,
+                instrumentAddr: trade.amm.id.split('-')[0],
+                expiry: Number(trade.amm.id.split('-')[1]),
                 takerVolume: 0,
                 takerFee: 0,
                 makerVolume: 0,
