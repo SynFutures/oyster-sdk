@@ -2183,6 +2183,22 @@ const _abi = [
     type: "error",
   },
   {
+    inputs: [
+      {
+        internalType: "uint16",
+        name: "stabilityFeeRatio",
+        type: "uint16",
+      },
+      {
+        internalType: "uint16",
+        name: "limitStabilityFeeRatio",
+        type: "uint16",
+      },
+    ],
+    name: "TradeStabilityFeeLimit",
+    type: "error",
+  },
+  {
     inputs: [],
     name: "TradeTrivial",
     type: "error",

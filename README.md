@@ -307,6 +307,25 @@ async function main() {
         Math.floor(Date.now() / 1000) + 300, // deadline, set to 5 minutes later
     );
 
+    // use referral code
+    // NOTICE: channel code must be 6 bytes long
+    const channel = '8test8';
+    const getReferralCode = (channel: string): string => {
+        return '\xff\xff' + channel; // 0xffff means you are sending tx using SDK and private key
+    };
+    await sdk.intuitiveTrade(
+        signer,
+        pair,
+        Side.LONG,
+        baseAmount,
+        margin, // required margin
+        tradePrice,
+        100, // slippage, 100 means 100 / 10000 = 1%
+        Math.floor(Date.now() / 1000) + 300, // deadline, set to 5 minutes later,
+        {}, // here is overrides, you can pass in custom overrides for gas price and limit
+        getReferralCode(channel),
+    );
+
     console.log(
         `Open a long position of ${ethers.utils.formatEther(
             baseAmount,
@@ -421,6 +440,24 @@ async function main() {
         result.balance,
         Side.SHORT,
         Math.floor(Date.now() / 1000) + 300, // deadline, set to 5 minutes later
+    );
+
+    // use referral code
+    // NOTICE: channel code must be 6 bytes long
+    const channel = '8test8';
+    const getReferralCode = (channel: string): string => {
+        return '\xff\xff' + channel; // 0xffff means you are sending tx using SDK and private key
+    };
+    await sdk.limitOrder(
+        signer,
+        pair,
+        targetTick,
+        ethers.utils.parseEther('0.2'),
+        result.balance,
+        Side.SHORT,
+        Math.floor(Date.now() / 1000) + 300, // deadline, set to 5 minutes later
+        {}, // here is overrides, you can pass in custom overrides for gas price and limit
+        getReferralCode(channel),
     );
 
     console.log(
@@ -546,6 +583,29 @@ async function main() {
         sqrtStrikeLowerPX96,
         sqrtStrikeUpperPX96,
         Math.floor(Date.now() / 1000) + 300, // deadline, set to 5 minutes later
+    );
+
+    // use referral code
+    // NOTICE: channel code must be 6 bytes long
+    const channel = '8test8';
+    const getReferralCode = (channel: string): string => {
+        return '\xff\xff' + channel; // 0xffff means you are sending tx using SDK and private key
+    };
+    await sdk.addLiquidity(
+        signer,
+        {
+            marketType: instrument.marketType,
+            baseSymbol: instrument.info.base.symbol,
+            quoteSymbol: instrument.info.quote.symbol,
+        },
+        PERP_EXPIRY,
+        tickDelta,
+        margin,
+        sqrtStrikeLowerPX96,
+        sqrtStrikeUpperPX96,
+        Math.floor(Date.now() / 1000) + 300, // deadline, set to 5 minutes later
+        {}, // here is overrides, you can pass in custom overrides for gas price and limit
+        getReferralCode(channel),
     );
 
     console.log(
@@ -1235,6 +1295,29 @@ export async function demoTrade(): Promise<void> {
         limitTick: size.gt(ZERO) ? INT24_MAX : INT24_MIN,
         deadline: NULL_DDL, // set tx deadline, if desire 10 minutes ddl, use now() + 10 * 60
     });
+
+    // use referral code
+    // NOTICE: channel code must be 6 bytes long
+    const channel = '8test8';
+    const getReferralCode = (channel: string): string => {
+        return '\xff\xff' + channel; // 0xffff means you are sending tx using SDK and private key
+    };
+    await synfV3.trade(
+        signer,
+        instrument.info.addr,
+        {
+            expiry: pair.amm.expiry,
+            size,
+            amount: margin,
+            // if the traded average price exceeds the limit price represented in tick format, trade would revert
+            // say I want to long btc with 1 btc, and I don't want average trade price to exceed 60k, then set limitTick to
+            // TickMath.getTickAtPWad(parseEther('60000'))
+            limitTick: size.gt(ZERO) ? INT24_MAX : INT24_MIN,
+            deadline: NULL_DDL, // set tx deadline, if desire 10 minutes ddl, use now() + 10 * 60
+        },
+        {}, // here is overrides, you can pass in custom overrides for gas price and limit
+        getReferralCode(channel),
+    );
 }
 
 demoTrade().catch(console.error);
@@ -1279,6 +1362,26 @@ export async function demoPlace(): Promise<void> {
         amount: margin,
         deadline: now() + 10 * 60,
     });
+
+    // use referral code
+    // NOTICE: channel code must be 6 bytes long
+    const channel = '8test8';
+    const getReferralCode = (channel: string): string => {
+        return '\xff\xff' + channel; // 0xffff means you are sending tx using SDK and private key
+    };
+    await synfV3.place(
+        signer,
+        instrument.info.addr,
+        {
+            expiry: pair.amm.expiry,
+            tick, // the price you want to place your order in tick format
+            size: size,
+            amount: margin,
+            deadline: now() + 10 * 60,
+        },
+        {}, // here is overrides, you can pass in custom overrides for gas price and limit
+        getReferralCode(channel),
+    );
 }
 
 demoPlace().catch(console.error);
@@ -1336,6 +1439,27 @@ export async function demoAdd(): Promise<void> {
         limitTicks,
         deadline: NULL_DDL,
     });
+
+    // use referral code
+    // NOTICE: channel code must be 6 bytes long
+    const channel = '8test8';
+    const getReferralCode = (channel: string): string => {
+        return '\xff\xff' + channel; // 0xffff means you are sending tx using SDK and private key
+    };
+    await synfV3.add(
+        signer,
+        instrument.info.addr,
+        {
+            expiry: pair.amm.expiry,
+            // can use tickDelta larger than calcMinTickDelta(imr) and smaller than TICK_DELTA_MAX
+            tickDelta: rangeSimulation.tickDelta,
+            amount: margin,
+            limitTicks,
+            deadline: NULL_DDL,
+        },
+        {}, // here is overrides, you can pass in custom overrides for gas price and limit
+        getReferralCode(channel),
+    );
 }
 
 demoAdd().catch(console.error);
