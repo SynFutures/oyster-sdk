@@ -73,8 +73,8 @@
           "heartBeat0": 129600,
           "aggregator1": "0x0000000000000000000000000000000000000000",
           "heartBeat1": 0
-      },
-      {
+        },
+        {
           "baseSymbol": "WIF",
           "quoteSymbol": "WETH",
           "ftype": 0,
@@ -82,8 +82,8 @@
           "heartBeat0": 129600,
           "aggregator1": "0x0000000000000000000000000000000000000000",
           "heartBeat1": 0
-      },
-      {
+        },
+        {
           "baseSymbol": "BODEN",
           "quoteSymbol": "WETH",
           "ftype": 0,
@@ -91,8 +91,8 @@
           "heartBeat0": 129600,
           "aggregator1": "0x0000000000000000000000000000000000000000",
           "heartBeat1": 0
-      },
-      {
+        },
+        {
           "baseSymbol": "NICK",
           "quoteSymbol": "WETH",
           "ftype": 0,
@@ -100,8 +100,8 @@
           "heartBeat0": 129600,
           "aggregator1": "0x0000000000000000000000000000000000000000",
           "heartBeat1": 0
-      },
-      {
+        },
+        {
           "baseSymbol": "TREMP",
           "quoteSymbol": "WETH",
           "ftype": 0,
@@ -109,8 +109,8 @@
           "heartBeat0": 129600,
           "aggregator1": "0x0000000000000000000000000000000000000000",
           "heartBeat1": 0
-      },
-      {
+        },
+        {
           "baseSymbol": "BOME",
           "quoteSymbol": "WETH",
           "ftype": 0,
@@ -118,8 +118,8 @@
           "heartBeat0": 129600,
           "aggregator1": "0x0000000000000000000000000000000000000000",
           "heartBeat1": 0
-      },
-      {
+        },
+        {
           "baseSymbol": "SLERF",
           "quoteSymbol": "WETH",
           "ftype": 0,
@@ -127,8 +127,8 @@
           "heartBeat0": 129600,
           "aggregator1": "0x0000000000000000000000000000000000000000",
           "heartBeat1": 0
-      },
-      {
+        },
+        {
           "baseSymbol": "WAI",
           "quoteSymbol": "WETH",
           "ftype": 0,
@@ -136,8 +136,8 @@
           "heartBeat0": 129600,
           "aggregator1": "0x0000000000000000000000000000000000000000",
           "heartBeat1": 0
-      },
-      {
+        },
+        {
           "baseSymbol": "SMOLE",
           "quoteSymbol": "USDB",
           "ftype": 1,
@@ -145,8 +145,8 @@
           "heartBeat0": 129600,
           "aggregator1": "0x0000000000000000000000000000000000000000",
           "heartBeat1": 0
-      },
-      {
+        },
+        {
           "baseSymbol": "BRETT",
           "quoteSymbol": "WETH",
           "ftype": 0,
@@ -154,8 +154,8 @@
           "heartBeat0": 129600,
           "aggregator1": "0x0000000000000000000000000000000000000000",
           "heartBeat1": 0
-      },
-      {
+        },
+        {
           "baseSymbol": "LADYF",
           "quoteSymbol": "WETH",
           "ftype": 0,
@@ -163,8 +163,8 @@
           "heartBeat0": 129600,
           "aggregator1": "0x81c73EE3AC8cd2Ce9B077d0111a0961dC8929a91",
           "heartBeat1": 129600
-      },
-      {
+        },
+        {
           "baseSymbol": "DEGEN",
           "quoteSymbol": "WETH",
           "ftype": 0,
@@ -172,8 +172,8 @@
           "heartBeat0": 129600,
           "aggregator1": "0x0000000000000000000000000000000000000000",
           "heartBeat1": 0
-      },
-      {
+        },
+        {
           "baseSymbol": "ETH",
           "quoteSymbol": "FWWETH",
           "ftype": 0,
@@ -181,8 +181,8 @@
           "heartBeat0": 129600,
           "aggregator1": "0x24c0B30b4951f7308fcaA57732Bb252998C428e1",
           "heartBeat1": 129600
-      },
-      {
+        },
+        {
           "baseSymbol": "WETH",
           "quoteSymbol": "PAC",
           "ftype": 0,
@@ -190,8 +190,8 @@
           "heartBeat0": 129600,
           "aggregator1": "0x0000000000000000000000000000000000000000",
           "heartBeat1": 0
-      },
-      {
+        },
+        {
           "baseSymbol": "MEW",
           "quoteSymbol": "WETH",
           "ftype": 0,
@@ -199,8 +199,8 @@
           "heartBeat0": 129600,
           "aggregator1": "0x0000000000000000000000000000000000000000",
           "heartBeat1": 0
-      },
-      {
+        },
+        {
           "baseSymbol": "MANEKI",
           "quoteSymbol": "WETH",
           "ftype": 0,
@@ -208,8 +208,8 @@
           "heartBeat0": 129600,
           "aggregator1": "0x0000000000000000000000000000000000000000",
           "heartBeat1": 0
-      },
-      {
+        },
+        {
           "baseSymbol": "FANTASY",
           "quoteSymbol": "WETH",
           "ftype": 0,
@@ -217,8 +217,8 @@
           "heartBeat0": 129600,
           "aggregator1": "0x0000000000000000000000000000000000000000",
           "heartBeat1": 0
-      },
-      {
+        },
+        {
           "baseSymbol": "FRIEND",
           "quoteSymbol": "WETH",
           "ftype": 0,
@@ -226,8 +226,8 @@
           "heartBeat0": 129600,
           "aggregator1": "0x0000000000000000000000000000000000000000",
           "heartBeat1": 0
-      },
-      {
+        },
+        {
           "baseSymbol": "WETH",
           "quoteSymbol": "wrsETH",
           "ftype": 0,
@@ -235,7 +235,7 @@
           "heartBeat0": 129600,
           "aggregator1": "0x0000000000000000000000000000000000000000",
           "heartBeat1": 0
-      }
+        }
       ]
     },
     "PYTH": {
