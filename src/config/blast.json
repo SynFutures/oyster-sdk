@@ -228,10 +228,10 @@
           "heartBeat1": 0
         },
         {
-          "baseSymbol": "WETH",
+          "baseSymbol": "ETH",
           "quoteSymbol": "wrsETH",
           "ftype": 0,
-          "aggregator0": "0xb592fe3d14f05e03Fee6dF3384Dcb22DDE66214A",
+          "aggregator0": "0x1725bbAB3DC7CF3F22422a316d4D330E6e6a63CC",
           "heartBeat0": 129600,
           "aggregator1": "0x0000000000000000000000000000000000000000",
           "heartBeat1": 0
@@ -387,8 +387,8 @@
       "stabilityFeeRatioParam": "14415916854096691000",
       "protocolFeeRatio": 20,
       "qtype": 2,
-      "minMarginAmount": "150000000000000000000",
-      "tip": "5000000000000000000"
+      "minMarginAmount": "2000000000000000",
+      "tip": "100000000000000"
     }
   },
   "tokenInfo":[
