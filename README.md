@@ -67,7 +67,7 @@ To successfully run the blew examples:
 
 ```ts
 const sdk = SynFuturesV3.getInstance('blast');
-sdk.ctx.setProvider(new ethers.providers.JsonRpcProvider('https://rpc.ankr.com/blast'));
+sdk.setProvider(new ethers.providers.JsonRpcProvider('https://rpc.ankr.com/blast'));
 const keystore = readFileSync('keystore.json', 'utf-8');
 const signer1 = ethers.Wallet.fromEncryptedJsonSync(keystore, 'password');
 const signer2 = ethers.Wallet.fromMnemonic(
