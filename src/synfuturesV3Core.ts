@@ -88,19 +88,7 @@ import {
     alignRangeTick,
     EMPTY_QUOTE_PARAM,
 } from './types';
-import {
-    r2w,
-    sqrtX96ToWad,
-    TickMath,
-    wadToTick,
-    wdiv,
-    wmul,
-    wmulDown,
-    wmulUp,
-    ZERO,
-    wdivUp,
-    max,
-} from './math';
+import { r2w, sqrtX96ToWad, TickMath, wadToTick, wdiv, wmul, wmulDown, wmulUp, ZERO, wdivUp, max } from './math';
 import { cexMarket, FeederType, InstrumentCondition, MarketType, QuoteType, Side, signOfSide } from './types/enum';
 import { AssembledInstrumentData, InstrumentInfo, InstrumentModel, InstrumentState } from './types/instrument';
 import {
@@ -1337,8 +1325,10 @@ export class SynFuturesV3 {
             sqrtX96ToWad(quotation.sqrtFairPX96),
         );
 
-
-        const stabilityFee = this.getStabilityFee(quotation, pairAccountModel.rootPair.rootInstrument.setting.quoteParam);
+        const stabilityFee = this.getStabilityFee(
+            quotation,
+            pairAccountModel.rootPair.rootInstrument.setting.quoteParam,
+        );
         return {
             tradePrice: tradePrice,
             estimatedTradeValue: quotation.entryNotional,
@@ -1738,10 +1728,10 @@ export class SynFuturesV3 {
             this.ctx.registerAddress(
                 instrumentAddress,
                 instrumentIdentifier.baseSymbol +
-                '-' +
-                instrumentIdentifier.quoteSymbol +
-                '-' +
-                instrumentIdentifier.marketType,
+                    '-' +
+                    instrumentIdentifier.quoteSymbol +
+                    '-' +
+                    instrumentIdentifier.marketType,
             );
             // need to create instrument
             unsignedTx = await gate.populateTransaction.launch(
@@ -1912,7 +1902,7 @@ export class SynFuturesV3 {
         maintenanceMarginRatio;
         const stabilityFee = this.getStabilityFee(quotation, param);
         const ratioTemp = wdiv(stabilityFee, quotation.entryNotional);
-        const scaler = BigNumber.from(10).pow(14)
+        const scaler = BigNumber.from(10).pow(14);
         const ratio = ratioTemp.add(scaler.sub(1)).div(scaler);
 
         return ratio.toNumber();

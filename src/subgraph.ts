@@ -9,7 +9,7 @@ import {
     now,
 } from '@derivation-tech/web3-core';
 import { BigNumber } from 'ethers';
-import { WAD, ZERO, sqrtX96ToWad, wadToTick, wdiv } from './math';
+import { WAD, ZERO, r2w, sqrtX96ToWad, wadToTick, wdiv, wmul } from './math';
 import {
     FeederType,
     InstrumentCondition,
@@ -67,6 +67,8 @@ export interface VirtualTrade {
     price: BigNumber;
     tradeValue: BigNumber;
     fee: BigNumber;
+    // stability fee = tradeValue * (feeRatio - tradingFeeRatio), this field is only available for Trade and Sweep event
+    stablityFee: BigNumber;
     type: VirtualTradeType;
     // this field only apply for Remove event, true means the range is liquidated; false means the range is removed by user
     isRangeLiquidated?: boolean;
@@ -833,10 +835,18 @@ export class Subgraph extends Graph {
         let result: VirtualTrade[] = [];
         for (const trade of resp.virtualTrades) {
             let isRangeLiquidated = false;
-
             if (trade.original.name === 'Remove') {
                 const args = JSON.parse(trade.original.args);
                 isRangeLiquidated = args.trader !== args.operator;
+            }
+
+            let stablityFee = BigNumber.from(0);
+            if (trade.original.name === 'Trade' || trade.original.name === 'Sweep') {
+                const args = JSON.parse(trade.original.args);
+                stablityFee = wmul(
+                    BigNumber.from(trade.tradeValue),
+                    r2w(Number(args.feeRatio) - Number(args.tradingFeeRatio)),
+                );
             }
 
             result.push({
@@ -850,6 +860,7 @@ export class Subgraph extends Graph {
                 size: BigNumber.from(trade.size),
                 price: BigNumber.from(trade.price),
                 fee: BigNumber.from(trade.fee),
+                stablityFee,
                 tradeValue: BigNumber.from(trade.tradeValue),
                 type: trade.type as VirtualTradeType,
                 isRangeLiquidated,
