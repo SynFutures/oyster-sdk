@@ -25,6 +25,33 @@ This package depends on the more fundamental package `@derivation-tech/web3-core
 1. Before carrying out operations like trade, place, etc., please check the user's allowance for `Gate`.
 2. When interacting with `Gate` (such as deposit, withdraw), the precision of the token is its own precision. However, when interacting with `Instrument`, the precision of the token is fixed at 18.
 
+## ABIs
+
+The SDK provides ABIs of several important contracts to facilitate your interaction with SynFuturesV3. You can obtain them in the following ways:
+
+- Extract the original JSON files directly from the SDK. The paths are as follows:
+
+```shell
+/oyster-sdk/src/abis/CexMarket.json   
+/oyster-sdk/src/abis/Config.json      
+/oyster-sdk/src/abis/DexV2Market.json
+/oyster-sdk/src/abis/Gate.json        
+/oyster-sdk/src/abis/Instrument.json  
+/oyster-sdk/src/abis/Observer.json
+```
+
+- Use them directly from the SDK
+```typescript
+import { INSTRUMENT_ABI } from "@synfutures/oyster-sdk";
+import { Contract } from 'ethers';
+
+// Print the ABI of the Instrument contract
+console.info(JSON.stringify(INSTRUMENT_ABI, null, 2));
+
+// Use INSTRUMENT_ABI directly from the SDK
+new Contract(address, INSTRUMENT_ABI, signerOrProvider);
+```
+
 ## Examples
 
 1. [Query instruments and pairs information](#query-instruments-and-pairs-information)
