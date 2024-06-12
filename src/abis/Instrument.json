@@ -1,0 +1,2214 @@
+[
+  {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "AddTraderIneligible",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "AlreadyInitialized",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BadAmmStatus",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BadInstrumentCondition",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BadMinMarginAmount",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BadProtocolFeeRatio",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BadTip",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BadTradingFeeRatio",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ExpiryNotAligned",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "margin",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "minMargin",
+        "type": "uint256"
+      }
+    ],
+    "name": "InitTrivial",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "LiquidatorIneligible",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "Locked",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotGate",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotSynFuturesV3Admin",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotTradeable",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      }
+    ],
+    "name": "PairNotCleared",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SelfLiquidation",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "Timeout",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ZeroAddress",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "version",
+        "type": "uint8"
+      }
+    ],
+    "name": "Initialized",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32[2]",
+        "name": "args",
+        "type": "bytes32[2]"
+      }
+    ],
+    "name": "add",
+    "outputs": [
+      {
+        "internalType": "int24",
+        "name": "tickLower",
+        "type": "int24"
+      },
+      {
+        "internalType": "int24",
+        "name": "tickUpper",
+        "type": "int24"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint128",
+            "name": "liquidity",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "entryFeeIndex",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint96",
+            "name": "balance",
+            "type": "uint96"
+          },
+          {
+            "internalType": "uint160",
+            "name": "sqrtEntryPX96",
+            "type": "uint160"
+          }
+        ],
+        "internalType": "struct Range",
+        "name": "range",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "arg",
+        "type": "bytes32"
+      }
+    ],
+    "name": "cancel",
+    "outputs": [
+      {
+        "internalType": "bool[8]",
+        "name": "succees",
+        "type": "bool[8]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "int256",
+            "name": "balance",
+            "type": "int256"
+          },
+          {
+            "internalType": "int256",
+            "name": "size",
+            "type": "int256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "entryNotional",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "entrySocialLossIndex",
+            "type": "uint256"
+          },
+          {
+            "internalType": "int256",
+            "name": "entryFundingIndex",
+            "type": "int256"
+          }
+        ],
+        "internalType": "struct PositionCache[8]",
+        "name": "pics",
+        "type": "tuple[8]"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      }
+    ],
+    "name": "claimProtocolFee",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      }
+    ],
+    "name": "claimYield",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "condition",
+    "outputs": [
+      {
+        "internalType": "enum Condition",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "enum YieldMode",
+        "name": "yieldMode",
+        "type": "uint8"
+      }
+    ],
+    "name": "configureYieldMode",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "donateInsuranceFund",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "arg",
+        "type": "bytes32"
+      }
+    ],
+    "name": "fill",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "int256",
+            "name": "balance",
+            "type": "int256"
+          },
+          {
+            "internalType": "int256",
+            "name": "size",
+            "type": "int256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "entryNotional",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "entrySocialLossIndex",
+            "type": "uint256"
+          },
+          {
+            "internalType": "int256",
+            "name": "entryFundingIndex",
+            "type": "int256"
+          }
+        ],
+        "internalType": "struct PositionCache",
+        "name": "pic",
+        "type": "tuple"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tip",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "freeze",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getExpiries",
+    "outputs": [
+      {
+        "internalType": "uint32[]",
+        "name": "",
+        "type": "uint32[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "target",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32[2]",
+        "name": "args",
+        "type": "bytes32[2]"
+      }
+    ],
+    "name": "init",
+    "outputs": [
+      {
+        "internalType": "int24",
+        "name": "tickLower",
+        "type": "int24"
+      },
+      {
+        "internalType": "int24",
+        "name": "tickUpper",
+        "type": "int24"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint128",
+            "name": "liquidity",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "entryFeeIndex",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint96",
+            "name": "balance",
+            "type": "uint96"
+          },
+          {
+            "internalType": "uint160",
+            "name": "sqrtEntryPX96",
+            "type": "uint160"
+          }
+        ],
+        "internalType": "struct Range",
+        "name": "range",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "internalType": "int256",
+        "name": "size",
+        "type": "int256"
+      }
+    ],
+    "name": "inquire",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "benchmark",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint160",
+            "name": "sqrtFairPX96",
+            "type": "uint160"
+          },
+          {
+            "internalType": "int24",
+            "name": "tick",
+            "type": "int24"
+          },
+          {
+            "internalType": "uint256",
+            "name": "mark",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "entryNotional",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "fee",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint160",
+            "name": "sqrtPostFairPX96",
+            "type": "uint160"
+          },
+          {
+            "internalType": "int24",
+            "name": "postTick",
+            "type": "int24"
+          }
+        ],
+        "internalType": "struct Quotation",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "internalType": "address",
+        "name": "target",
+        "type": "address"
+      },
+      {
+        "internalType": "int256",
+        "name": "size",
+        "type": "int256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "liquidate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes[]",
+        "name": "data",
+        "type": "bytes[]"
+      }
+    ],
+    "name": "multicall",
+    "outputs": [
+      {
+        "internalType": "bytes[]",
+        "name": "results",
+        "type": "bytes[]"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "normalize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32[2]",
+        "name": "args",
+        "type": "bytes32[2]"
+      }
+    ],
+    "name": "place",
+    "outputs": [
+      {
+        "internalType": "uint24",
+        "name": "nonce",
+        "type": "uint24"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint128",
+            "name": "balance",
+            "type": "uint128"
+          },
+          {
+            "internalType": "int128",
+            "name": "size",
+            "type": "int128"
+          }
+        ],
+        "internalType": "struct Order",
+        "name": "order",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "internalType": "address",
+        "name": "target",
+        "type": "address"
+      },
+      {
+        "internalType": "enum QueryAcc",
+        "name": "query",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bytes",
+        "name": "inputs",
+        "type": "bytes"
+      }
+    ],
+    "name": "queryAccount",
+    "outputs": [
+      {
+        "internalType": "bytes",
+        "name": "result",
+        "type": "bytes"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "internalType": "enum QueryCtx",
+        "name": "query",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "offsets",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "bytes",
+        "name": "inputs",
+        "type": "bytes"
+      }
+    ],
+    "name": "queryContext",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "offsets",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "querySetting",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      }
+    ],
+    "name": "recycleInsuranceFund",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32[2]",
+        "name": "args",
+        "type": "bytes32[2]"
+      }
+    ],
+    "name": "remove",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "int256",
+            "name": "balance",
+            "type": "int256"
+          },
+          {
+            "internalType": "int256",
+            "name": "size",
+            "type": "int256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "entryNotional",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "entrySocialLossIndex",
+            "type": "uint256"
+          },
+          {
+            "internalType": "int256",
+            "name": "entryFundingIndex",
+            "type": "int256"
+          }
+        ],
+        "internalType": "struct PositionCache",
+        "name": "pic",
+        "type": "tuple"
+      },
+      {
+        "internalType": "uint256",
+        "name": "fee",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tip",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint128",
+        "name": "settlementPrice",
+        "type": "uint128"
+      }
+    ],
+    "name": "resolve",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "enum Leverage",
+        "name": "leverage",
+        "type": "uint8"
+      }
+    ],
+    "name": "setLeverage",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint128",
+            "name": "minMarginAmount",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint16",
+            "name": "tradingFeeRatio",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "protocolFeeRatio",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint64",
+            "name": "stabilityFeeRatioParam",
+            "type": "uint64"
+          },
+          {
+            "internalType": "enum QuoteType",
+            "name": "qtype",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint128",
+            "name": "tip",
+            "type": "uint128"
+          }
+        ],
+        "internalType": "struct QuoteParam",
+        "name": "param",
+        "type": "tuple"
+      }
+    ],
+    "name": "setQuoteParam",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "internalType": "address",
+        "name": "target",
+        "type": "address"
+      }
+    ],
+    "name": "settle",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "internalType": "address",
+        "name": "target",
+        "type": "address"
+      },
+      {
+        "internalType": "int256",
+        "name": "size",
+        "type": "int256"
+      }
+    ],
+    "name": "sweep",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "syncPointsOperator",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32[2]",
+        "name": "args",
+        "type": "bytes32[2]"
+      }
+    ],
+    "name": "trade",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "int256",
+            "name": "balance",
+            "type": "int256"
+          },
+          {
+            "internalType": "int256",
+            "name": "size",
+            "type": "int256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "entryNotional",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "entrySocialLossIndex",
+            "type": "uint256"
+          },
+          {
+            "internalType": "int256",
+            "name": "entryFundingIndex",
+            "type": "int256"
+          }
+        ],
+        "internalType": "struct PositionCache",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      }
+    ],
+    "name": "update",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "trader",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "int24",
+        "name": "tickLower",
+        "type": "int24"
+      },
+      {
+        "indexed": false,
+        "internalType": "int24",
+        "name": "tickUpper",
+        "type": "int24"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint128",
+            "name": "liquidity",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "entryFeeIndex",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint96",
+            "name": "balance",
+            "type": "uint96"
+          },
+          {
+            "internalType": "uint160",
+            "name": "sqrtEntryPX96",
+            "type": "uint160"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct Range",
+        "name": "range",
+        "type": "tuple"
+      }
+    ],
+    "name": "Add",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "trader",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "net",
+        "type": "int256"
+      }
+    ],
+    "name": "Adjust",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "trader",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "int24",
+        "name": "tick",
+        "type": "int24"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "nonce",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "fee",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "int256",
+            "name": "balance",
+            "type": "int256"
+          },
+          {
+            "internalType": "int256",
+            "name": "size",
+            "type": "int256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "entryNotional",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "entrySocialLossIndex",
+            "type": "uint256"
+          },
+          {
+            "internalType": "int256",
+            "name": "entryFundingIndex",
+            "type": "int256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct PositionCache",
+        "name": "pic",
+        "type": "tuple"
+      }
+    ],
+    "name": "Cancel",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "ClaimProtocolFee",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      }
+    ],
+    "name": "DeleteContext",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "donator",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "DonateInsuranceFund",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "trader",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "int24",
+        "name": "tick",
+        "type": "int24"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "nonce",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "fee",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "int256",
+            "name": "balance",
+            "type": "int256"
+          },
+          {
+            "internalType": "int256",
+            "name": "size",
+            "type": "int256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "entryNotional",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "entrySocialLossIndex",
+            "type": "uint256"
+          },
+          {
+            "internalType": "int256",
+            "name": "entryFundingIndex",
+            "type": "int256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct PositionCache",
+        "name": "pic",
+        "type": "tuple"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tip",
+        "type": "uint256"
+      }
+    ],
+    "name": "Fill",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "trader",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "funding",
+        "type": "int256"
+      }
+    ],
+    "name": "FundingFee",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "trader",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "mark",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "target",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "size",
+        "type": "int256"
+      }
+    ],
+    "name": "Liquidate",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "trader",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "int24",
+        "name": "tick",
+        "type": "int24"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "nonce",
+        "type": "uint32"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint128",
+            "name": "balance",
+            "type": "uint128"
+          },
+          {
+            "internalType": "int128",
+            "name": "size",
+            "type": "int128"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct Order",
+        "name": "order",
+        "type": "tuple"
+      }
+    ],
+    "name": "Place",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "RecycleInsuranceFund",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "trader",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "int24",
+        "name": "tickLower",
+        "type": "int24"
+      },
+      {
+        "indexed": false,
+        "internalType": "int24",
+        "name": "tickUpper",
+        "type": "int24"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "fee",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "int256",
+            "name": "balance",
+            "type": "int256"
+          },
+          {
+            "internalType": "int256",
+            "name": "size",
+            "type": "int256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "entryNotional",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "entrySocialLossIndex",
+            "type": "uint256"
+          },
+          {
+            "internalType": "int256",
+            "name": "entryFundingIndex",
+            "type": "int256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct PositionCache",
+        "name": "pic",
+        "type": "tuple"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tip",
+        "type": "uint256"
+      }
+    ],
+    "name": "Remove",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "trader",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "settlement",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "balance",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      }
+    ],
+    "name": "Settle",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "trader",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "size",
+        "type": "int256"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "takenSize",
+        "type": "int256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "takenValue",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "entryNotional",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "feeRatio",
+        "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint160",
+        "name": "sqrtPX96",
+        "type": "uint160"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "mark",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      }
+    ],
+    "name": "Sweep",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "trader",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "size",
+        "type": "int256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "takenSize",
+        "type": "int256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "takenValue",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "entryNotional",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "feeRatio",
+        "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint160",
+        "name": "sqrtPX96",
+        "type": "uint160"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "mark",
+        "type": "uint256"
+      }
+    ],
+    "name": "Trade",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum Status",
+        "name": "status",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint160",
+        "name": "sqrtPX96",
+        "type": "uint160"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "mark",
+        "type": "uint256"
+      }
+    ],
+    "name": "UpdateAmmStatus",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "timestamp",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum Condition",
+        "name": "condition",
+        "type": "uint8"
+      }
+    ],
+    "name": "UpdateCondition",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "feeIndex",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "protocolFee",
+        "type": "uint128"
+      }
+    ],
+    "name": "UpdateFeeState",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "fundingIndex",
+        "type": "uint256"
+      }
+    ],
+    "name": "UpdateFundingIndex",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "initialMarginRatio",
+        "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "maintenanceMarginRatio",
+        "type": "uint16"
+      }
+    ],
+    "name": "UpdateMarginRatio",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint128",
+            "name": "minMarginAmount",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint16",
+            "name": "tradingFeeRatio",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "protocolFeeRatio",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint64",
+            "name": "stabilityFeeRatioParam",
+            "type": "uint64"
+          },
+          {
+            "internalType": "enum QuoteType",
+            "name": "qtype",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint128",
+            "name": "tip",
+            "type": "uint128"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct QuoteParam",
+        "name": "param",
+        "type": "tuple"
+      }
+    ],
+    "name": "UpdateParam",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "trader",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "int256",
+            "name": "balance",
+            "type": "int256"
+          },
+          {
+            "internalType": "int256",
+            "name": "size",
+            "type": "int256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "entryNotional",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "entrySocialLossIndex",
+            "type": "uint256"
+          },
+          {
+            "internalType": "int256",
+            "name": "entryFundingIndex",
+            "type": "int256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct PositionCache",
+        "name": "pic",
+        "type": "tuple"
+      }
+    ],
+    "name": "UpdatePosition",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "longSocialLossIndex",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "shortSocialLossIndex",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "insuranceFund",
+        "type": "uint128"
+      }
+    ],
+    "name": "UpdateSocialLossInsuranceFund",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "previousAdmin",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newAdmin",
+        "type": "address"
+      }
+    ],
+    "name": "AdminChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "beacon",
+        "type": "address"
+      }
+    ],
+    "name": "BeaconUpgraded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "implementation",
+        "type": "address"
+      }
+    ],
+    "name": "Upgraded",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "AddLiquidityExceedMax",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "AddOverflow",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BadAmmTiming",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "int256",
+        "name": "totalSize",
+        "type": "int256"
+      },
+      {
+        "internalType": "int256",
+        "name": "requestedSize",
+        "type": "int256"
+      }
+    ],
+    "name": "BadTargetSize",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "DivByZero",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvariantBroken",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "LiquidatePostImrUnsafe",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bool",
+        "name": "noShortParty",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "socialLoss",
+        "type": "uint256"
+      }
+    ],
+    "name": "NoCounterparty",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OrderFull",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "minAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "OrderImrUnsafe",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OrderNotExist",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "int256",
+        "name": "requested",
+        "type": "int256"
+      },
+      {
+        "internalType": "int256",
+        "name": "taken",
+        "type": "int256"
+      }
+    ],
+    "name": "OrderNotFullyTaken",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OrderOccupied",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OrderTickUnaligned",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OrderTooFar",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OrderTrivial",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OrderWrongSide",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "PositionBankrupt",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "PositionNotExist",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "RangeNotExist",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ReuseNonEmptyRecord",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "RoundHalfUpBadParam",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TargetSafe",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TickOutOfBound",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "GetErc20DecimalsFailed",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "GetErc20NameFailed",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "GetErc20SymbolFailed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "AddInvalidTickDelta",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "AddSlippage",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "liquidity",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "minLiquidity",
+        "type": "uint256"
+      }
+    ],
+    "name": "AddTrivial",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CrazySpot",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ExpiryBelowSettlingDuration",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ExpiryExceedMaxExpiryPeriod",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "RangeFull",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "RangeOccupied",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "RemoveActiveRange",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "RemoveSlippage",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SqrtPX96OutOfBound",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CrazyDeviation",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "DivUnderflow",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MulOverflow",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TradeImrUnsafe",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TradeMmrUnsafe",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TradeOutOfLiquidity",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TradeSlippage",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "stabilityFeeRatio",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "limitStabilityFeeRatio",
+        "type": "uint16"
+      }
+    ],
+    "name": "TradeStabilityFeeLimit",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TradeTrivial",
+    "type": "error"
+  }
+]

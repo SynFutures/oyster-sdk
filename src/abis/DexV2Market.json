@@ -1,0 +1,856 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_config",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_gate",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "BadEmaHalfTime",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BadMaxChangeRatioPerSecond",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BadMaxRawTimeDelta",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BadMaxTimeDelta",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CastUint256ToUint224Overflow",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "DecimalsExceed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "DexV2NoFeeder",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "DexV2PairLiquidity",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "DexV2RepeatedFactory",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "DivByZero",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "GetErc20DecimalsFailed",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "GetErc20SymbolFailed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotConverge",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotGate",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotSynFuturesV3Admin",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "QuoteNotSupported",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "WrongStatusToFetchMarkPrice",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "factory",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "number",
+        "type": "uint256"
+      }
+    ],
+    "name": "AddDexV2Factory",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "instrument",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      }
+    ],
+    "name": "ClearStates",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "version",
+        "type": "uint8"
+      }
+    ],
+    "name": "Initialized",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "compactEmaParam",
+        "type": "uint256"
+      }
+    ],
+    "name": "SetCompactEmaParam",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "instrument",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "enum FeederType",
+            "name": "ftype",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bool",
+            "name": "isToken0Quote",
+            "type": "bool"
+          },
+          {
+            "internalType": "address",
+            "name": "pair",
+            "type": "address"
+          },
+          {
+            "internalType": "uint64",
+            "name": "scaler0",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "scaler1",
+            "type": "uint64"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct DexV2Feeder",
+        "name": "feeder",
+        "type": "tuple"
+      }
+    ],
+    "name": "SetFeeder",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "instrument",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "initTime",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint224",
+            "name": "initMark",
+            "type": "uint224"
+          },
+          {
+            "internalType": "uint256",
+            "name": "initAccumulation",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct DexV2AccState",
+        "name": "accState",
+        "type": "tuple"
+      }
+    ],
+    "name": "UpdateAccState",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "instrument",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint16",
+            "name": "emaHalfTime",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxTimeDelta",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxRawTimeDelta",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxChangeRatioPerSecond",
+            "type": "uint16"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct EmaParam",
+        "name": "emaParam",
+        "type": "tuple"
+      }
+    ],
+    "name": "UpdateEmaParam",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "instrument",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "time",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint224",
+            "name": "spot",
+            "type": "uint224"
+          },
+          {
+            "internalType": "uint256",
+            "name": "raw",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct SpotState",
+        "name": "spotState",
+        "type": "tuple"
+      }
+    ],
+    "name": "UpdateSpotState",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "dexV2Factory",
+        "type": "address"
+      }
+    ],
+    "name": "addDexV2Factory",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      }
+    ],
+    "name": "clearStates",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "config",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "instrument",
+        "type": "address"
+      }
+    ],
+    "name": "feeders",
+    "outputs": [
+      {
+        "internalType": "enum FeederType",
+        "name": "ftype",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bool",
+        "name": "isToken0Quote",
+        "type": "bool"
+      },
+      {
+        "internalType": "address",
+        "name": "pair",
+        "type": "address"
+      },
+      {
+        "internalType": "uint64",
+        "name": "scaler0",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "scaler1",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "gate",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "instrument",
+        "type": "address"
+      },
+      {
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      }
+    ],
+    "name": "getAccState",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "initTime",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint224",
+            "name": "initMark",
+            "type": "uint224"
+          },
+          {
+            "internalType": "uint256",
+            "name": "initAccumulation",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct DexV2AccState",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getAllInstruments",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "instrument",
+        "type": "address"
+      },
+      {
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      }
+    ],
+    "name": "getBenchmarkPrice",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "benchmark",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getCompactEmaParam",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getDexV2Factories",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "instrument",
+        "type": "address"
+      }
+    ],
+    "name": "getEmaParam",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint16",
+            "name": "emaHalfTime",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxTimeDelta",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxRawTimeDelta",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxChangeRatioPerSecond",
+            "type": "uint16"
+          }
+        ],
+        "internalType": "struct EmaParam",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "instrument",
+        "type": "address"
+      },
+      {
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "internalType": "enum Status",
+        "name": "status",
+        "type": "uint8"
+      }
+    ],
+    "name": "getMarkPrice",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "mark",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getMarketType",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "instrument",
+        "type": "address"
+      }
+    ],
+    "name": "getRawPrice",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "raw",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "instrument",
+        "type": "address"
+      }
+    ],
+    "name": "getSpotPrice",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "spot",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "instrument",
+        "type": "address"
+      }
+    ],
+    "name": "getSpotState",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "time",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint224",
+            "name": "spot",
+            "type": "uint224"
+          },
+          {
+            "internalType": "uint256",
+            "name": "raw",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct SpotState",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_emaParam",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address[]",
+        "name": "_factories",
+        "type": "address[]"
+      }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_compactEmaParam",
+        "type": "uint256"
+      }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "instruments",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "instrumentsLength",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "expiry",
+        "type": "uint32"
+      },
+      {
+        "internalType": "enum Status",
+        "name": "status",
+        "type": "uint8"
+      }
+    ],
+    "name": "markPrice",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "mark",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "instrument",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
+    ],
+    "name": "prepareInstrument",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "index",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "base",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes",
+        "name": "initData",
+        "type": "bytes"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "newCompactEmaParam",
+        "type": "uint256"
+      }
+    ],
+    "name": "setCompactEmaParam",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "enum Leverage",
+        "name": "leverage",
+        "type": "uint8"
+      }
+    ],
+    "name": "syncEmaParam",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "instrument",
+        "type": "address"
+      }
+    ],
+    "name": "updateFeeder",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
