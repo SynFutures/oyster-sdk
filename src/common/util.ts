@@ -224,7 +224,10 @@ export function encodeAddParam(addParam: AddParam): [string, string] {
     const uTick = asUint48(addParam.limitTicks.toNumber());
     const combinedTick = BigNumber.from(uTick).shl(32).add(BigNumber.from(addParam.expiry));
     const combinedDeadline = BigNumber.from(addParam.deadline).shl(80).add(combinedTick);
-    const combinedAmount = BigNumber.from(addParam.tickDelta).shl(128).add(addParam.amount);
+    const combinedAmount = BigNumber.from(addParam.tickDeltaLower)
+        .shl(152)
+        .add(BigNumber.from(addParam.tickDeltaUpper).shl(128))
+        .add(addParam.amount);
 
     const page0 = hexZeroPad(combinedDeadline.toHexString(), 32);
     const page1 = hexZeroPad(combinedAmount.toHexString(), 32);
@@ -236,7 +239,10 @@ export function encodeAddWithReferralParam(addParam: AddParam, referral: string)
     const uTick = asUint48(addParam.limitTicks.toNumber());
     const combinedTick = BigNumber.from(uTick).shl(32).add(BigNumber.from(addParam.expiry));
     const combinedDeadline = BigNumber.from(addParam.deadline).shl(80).add(combinedTick);
-    const combinedAmount = BigNumber.from(addParam.tickDelta).shl(128).add(addParam.amount);
+    const combinedAmount = BigNumber.from(addParam.tickDeltaLower)
+        .shl(152)
+        .add(BigNumber.from(addParam.tickDeltaUpper).shl(128))
+        .add(addParam.amount);
 
     const page0 = hexZeroPad(BigNumber.from(hexReferral).shl(192).add(combinedDeadline).toHexString(), 32);
     const page1 = hexZeroPad(combinedAmount.toHexString(), 32);
@@ -452,9 +458,10 @@ export function decodeAddParam(args: string[]): AddParam {
     offset = 0;
     const value2 = bytes32ToBigNumber(arg2);
     const amount = pickBigNumber(value2, offset, (offset += amountLength));
-    const tickDelta = pickNumber(value2, offset, (offset += tickLength));
+    const tickDeltaUpper = pickNumber(value2, offset, (offset += tickLength));
+    const tickDeltaLower = pickNumber(value2, offset, (offset += tickLength));
 
-    return { limitTicks, amount, tickDelta, expiry, deadline };
+    return { limitTicks, amount, tickDeltaLower, tickDeltaUpper, expiry, deadline };
 }
 
 export function decodeRemoveParam(args: string[]): RemoveParam {

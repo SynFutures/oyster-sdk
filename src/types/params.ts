@@ -68,7 +68,8 @@ export interface AdjustParam {
 
 export interface AddParam {
     expiry: number;
-    tickDelta: number;
+    tickDeltaLower: number;
+    tickDeltaUpper: number;
     amount: BigNumber;
     limitTicks: BigNumber;
     deadline: number;

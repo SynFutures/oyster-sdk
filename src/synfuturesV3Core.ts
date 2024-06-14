@@ -1720,6 +1720,30 @@ export class SynFuturesV3 {
         return this.ctx.sendTx(signer, unsignedTx);
     }
 
+    async addLiquidityWithAsymmetricRange(
+        signer: Signer,
+        instrumentIdentifier: InstrumentIdentifier,
+        expiry: number,
+        tickDeltaLower: number,
+        tickDeltaUpper: number,
+        marginWad: BigNumber,
+        sqrtStrikeLowerPX96: BigNumber,
+        sqrtStrikeUpperPX96: BigNumber,
+        deadline: number,
+        overrides?: PayableOverrides,
+        referralCode = DEFAULT_REFERRAL_CODE,
+    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
+        const addParam = {
+            expiry: expiry,
+            tickDeltaLower: tickDeltaLower,
+            tickDeltaUpper: tickDeltaUpper,
+            amount: marginWad,
+            limitTicks: this.encodeLimitTicks(sqrtStrikeLowerPX96, sqrtStrikeUpperPX96),
+            deadline: deadline,
+        } as AddParam;
+        return this._addLiquidity(signer, addParam, instrumentIdentifier, referralCode, overrides);
+    }
+
     async addLiquidity(
         signer: Signer,
         instrumentIdentifier: InstrumentIdentifier,
@@ -1734,12 +1758,22 @@ export class SynFuturesV3 {
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
         const addParam = {
             expiry: expiry,
-            tickDelta: tickDelta,
+            tickDeltaLower: 0,
+            tickDeltaUpper: tickDelta,
             amount: marginWad,
             limitTicks: this.encodeLimitTicks(sqrtStrikeLowerPX96, sqrtStrikeUpperPX96),
             deadline: deadline,
         } as AddParam;
+        return this._addLiquidity(signer, addParam, instrumentIdentifier, referralCode, overrides);
+    }
 
+    async _addLiquidity(
+        signer: Signer,
+        addParam: AddParam,
+        instrumentIdentifier: InstrumentIdentifier,
+        referralCode: string,
+        overrides?: PayableOverrides,
+    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
         const instrumentAddress = await this.computeInstrumentAddress(
             instrumentIdentifier.marketType,
             instrumentIdentifier.baseSymbol,

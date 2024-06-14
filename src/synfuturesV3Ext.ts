@@ -216,7 +216,8 @@ export class SynFuturesV3Ext {
         const data = ethers.utils.defaultAbiCoder.encode(['string', 'address'], [param.baseSymbol, quoteAddress]);
         const addParam = {
             expiry: PERP_EXPIRY,
-            tickDelta: TICK_DELTA_MAX,
+            tickDeltaLower: 0,
+            tickDeltaUpper: TICK_DELTA_MAX,
             amount: ethers.utils.parseEther('10000'),
             limitTicks: ANY_PRICE_TICK,
             deadline: NULL_DDL,
