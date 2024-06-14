@@ -51,9 +51,9 @@
           "quoteSymbol": "USDC",
           "ftype": 1,
           "aggregator0": "0x64c911996D3c6aC71f9b455B1E8E7266BcbD848F",
-          "heartBeat0": 86400,
+          "heartBeat0": 1200,
           "aggregator1": "0x7e860098F58bBFC8648a4311b374B1D669a2bc6B",
-          "heartBeat1": 1200
+          "heartBeat1": 86400
         }
       ]
     },
