@@ -46,7 +46,6 @@ import {
     encodePlaceWithReferralParam,
     encodeAdjustWithReferralParam,
     encodeTradeWithRiskParam,
-    encodeBatchPlaceParam,
     encodeBatchPlaceWithReferralParam,
 } from './common/util';
 import {

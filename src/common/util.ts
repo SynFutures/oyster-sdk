@@ -45,6 +45,7 @@ import {
     InstrumentCondition,
     DexV2Feeder,
     PriceFeeder,
+    BatchPlaceParam,
 } from '../types';
 import * as moment from 'moment';
 import { Interface, Result, hexZeroPad } from 'ethers/lib/utils';
@@ -61,6 +62,8 @@ const quantityLength = 96;
 const addressLength = 160;
 const deadlineLength = 32;
 const limitStabilityFeeRatioLength = 16;
+const ratioLength = 16;
+const leverageLength = 128;
 
 function bytes32ToBigNumber(str: string): BigNumber {
     str = str.startsWith('0x') ? str : '0x' + str;
@@ -485,6 +488,46 @@ export function decodePlaceParam(args: string[]): PlaceParam {
         tick: result.limitTick,
         deadline: result.deadline,
     };
+}
+
+export function decodeBatchPlaceParam(args: string[]): BatchPlaceParam {
+    if (args.length !== 3) {
+        throw new Error('invalid args length');
+    }
+
+    const [arg1, arg2, arg3] = args;
+
+    const ticks: number[] = [];
+    const ratios: number[] = [];
+
+    let offset = 0;
+    const value1 = bytes32ToBigNumber(arg1);
+    const expiry = pickNumber(value1, offset, (offset += expiryLength));
+    const deadline = pickNumber(value1, offset, (offset += deadlineLength));
+    for (let i = 0; i < 3; i++) {
+        const ratio = pickNumber(value1, offset, (offset += ratioLength));
+        const tick = asInt24(pickNumber(value1, offset, (offset += tickLength)));
+        if (BigNumber.from(tick).eq(EMPTY_TICK)) continue;
+        ticks.push(tick);
+        ratios.push(ratio);
+    }
+
+    offset = 0;
+    const value2 = bytes32ToBigNumber(arg2);
+    for (let i = 0; i < 6; i++) {
+        const ratio = pickNumber(value2, offset, (offset += ratioLength));
+        const tick = asInt24(pickNumber(value2, offset, (offset += tickLength)));
+        if (BigNumber.from(tick).eq(EMPTY_TICK)) continue;
+        ticks.push(tick);
+        ratios.push(ratio);
+    }
+
+    offset = 0;
+    const value3 = bytes32ToBigNumber(arg3);
+    const leverage = asInt128(pickBigNumber(value3, offset, (offset += leverageLength)));
+    const size = asInt128(pickBigNumber(value3, offset, (offset += sizeLength)));
+
+    return { expiry, ticks, ratios, size, leverage, deadline };
 }
 
 export function decodeFillParam(arg: string): FillParam {

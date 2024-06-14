@@ -17,6 +17,7 @@ import {
 } from '../types';
 import {
     decodeAddParam,
+    decodeBatchPlaceParam,
     decodeCancelParam,
     decodeFillParam,
     decodeParamForDepositAndWithdraw,
@@ -94,6 +95,8 @@ export class InstrumentParser extends ContractParser {
             return this.formatEncodedFundctionArgs(decodeTradeWithStabilityFeeParam(value));
         } else if (description.name === 'place' && param.name === 'args') {
             return this.formatEncodedFundctionArgs(decodePlaceParam(value));
+        } else if (description.name === 'batchPlace' && param.name === 'args') {
+            return this.formatEncodedFundctionArgs(decodeBatchPlaceParam(value));
         }
         return await super.parseBaseArrayParam(description, param, value);
     }
