@@ -263,6 +263,34 @@ export class SynFuturesV3Front {
         return this.core.place(signer, instrumentAddr, param, overrides, referralCode);
     }
 
+    async addLiquidityWithAsymmetricRangeWithReferral(
+        signer: Signer,
+        instrumentIdentifier: InstrumentIdentifier,
+        expiry: number,
+        tickDeltaLower: number,
+        tickDeltaUpper: number,
+        marginWad: BigNumber,
+        sqrtStrikeLowerPX96: BigNumber,
+        sqrtStrikeUpperPX96: BigNumber,
+        deadline: number,
+        referralCode: string,
+        overrides?: PayableOverrides,
+    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
+        return this.core.addLiquidityWithAsymmetricRange(
+            signer,
+            instrumentIdentifier,
+            expiry,
+            tickDeltaLower,
+            tickDeltaUpper,
+            marginWad,
+            sqrtStrikeLowerPX96,
+            sqrtStrikeUpperPX96,
+            deadline,
+            overrides,
+            referralCode,
+        );
+    }
+
     async addLiquidityWithReferral(
         signer: Signer,
         instrumentIdentifier: InstrumentIdentifier,
