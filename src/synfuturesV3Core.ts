@@ -46,6 +46,8 @@ import {
     encodePlaceWithReferralParam,
     encodeAdjustWithReferralParam,
     encodeTradeWithRiskParam,
+    encodeBatchPlaceParam,
+    encodeBatchPlaceWithReferralParam,
 } from './common/util';
 import {
     AddParam,
@@ -87,6 +89,7 @@ import {
     InstrumentSetting,
     alignRangeTick,
     EMPTY_QUOTE_PARAM,
+    BatchPlaceParam,
 } from './types';
 import { r2w, sqrtX96ToWad, TickMath, wadToTick, wdiv, wmul, wmulDown, wmulUp, ZERO, wdivUp, max } from './math';
 import { cexMarket, FeederType, InstrumentCondition, MarketType, QuoteType, Side, signOfSide } from './types/enum';
@@ -859,6 +862,29 @@ export class SynFuturesV3 {
                 param.amount,
                 param.tick,
                 param.deadline,
+                referralCode,
+            ),
+            overrides ?? {},
+        );
+        return this.ctx.sendTx(signer, unsignedTx);
+    }
+
+    async batchPlace(
+        signer: Signer,
+        instrumentAddr: string,
+        params: BatchPlaceParam,
+        overrides?: Overrides,
+        referralCode = DEFAULT_REFERRAL_CODE,
+    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
+        const instrument = this.getInstrumentContract(instrumentAddr, signer);
+        const unsignedTx = await instrument.populateTransaction.batchPlace(
+            encodeBatchPlaceWithReferralParam(
+                params.expiry,
+                params.size,
+                params.leverage,
+                params.ticks,
+                params.ratios,
+                params.deadline,
                 referralCode,
             ),
             overrides ?? {},

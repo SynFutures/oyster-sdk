@@ -125,8 +125,17 @@ export interface PlaceParam {
     deadline: number;
 }
 
+export interface BatchPlaceParam {
+    expiry: number;
+    ticks: number[];
+    ratios: number[];
+    size: BigNumber;
+    leverage: BigNumber;
+    deadline: number;
+}
+
 export interface InstrumentPointConfigParam {
-    isStable:boolean
+    isStable: boolean;
     quotePriceWad: BigNumber;
     // expiry -> PoolFactor
     poolFactorMap: Map<number, number>;

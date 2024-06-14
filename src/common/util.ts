@@ -1,7 +1,27 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { BigNumber, BigNumberish, ethers } from 'ethers';
-import { INT24_MAX, MAX_STABILITY_FEE_RATIO, MAX_TICK, MIN_TICK, PERP_EXPIRY, RATIO_DECIMALS } from '../constants';
-import { MAX_UINT_128, ONE, ZERO, TickMath, wadToTick, WAD, MAX_INT_24, MAX_UINT_16, wdiv, s2w } from '../math';
+import {
+    INT24_MAX,
+    MAX_STABILITY_FEE_RATIO,
+    MAX_TICK,
+    MIN_TICK,
+    PERP_EXPIRY,
+    RATIO_BASE,
+    RATIO_DECIMALS,
+} from '../constants';
+import {
+    MAX_UINT_128,
+    ONE,
+    ZERO,
+    TickMath,
+    wadToTick,
+    WAD,
+    MAX_INT_24,
+    MAX_UINT_16,
+    wdiv,
+    s2w,
+    EMPTY_TICK,
+} from '../math';
 import { sqrt, sqrtX96ToWad, wmulDown, r2w } from '../math';
 import {
     ADDR_BATCH_SIZE,
@@ -258,6 +278,58 @@ export function encodePlaceWithReferralParam(
     return encodeParamForTradeAndPlaceWithReferral(expiry, size, amount, tick, deadline, referral);
 }
 
+export function encodeBatchPlaceParam(
+    expiry: number,
+    size: BigNumber,
+    leverage: BigNumber,
+    ticks: number[],
+    ratios: number[],
+    deadline: number,
+): [string, string, string] {
+    if (ticks.length > 9) throw new Error('cannot place more than 9 orders at once');
+    if (ticks.length !== ratios.length) throw new Error('ticks and ratios length mismatch');
+
+    if (ratios.reduce((a, b) => a + b, 0) !== RATIO_BASE) throw new Error('ratios sum must be 10000');
+
+    const usize = asUint128(size);
+    const uLeverage = asUint128(leverage);
+    const combinedSize = BigNumber.from(usize).shl(128).add(uLeverage);
+    const page2 = hexZeroPad(combinedSize.toHexString(), 32);
+
+    let tmp0 = BigNumber.from(deadline).shl(32).add(BigNumber.from(expiry));
+    for (let i = 0; i < 3; i++) {
+        const uTick = i < ticks.length ? asUint24(ticks[i]) : EMPTY_TICK;
+        const uRatio = i < ratios.length ? asUint16(ratios[i]) : 0;
+        tmp0 = tmp0.add(BigNumber.from(uRatio).shl(64 + 40 * i)).add(BigNumber.from(uTick).shl(64 + 40 * i + 16));
+    }
+    const page0 = hexZeroPad(tmp0.toHexString(), 32);
+
+    let tmp1 = ZERO;
+    for (let i = 0; i < 6; i++) {
+        const uTick = i + 3 < ticks.length ? asUint24(ticks[i + 3]) : EMPTY_TICK;
+        const uRatio = i + 3 < ratios.length ? asUint16(ratios[i + 3]) : 0;
+        tmp1 = tmp1.add(BigNumber.from(uRatio).shl(40 * i)).add(BigNumber.from(uTick).shl(40 * i + 16));
+    }
+    const page1 = hexZeroPad(tmp1.toHexString(), 32);
+
+    return [page0, page1, page2];
+}
+
+export function encodeBatchPlaceWithReferralParam(
+    expiry: number,
+    size: BigNumber,
+    leverage: BigNumber,
+    ticks: number[],
+    ratios: number[],
+    deadline: number,
+    referral: string,
+): [string, string, string] {
+    const [page0Temp, page1, page2] = encodeBatchPlaceParam(expiry, size, leverage, ticks, ratios, deadline);
+    const hexReferral = getHexReferral(referral);
+    const page0 = hexZeroPad(BigNumber.from(hexReferral).shl(192).add(BigNumber.from(page0Temp)).toHexString(), 32);
+    return [page0, page1, page2];
+}
+
 /// encode fill param to contract input format (bytes32)
 export function encodeFillParam(expiry: number, target: string, tick: number, nonce: number): string {
     const uTick = asUint24(tick);
@@ -462,6 +534,13 @@ export function getMaxTick(tickSpacing: number): number {
 
 export function getMaxLiquidityPerTick(tickSpacing: number): BigNumber {
     return MAX_UINT_128.div((getMaxTick(tickSpacing) - getMinTick(tickSpacing)) / tickSpacing + 1);
+}
+
+export function asUint16(x: number): number {
+    if (x < 0) {
+        x += 1 << 16;
+    }
+    return x;
 }
 
 export function asInt24(x: number): number {

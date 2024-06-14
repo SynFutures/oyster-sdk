@@ -32,3 +32,5 @@ export const TICK_DELTA_MAX = 16096; // 1.0001 ** 16096 = 5.0004080813
 // uint48(uint24(type(int24).min)) << 24 | uint48(uint24(type(int24).max))
 // which is (2 ** 24 + type(int24).min) * (2 ** 24) + type(int24).max
 export const ANY_PRICE_TICK = BigNumber.from(140737496743935);
+
+export const EMPTY_TICK = TWO.pow(22).sub(ONE); // type(int24).max
