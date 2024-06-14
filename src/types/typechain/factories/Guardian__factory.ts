@@ -1006,6 +1006,11 @@ const _abi = [
         name: "leverages",
         type: "uint8[]",
       },
+      {
+        internalType: "uint16[]",
+        name: "mmrs",
+        type: "uint16[]",
+      },
     ],
     name: "setInstrumentLeverage",
     outputs: [],

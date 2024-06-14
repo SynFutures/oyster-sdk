@@ -41,6 +41,16 @@ export type RangeStructOutput = [BigNumber, BigNumber, BigNumber, BigNumber] & {
   sqrtEntryPX96: BigNumber;
 };
 
+export type OrderStruct = {
+  balance: PromiseOrValue<BigNumberish>;
+  size: PromiseOrValue<BigNumberish>;
+};
+
+export type OrderStructOutput = [BigNumber, BigNumber] & {
+  balance: BigNumber;
+  size: BigNumber;
+};
+
 export type PositionCacheStruct = {
   balance: PromiseOrValue<BigNumberish>;
   size: PromiseOrValue<BigNumberish>;
@@ -97,16 +107,6 @@ export type QuotationStructOutput = [
   postTick: number;
 };
 
-export type OrderStruct = {
-  balance: PromiseOrValue<BigNumberish>;
-  size: PromiseOrValue<BigNumberish>;
-};
-
-export type OrderStructOutput = [BigNumber, BigNumber] & {
-  balance: BigNumber;
-  size: BigNumber;
-};
-
 export type QuoteParamStruct = {
   minMarginAmount: PromiseOrValue<BigNumberish>;
   tradingFeeRatio: PromiseOrValue<BigNumberish>;
@@ -135,6 +135,7 @@ export type QuoteParamStructOutput = [
 export interface InstrumentInterface extends utils.Interface {
   functions: {
     "add(bytes32[2])": FunctionFragment;
+    "batchPlace(bytes32[3])": FunctionFragment;
     "cancel(bytes32)": FunctionFragment;
     "claimProtocolFee(uint32)": FunctionFragment;
     "claimYield(address)": FunctionFragment;
@@ -157,7 +158,7 @@ export interface InstrumentInterface extends utils.Interface {
     "recycleInsuranceFund(uint32)": FunctionFragment;
     "remove(bytes32[2])": FunctionFragment;
     "resolve(uint128)": FunctionFragment;
-    "setLeverage(uint8)": FunctionFragment;
+    "setLeverage(uint8,uint16)": FunctionFragment;
     "setQuoteParam((uint128,uint16,uint16,uint64,uint8,uint128))": FunctionFragment;
     "settle(uint32,address)": FunctionFragment;
     "sweep(uint32,address,int256)": FunctionFragment;
@@ -169,6 +170,7 @@ export interface InstrumentInterface extends utils.Interface {
   getFunction(
     nameOrSignatureOrTopic:
       | "add"
+      | "batchPlace"
       | "cancel"
       | "claimProtocolFee"
       | "claimYield"
@@ -203,6 +205,16 @@ export interface InstrumentInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "add",
     values: [[PromiseOrValue<BytesLike>, PromiseOrValue<BytesLike>]]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "batchPlace",
+    values: [
+      [
+        PromiseOrValue<BytesLike>,
+        PromiseOrValue<BytesLike>,
+        PromiseOrValue<BytesLike>
+      ]
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "cancel",
@@ -303,7 +315,7 @@ export interface InstrumentInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "setLeverage",
-    values: [PromiseOrValue<BigNumberish>]
+    values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
     functionFragment: "setQuoteParam",
@@ -335,6 +347,7 @@ export interface InstrumentInterface extends utils.Interface {
   ): string;
 
   decodeFunctionResult(functionFragment: "add", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "batchPlace", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "cancel", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "claimProtocolFee",
@@ -872,6 +885,15 @@ export interface Instrument extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
+    batchPlace(
+      args: [
+        PromiseOrValue<BytesLike>,
+        PromiseOrValue<BytesLike>,
+        PromiseOrValue<BytesLike>
+      ],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
     cancel(
       arg: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -918,7 +940,7 @@ export interface Instrument extends BaseContract {
     ): Promise<ContractTransaction>;
 
     initialize(
-      _data: PromiseOrValue<BytesLike>,
+      data: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -988,6 +1010,7 @@ export interface Instrument extends BaseContract {
 
     setLeverage(
       leverage: PromiseOrValue<BigNumberish>,
+      maintenanceMarginRatio: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -1026,6 +1049,15 @@ export interface Instrument extends BaseContract {
 
   add(
     args: [PromiseOrValue<BytesLike>, PromiseOrValue<BytesLike>],
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  batchPlace(
+    args: [
+      PromiseOrValue<BytesLike>,
+      PromiseOrValue<BytesLike>,
+      PromiseOrValue<BytesLike>
+    ],
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -1075,7 +1107,7 @@ export interface Instrument extends BaseContract {
   ): Promise<ContractTransaction>;
 
   initialize(
-    _data: PromiseOrValue<BytesLike>,
+    data: PromiseOrValue<BytesLike>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -1145,6 +1177,7 @@ export interface Instrument extends BaseContract {
 
   setLeverage(
     leverage: PromiseOrValue<BigNumberish>,
+    maintenanceMarginRatio: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -1189,6 +1222,20 @@ export interface Instrument extends BaseContract {
         tickLower: number;
         tickUpper: number;
         range: RangeStructOutput;
+      }
+    >;
+
+    batchPlace(
+      args: [
+        PromiseOrValue<BytesLike>,
+        PromiseOrValue<BytesLike>,
+        PromiseOrValue<BytesLike>
+      ],
+      overrides?: CallOverrides
+    ): Promise<
+      [number[], OrderStructOutput[]] & {
+        nonces: number[];
+        orders: OrderStructOutput[];
       }
     >;
 
@@ -1252,7 +1299,7 @@ export interface Instrument extends BaseContract {
     >;
 
     initialize(
-      _data: PromiseOrValue<BytesLike>,
+      data: PromiseOrValue<BytesLike>,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1328,6 +1375,7 @@ export interface Instrument extends BaseContract {
 
     setLeverage(
       leverage: PromiseOrValue<BigNumberish>,
+      maintenanceMarginRatio: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1697,6 +1745,15 @@ export interface Instrument extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
+    batchPlace(
+      args: [
+        PromiseOrValue<BytesLike>,
+        PromiseOrValue<BytesLike>,
+        PromiseOrValue<BytesLike>
+      ],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
     cancel(
       arg: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -1743,7 +1800,7 @@ export interface Instrument extends BaseContract {
     ): Promise<BigNumber>;
 
     initialize(
-      _data: PromiseOrValue<BytesLike>,
+      data: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -1813,6 +1870,7 @@ export interface Instrument extends BaseContract {
 
     setLeverage(
       leverage: PromiseOrValue<BigNumberish>,
+      maintenanceMarginRatio: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -1852,6 +1910,15 @@ export interface Instrument extends BaseContract {
   populateTransaction: {
     add(
       args: [PromiseOrValue<BytesLike>, PromiseOrValue<BytesLike>],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    batchPlace(
+      args: [
+        PromiseOrValue<BytesLike>,
+        PromiseOrValue<BytesLike>,
+        PromiseOrValue<BytesLike>
+      ],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -1901,7 +1968,7 @@ export interface Instrument extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     initialize(
-      _data: PromiseOrValue<BytesLike>,
+      data: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -1971,6 +2038,7 @@ export interface Instrument extends BaseContract {
 
     setLeverage(
       leverage: PromiseOrValue<BigNumberish>,
+      maintenanceMarginRatio: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 

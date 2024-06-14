@@ -29,11 +29,6 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "BadAmmTiming",
-    type: "error",
-  },
-  {
-    inputs: [],
     name: "BadInstrumentCondition",
     type: "error",
   },
@@ -59,7 +54,28 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "DivByZero",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "ExpiryNotAligned",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "margin",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "minMargin",
+        type: "uint256",
+      },
+    ],
+    name: "InitTrivial",
     type: "error",
   },
   {
@@ -100,7 +116,17 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "RoundHalfUpBadParam",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "SelfLiquidation",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "TickOutOfBound",
     type: "error",
   },
   {
@@ -172,6 +198,42 @@ const _abi = [
         internalType: "struct Range",
         name: "range",
         type: "tuple",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32[3]",
+        name: "args",
+        type: "bytes32[3]",
+      },
+    ],
+    name: "batchPlace",
+    outputs: [
+      {
+        internalType: "uint24[]",
+        name: "nonces",
+        type: "uint24[]",
+      },
+      {
+        components: [
+          {
+            internalType: "uint128",
+            name: "balance",
+            type: "uint128",
+          },
+          {
+            internalType: "int128",
+            name: "size",
+            type: "int128",
+          },
+        ],
+        internalType: "struct Order[]",
+        name: "orders",
+        type: "tuple[]",
       },
     ],
     stateMutability: "nonpayable",
@@ -429,7 +491,7 @@ const _abi = [
     inputs: [
       {
         internalType: "bytes",
-        name: "_data",
+        name: "data",
         type: "bytes",
       },
     ],
@@ -774,6 +836,11 @@ const _abi = [
         internalType: "enum Leverage",
         name: "leverage",
         type: "uint8",
+      },
+      {
+        internalType: "uint16",
+        name: "maintenanceMarginRatio",
+        type: "uint16",
       },
     ],
     name: "setLeverage",
@@ -1900,6 +1967,16 @@ const _abi = [
     type: "error",
   },
   {
+    inputs: [],
+    name: "BadAmmTiming",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "BadMaintenanceMarginRatio",
+    type: "error",
+  },
+  {
     inputs: [
       {
         internalType: "int256",
@@ -1913,11 +1990,6 @@ const _abi = [
       },
     ],
     name: "BadTargetSize",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "DivByZero",
     type: "error",
   },
   {
@@ -2035,17 +2107,7 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "RoundHalfUpBadParam",
-    type: "error",
-  },
-  {
-    inputs: [],
     name: "TargetSafe",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "TickOutOfBound",
     type: "error",
   },
   {
