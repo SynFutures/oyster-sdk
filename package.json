@@ -1,6 +1,6 @@
 {
     "name": "@synfutures/oyster-sdk",
-    "version": "0.1.13-base-alpha",
+    "version": "0.1.13-base-alpha-2",
     "description": "SynFutures V3 SDK",
     "author": "SynFutures",
     "license": "MIT",
@@ -18,7 +18,7 @@
         "url": "https://github.com/SynFutures/oyster-sdk"
     },
     "dependencies": {
-        "@derivation-tech/web3-core": "1.0.30",
+        "@derivation-tech/web3-core": "1.0.32",
         "lodash": "^4.17.21"
     },
     "devDependencies": {
