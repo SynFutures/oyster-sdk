@@ -5,8 +5,8 @@
   "blockExplorerUrl":"https://basescan.org/",
   "blockTime":4000,
   "wrappedNativeAddress":"0x4200000000000000000000000000000000000006",
-  "subgraph":"",
-  "subgraphProxy":"",
+  "subgraph":"https://api.synfutures.com/thegraph/v3-base",
+  "subgraphProxy":"https://api.synfutures.com/thegraph/v3-base",
   "commit":"138e9075500909039420f9ad6f67e71312c6bf11",
   "contractAddress":{
     "config": "0x015397A4CeCb2770a101631D068c963B0d053b36",
