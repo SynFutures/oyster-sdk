@@ -1451,35 +1451,60 @@ export class SynFuturesV3 {
         side: Side,
         leverageWad: BigNumber,
     ): {
-        baseSize: BigNumber;
-        balance: BigNumber;
-        leverageWad: BigNumber;
+        orders: {
+            baseSize: BigNumber;
+            balance: BigNumber;
+            leverageWad: BigNumber;
+            minFeeRebate: BigNumber;
+        }[];
         marginToDepositWad: BigNumber;
         minOrderValue: BigNumber;
-        minFeeRebate: BigNumber;
-    }[] {
+    } {
         if (targetTicks.length > 9) throw new Error('cannot place more than 9 orders');
-        return targetTicks.map((targetTick) => {
+        // check for same tick and unaligned ticks
+        if (new Set(targetTicks).size !== targetTicks.length) throw new Error('duplicated ticks');
+        if (targetTicks.find((tick) => tick % PEARL_SPACING !== 0)) throw new Error('unaligned ticks');
+
+        const orders: {
+            baseSize: BigNumber;
+            balance: BigNumber;
+            leverageWad: BigNumber;
+            minFeeRebate: BigNumber;
+        }[] = targetTicks.map((targetTick) => {
             try {
-                return this.simulateOrder(
+                const res = this.simulateOrder(
                     pairAccountModel,
                     targetTick,
                     baseSize.div(targetTicks.length),
                     side,
                     leverageWad,
                 );
+                return {
+                    baseSize: res.baseSize,
+                    balance: res.balance,
+                    leverageWad: res.leverageWad,
+                    minFeeRebate: res.minFeeRebate,
+                };
             } catch (error) {
                 console.log('error', error);
                 return {
                     baseSize: ZERO,
                     balance: ZERO,
                     leverageWad: ZERO,
-                    marginToDepositWad: ZERO,
-                    minOrderValue: ZERO,
                     minFeeRebate: ZERO,
                 };
             }
         });
+        const pairModel = pairAccountModel.rootPair;
+        return {
+            orders,
+            marginToDepositWad: this.marginToDepositWad(
+                pairAccountModel.traderAddr,
+                pairModel.rootInstrument.info.quote,
+                orders.reduce((acc, order) => acc.add(order.balance), ZERO),
+            ),
+            minOrderValue: pairModel.rootInstrument.minOrderValue,
+        };
     }
 
     // @param transferAmount: decimal in 18 units; positive if transferIn, negative if transferOut
