@@ -1444,6 +1444,44 @@ export class SynFuturesV3 {
         };
     }
 
+    simulateBatchPlace(
+        pairAccountModel: PairLevelAccountModel,
+        targetTicks: number[],
+        baseSize: BigNumber,
+        side: Side,
+        leverageWad: BigNumber,
+    ): {
+        baseSize: BigNumber;
+        balance: BigNumber;
+        leverageWad: BigNumber;
+        marginToDepositWad: BigNumber;
+        minOrderValue: BigNumber;
+        minFeeRebate: BigNumber;
+    }[] {
+        if (targetTicks.length > 9) throw new Error('cannot place more than 9 orders');
+        return targetTicks.map((targetTick) => {
+            try {
+                return this.simulateOrder(
+                    pairAccountModel,
+                    targetTick,
+                    baseSize.div(targetTicks.length),
+                    side,
+                    leverageWad,
+                );
+            } catch (error) {
+                console.log('error', error);
+                return {
+                    baseSize: ZERO,
+                    balance: ZERO,
+                    leverageWad: ZERO,
+                    marginToDepositWad: ZERO,
+                    minOrderValue: ZERO,
+                    minFeeRebate: ZERO,
+                };
+            }
+        });
+    }
+
     // @param transferAmount: decimal in 18 units; positive if transferIn, negative if transferOut
     // @param leverageWad: decimal in 18 units
     // @param vaultBalanceWad: decimal in 18 units
