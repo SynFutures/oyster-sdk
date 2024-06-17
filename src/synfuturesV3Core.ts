@@ -10,7 +10,7 @@ import {
 } from './config';
 import { BigNumber, CallOverrides, Overrides, PayableOverrides, Signer, ethers } from 'ethers';
 import { Provider } from '@ethersproject/providers';
-import { BlockInfo, CHAIN_ID, ContractParser, ZERO_ADDRESS } from '@derivation-tech/web3-core';
+import { BlockInfo, CHAIN_ID, ContractParser, now, SECS_PER_MINUTE, ZERO_ADDRESS } from '@derivation-tech/web3-core';
 import {
     Instrument__factory,
     Observer__factory,
@@ -47,6 +47,7 @@ import {
     encodeAdjustWithReferralParam,
     encodeTradeWithRiskParam,
     encodeBatchPlaceWithReferralParam,
+    alignTick,
 } from './common/util';
 import {
     AddParam,
@@ -99,6 +100,7 @@ import {
     INT24_MIN,
     NATIVE_TOKEN_ADDRESS,
     ONE_RATIO,
+    ORDER_SPACING,
     PEARL_SPACING,
     PERP_EXPIRY,
     RANGE_SPACING,
@@ -1233,6 +1235,126 @@ export class SynFuturesV3 {
     //////////////////////////////////////////////////////////
     // Frontend Simulation API
     //////////////////////////////////////////////////////////
+
+    async simulateTradeToTickAndPlaceOrder(
+        account: PairLevelAccountModel,
+        baseSize: BigNumber,
+        tick: number,
+        wadLeverage: BigNumber,
+        priceSlippage: number,
+    ) {
+        if (tick % ORDER_SPACING != 0) throw Error('tick not aligned');
+        const pair = account.rootPair;
+        const long = baseSize.gt(0);
+
+        if ((long && tick < pair.amm.tick) || (!long && tick > pair.amm.tick)) throw Error('invalid tick');
+
+        const targetTick = long ? tick + 1 : tick;
+        console.log('targetTick', targetTick);
+        let marketSize = await this.getSizeToTargetTick(pair.rootInstrument.info.addr, pair.amm.expiry, targetTick);
+        marketSize = long ? marketSize : marketSize.sub(1);
+        const side = long ? Side.LONG : Side.SHORT;
+        let res = await this.inquireByBase(pair, side, marketSize.abs());
+        let quotation = res.quotation;
+        if (account.position.size.eq(0) && res.quoteAmount.lt(pair.rootInstrument.minTradeValue)) {
+            console.log('lower than min trade value');
+            const res = await this.inquireByQuote(pair, side, pair.rootInstrument.minTradeValue);
+            marketSize = res.baseAmount.mul(long ? 1 : -1);
+            quotation = res.quotation;
+        }
+
+        console.log('size', ethers.utils.formatEther(marketSize), ethers.utils.formatEther(baseSize));
+        if (marketSize.abs().gte(baseSize.abs())) {
+            // throw Error('invalid size');
+            baseSize = marketSize;
+        }
+
+        console.log('after trade', quotation.postTick);
+        const { marginToDepositWad, ...tradeSimulation } = this.simulateTrade(
+            account,
+            quotation,
+            side,
+            marketSize.abs(),
+            undefined,
+            wadLeverage,
+            priceSlippage,
+        );
+
+        let leftSize = baseSize.abs().sub(marketSize.abs());
+        leftSize = leftSize.gt(0) ? leftSize : ZERO;
+
+        const accountAfterTrade = new PairLevelAccountModel(account.rootPair, account.traderAddr, account.account);
+        accountAfterTrade.rootPair.amm.tick = quotation.postTick;
+        // only changed tick affects simulation result
+        const { marginToDepositWad: marginToDepositWadOrder, ...orderSimulation } = this.simulateOrder(
+            accountAfterTrade,
+            tick,
+            leftSize,
+            side,
+            wadLeverage,
+        );
+        const orderValue = wmul(orderSimulation.baseSize.abs(), TickMath.getWadAtTick(tick));
+        console.log(
+            'orderValue',
+            ethers.utils.formatEther(orderValue),
+            'minOrderValue',
+            ethers.utils.formatEther(orderSimulation.minOrderValue),
+        );
+        if (orderValue.lt(orderSimulation.minOrderValue)) {
+            throw Error('invalid size');
+        }
+        return {
+            marketSize: marketSize,
+            orderSize: long ? leftSize : leftSize.mul(-1),
+            tradeSimulation,
+            orderSimulation,
+            marginToDepositWad: this.marginToDepositWad(
+                account.traderAddr,
+                account.rootPair.rootInstrument.info.quote,
+                tradeSimulation.margin.add(orderSimulation.balance),
+            ),
+        };
+    }
+
+    async tradeToTickAndPlaceOrder(
+        signer: Signer,
+        instrumentAddr: string,
+        tradeParam: TradeParam,
+        orderParam: PlaceParam,
+        overrides?: Overrides,
+        referralCode = DEFAULT_REFERRAL_CODE,
+    ) {
+        const instrument = this.getInstrumentContract(instrumentAddr, signer);
+        const callData = [];
+        callData.push(
+            instrument.interface.encodeFunctionData('trade', [
+                encodeTradeWithReferralParam(
+                    tradeParam.expiry,
+                    tradeParam.size,
+                    tradeParam.amount,
+                    tradeParam.limitTick,
+                    tradeParam.deadline,
+                    referralCode,
+                ),
+            ]),
+        );
+
+        callData.push(
+            instrument.interface.encodeFunctionData('place', [
+                encodePlaceWithReferralParam(
+                    orderParam.expiry,
+                    orderParam.size,
+                    orderParam.amount,
+                    orderParam.tick,
+                    orderParam.deadline,
+                    referralCode,
+                ),
+            ]),
+        );
+
+        const tx = await instrument.populateTransaction.multicall(callData, overrides ?? {});
+        return await this.ctx.sendTx(signer, tx);
+    }
 
     // @param quotation: can be accessed through inquireByBase/inquireByQuote
     // four scenarios here: see examples in testMocks.ts
