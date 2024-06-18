@@ -1242,7 +1242,32 @@ export class SynFuturesV3 {
         tick: number,
         wadLeverage: BigNumber,
         priceSlippage: number,
-    ) {
+    ): Promise<{
+        marketSize: BigNumber;
+        orderSize: BigNumber;
+        tradeSimulation: {
+            tradePrice: BigNumber;
+            estimatedTradeValue: BigNumber;
+            minTradeValue: BigNumber;
+            tradingFee: BigNumber;
+            stabilityFee: BigNumber;
+            margin: BigNumber;
+            leverageWad: BigNumber;
+            priceImpactWad: BigNumber;
+            realized: BigNumber;
+            simulationMainPosition: PositionModel;
+            limitTick: number;
+            exceedMaxLeverage: boolean;
+        };
+        orderSimulation: {
+            baseSize: BigNumber;
+            balance: BigNumber;
+            leverageWad: BigNumber;
+            minOrderValue: BigNumber;
+            minFeeRebate: BigNumber;
+        };
+        marginToDepositWad: BigNumber;
+    }> {
         if (tick % ORDER_SPACING != 0) throw Error('tick not aligned');
         const pair = account.rootPair;
         const long = baseSize.gt(0);
@@ -1323,7 +1348,7 @@ export class SynFuturesV3 {
         orderParam: PlaceParam,
         overrides?: Overrides,
         referralCode = DEFAULT_REFERRAL_CODE,
-    ) {
+    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
         const instrument = this.getInstrumentContract(instrumentAddr, signer);
         const callData = [];
         callData.push(
