@@ -1800,6 +1800,118 @@ export class SynFuturesV3 {
         };
     }
 
+    // @param alphaWad: decimal 18 units 1.3e18 means 1.3
+    // @param marginWad: decimal 18 units
+    // @param slippage: 0 ~ 10000. e.g. 500 means 5%
+    async simulateAddLiquidityWithAsymmetricRange(
+        targetAddress: string,
+        instrumentIdentifier: InstrumentIdentifier,
+        expiry: number,
+        alphaWadLower: BigNumber,
+        alphaWadUpper: BigNumber,
+        margin: BigNumber,
+        slippage: number,
+        currentSqrtPX96?: BigNumber,
+    ): Promise<{
+        tickDeltaLower: number;
+        tickDeltaUpper: number;
+        liquidity: BigNumber;
+        upperPrice: BigNumber;
+        lowerPrice: BigNumber;
+        lowerPosition: PositionModel;
+        lowerLeverageWad: BigNumber;
+        upperPosition: PositionModel;
+        upperLeverageWad: BigNumber;
+        sqrtStrikeLowerPX96: BigNumber;
+        sqrtStrikeUpperPX96: BigNumber;
+        marginToDepositWad: BigNumber;
+        minMargin: BigNumber;
+        minEffectiveQuoteAmount: BigNumber;
+        equivalentAlpha: BigNumber;
+    }> {
+        const instrumentAddress = await this.computeInstrumentAddress(
+            instrumentIdentifier.marketType,
+            instrumentIdentifier.baseSymbol,
+            instrumentIdentifier.quoteSymbol,
+        );
+        let quoteInfo: TokenInfo;
+        let pairModel: PairModel;
+        let setting: InstrumentSetting;
+        // see if this instrument is created
+        let instrument = this.instrumentMap.get(instrumentAddress.toLowerCase());
+        if (!instrument || !instrument.state.pairStates.has(expiry)) {
+            // need uncreated instrument
+            const benchmarkPrice = await this.simulateBenchmarkPrice(instrumentIdentifier, expiry);
+            const { quoteTokenInfo } = await this.getTokenInfo(instrumentIdentifier);
+            quoteInfo = quoteTokenInfo;
+            if (instrument) {
+                setting = instrument.setting;
+            } else {
+                const quoteParam = this.config.quotesParam[quoteInfo.symbol]!;
+                instrument = InstrumentModel.minimumInstrumentWithParam(quoteParam);
+                setting = instrument.setting;
+            }
+            pairModel = PairModel.minimalPairWithAmm(instrument, benchmarkPrice);
+        } else {
+            pairModel = instrument.getPairModel(expiry);
+            quoteInfo = pairModel.rootInstrument.info.quote;
+            setting = pairModel.rootInstrument.setting;
+        }
+        const amm = pairModel.amm;
+        const tickDeltaLower = alphaWadToTickDelta(alphaWadLower);
+        const tickDeltaUpper = alphaWadToTickDelta(alphaWadUpper);
+
+        const upperTick = alignRangeTick(amm.tick + tickDeltaUpper, false);
+        const lowerTick = alignRangeTick(amm.tick - tickDeltaLower, true);
+
+        // if (pairAccountModel.containsRange(lowerTick, upperTick)) throw new Error('range is occupied');
+        const upperPrice = TickMath.getWadAtTick(upperTick);
+        const lowerPrice = TickMath.getWadAtTick(lowerTick);
+        const { liquidity: liquidity } = entryDelta(
+            amm.sqrtPX96,
+            lowerTick,
+            upperTick,
+            margin,
+            setting.initialMarginRatio,
+        );
+        const simulationRangeModel: RangeModel = RangeModel.fromRawRange(
+            pairModel,
+            {
+                liquidity: liquidity,
+                balance: margin,
+                sqrtEntryPX96: amm.sqrtPX96,
+                entryFeeIndex: amm.feeIndex,
+            },
+            rangeKey(lowerTick, upperTick),
+        );
+        const lowerPositionModel = simulationRangeModel.lowerPositionModelIfRemove;
+        const upperPositionModel = simulationRangeModel.upperPositionModelIfRemove;
+        const minMargin = getMarginFromLiquidity(
+            amm.sqrtPX96,
+            upperTick,
+            pairModel.getMinLiquidity(amm.sqrtPX96),
+            setting.initialMarginRatio,
+        );
+        const basedPX96 = currentSqrtPX96 ? currentSqrtPX96 : amm.sqrtPX96;
+        return {
+            tickDeltaLower,
+            tickDeltaUpper,
+            liquidity: liquidity,
+            upperPrice: simulationRangeModel.upperPrice,
+            lowerPrice: simulationRangeModel.lowerPrice,
+            lowerPosition: lowerPositionModel,
+            lowerLeverageWad: lowerPositionModel.size.mul(lowerPrice).div(lowerPositionModel.balance).abs(),
+            upperPosition: upperPositionModel,
+            upperLeverageWad: upperPositionModel.size.mul(upperPrice).div(upperPositionModel.balance).abs(),
+            sqrtStrikeLowerPX96: basedPX96.sub(wmulDown(basedPX96, r2w(slippage))),
+            sqrtStrikeUpperPX96: basedPX96.add(wmulDown(basedPX96, r2w(slippage))),
+            marginToDepositWad: this.marginToDepositWad(targetAddress, quoteInfo, margin),
+            minMargin: minMargin,
+            minEffectiveQuoteAmount: instrument.minRangeValue,
+            equivalentAlpha: tickDeltaToAlphaWad(~~((upperTick - lowerTick) / 2)),
+        };
+    }
+
     simulateRemoveLiquidity(
         pairAccountModel: PairLevelAccountModel,
         rangeModel: RangeModel,
@@ -1948,7 +2060,7 @@ export class SynFuturesV3 {
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
         const addParam = {
             expiry: expiry,
-            tickDeltaLower: 0,
+            tickDeltaLower: 0, // 0 means same as tickDeltaUpper
             tickDeltaUpper: tickDelta,
             amount: marginWad,
             limitTicks: this.encodeLimitTicks(sqrtStrikeLowerPX96, sqrtStrikeUpperPX96),
