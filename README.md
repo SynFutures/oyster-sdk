@@ -29,20 +29,21 @@ This package depends on the more fundamental package `@derivation-tech/web3-core
 
 The SDK provides ABIs of several important contracts to facilitate your interaction with SynFuturesV3. You can obtain them in the following ways:
 
-- Extract the original JSON files directly from the SDK. The paths are as follows:
+-   Extract the original JSON files directly from the SDK. The paths are as follows:
 
 ```shell
-/oyster-sdk/src/abis/CexMarket.json   
-/oyster-sdk/src/abis/Config.json      
+/oyster-sdk/src/abis/CexMarket.json
+/oyster-sdk/src/abis/Config.json
 /oyster-sdk/src/abis/DexV2Market.json
-/oyster-sdk/src/abis/Gate.json        
-/oyster-sdk/src/abis/Instrument.json  
+/oyster-sdk/src/abis/Gate.json
+/oyster-sdk/src/abis/Instrument.json
 /oyster-sdk/src/abis/Observer.json
 ```
 
-- Use them directly from the SDK
+-   Use them directly from the SDK
+
 ```typescript
-import { INSTRUMENT_ABI } from "@synfutures/oyster-sdk";
+import { INSTRUMENT_ABI } from '@synfutures/oyster-sdk';
 import { Contract } from 'ethers';
 
 // Print the ABI of the Instrument contract
@@ -61,28 +62,30 @@ new Contract(address, INSTRUMENT_ABI, signerOrProvider);
 5. [Trade](#trade)
 6. [Adjust position, withdraw half of the available margin](#adjust-position-withdraw-half-of-the-available-margin)
 7. [Place order](#place-order)
-8. [Bulk cancel order](#bulk-cancel-order)
-9. [Add liquidity](#add-liquidity)
-10. [Remove liquidity](#remove-liquidity)
-11. [Query user operation history](#query-user-operation-history)
-12. [Query pair kline chart data](#query-pair-kline)
-13. [Query pair depth chart data](#query-pair-depth)
-14. [Query pair funding rate data](#query-pair-funding-rate)
-15. [Query user single pair info](#query-user-single-pair-info)
-16. [Get Volume Chart](#get-volume-chart)
-17. [Query Account Portfolio Info](#query-account-portfolio-info)
-18. [Query Account Range History](#query-account-range-history)
-19. [Query Asset Transfer History](#query-asset-transfer-history)
-20. [Query Deposit Withdraw History](#query-deposit-withdraw-history)
-21. [Estimate Earning APY](#estimate-earning-apy)
-22. [Query market info](#query-market-info)
-23. [Direct trade interface](#direct-trade-interface)
-24. [Direct place interface](#direct-place-interface)
-25. [Direct add interface](#direct-add-interface)
-26. [Direct remove interface](#direct-remove-interface)
-27. [Direct cancel interface](#direct-cancel-interface)
-28. [Update pair](#update-pair)
-29. [Settle trader](#settle-trader)
+8. [Batch place orders](#batch-place-orders)
+9. [Bulk cancel order](#bulk-cancel-order)
+10. [Add liquidity](#add-liquidity)
+11. [Add asymmetric liquidity](#add-asymmetric-liquidity)
+12. [Remove liquidity](#remove-liquidity)
+13. [Query user operation history](#query-user-operation-history)
+14. [Query pair kline chart data](#query-pair-kline)
+15. [Query pair depth chart data](#query-pair-depth)
+16. [Query pair funding rate data](#query-pair-funding-rate)
+17. [Query user single pair info](#query-user-single-pair-info)
+18. [Get Volume Chart](#get-volume-chart)
+19. [Query Account Portfolio Info](#query-account-portfolio-info)
+20. [Query Account Range History](#query-account-range-history)
+21. [Query Asset Transfer History](#query-asset-transfer-history)
+22. [Query Deposit Withdraw History](#query-deposit-withdraw-history)
+23. [Estimate Earning APY](#estimate-earning-apy)
+24. [Query market info](#query-market-info)
+25. [Direct trade interface](#direct-trade-interface)
+26. [Direct place interface](#direct-place-interface)
+27. [Direct add interface](#direct-add-interface)
+28. [Direct remove interface](#direct-remove-interface)
+29. [Direct cancel interface](#direct-cancel-interface)
+30. [Update pair](#update-pair)
+31. [Settle trader](#settle-trader)
 
 ### Prerequisites
 
@@ -498,6 +501,69 @@ async function main() {
 main().catch(console.error);
 ```
 
+### Batch place orders
+
+```ts
+export async function demoBatchPlace(): Promise<void> {
+    const sdk = SynFuturesV3.getInstance('Blast');
+
+    await sdk.init();
+
+    // get your own signer
+    const signer = new ethers.Wallet(process.env.ALICE_PRIVATE_KEY as string, sdk.ctx.provider);
+
+    const instruments = await sdk.getAllInstruments();
+
+    function getInstrumentBySymbol(symbol: string) {
+        const instrument = instruments.find((i) => i.info.symbol === symbol);
+        if (!instrument) {
+            throw new Error('unknown symbol: ' + symbol);
+        }
+        return instrument;
+    }
+
+    const instrument = getInstrumentBySymbol('BTC-USDB-PYTH');
+    const account = await sdk.getPairLevelAccount(await signer.getAddress(), instrument.info.addr, PERP_EXPIRY);
+    await sdk.syncVaultCacheWithAllQuotes(account.traderAddr);
+    const pair = instrument.getPairModel(PERP_EXPIRY)!;
+    const ticks = Array.from({ length: 9 }, (_, i) =>
+        alignTick(pair.amm.tick + PEARL_SPACING * (i + 1), PEARL_SPACING),
+    );
+    const ratios = [1111, 1111, 1111, 1111, 1111, 1111, 1111, 1111, 1112]; // ratios must add up to 10000
+    const leverage = ethers.utils.parseEther('5');
+    const size = ethers.utils.parseEther('1');
+    const res = sdk.simulateBatchPlace(account, ticks, ratios, size, Side.SHORT, leverage);
+    for (const order of res.orders) {
+        console.log(
+            formatUnits(order.baseSize, 18),
+            formatUnits(wmul(order.baseSize, sqrtX96ToWad(pair.amm.sqrtPX96)), 18),
+            formatUnits(wdiv(wmul(order.baseSize, sqrtX96ToWad(pair.amm.sqrtPX96)), order.balance), 18),
+            formatUnits(order.balance, 18),
+            formatUnits(order.minFeeRebate, 18),
+        );
+    }
+    console.log(
+        formatUnits(
+            res.orders.reduce((acc, order) => acc.add(order.balance), ethers.BigNumber.from(0)),
+            18,
+        ),
+    );
+    console.log(formatUnits(res.marginToDepositWad, 18));
+    console.log(formatUnits(res.minOrderValue, 18));
+
+    await sdk.batchPlace(signer, instrument.info.addr, {
+        expiry: PERP_EXPIRY,
+        ticks,
+        ratios,
+        size,
+        leverage,
+        deadline: now() + 300, // deadline, set to 5 minutes from now
+    });
+}
+
+demoBatchPlace().catch(console.error);
+```
+
 ### Bulk Cancel order
 
 ```ts
@@ -643,6 +709,87 @@ async function main() {
 }
 
 main().catch(console.error);
+```
+
+### Add asymmetric liquidity
+
+```ts
+import { SynFuturesV3 } from './synfuturesV3Core';
+import { ethers } from 'ethers';
+import { alphaWadToTickDelta } from './common/util';
+import { PERP_EXPIRY } from './constants';
+import { r2w, wmulDown } from './math';
+import { now } from '@derivation-tech/web3-core';
+
+export async function demoAddAsymmetricLiquidity(): Promise<void> {
+    const sdk = SynFuturesV3.getInstance('Blast');
+
+    await sdk.init();
+
+    // get your own signer
+    const signer = new ethers.Wallet(process.env.ALICE_PRIVATE_KEY as string, sdk.ctx.provider);
+
+    const instruments = await sdk.getAllInstruments();
+
+    function getInstrumentBySymbol(symbol: string) {
+        const instrument = instruments.find((i) => i.info.symbol === symbol);
+        if (!instrument) {
+            throw new Error('unknown symbol: ' + symbol);
+        }
+        return instrument;
+    }
+
+    const instrument = getInstrumentBySymbol('BTC-USDB-PYTH');
+    const pair = instrument.getPairModel(PERP_EXPIRY);
+
+    // update cache for signer
+    await sdk.syncVaultCacheWithAllQuotes(await signer.getAddress());
+
+    const tickDeltaLower = alphaWadToTickDelta(ethers.utils.parseEther('1.1'));
+    const tickDeltaUpper = alphaWadToTickDelta(ethers.utils.parseEther('1.2'));
+    const margin = ethers.utils.parseUnits('1000', 18);
+    const slipapge = 100; // 1% in bps
+    await sdk.addLiquidityWithAsymmetricRange(
+        signer,
+        {
+            marketType: instrument.marketType,
+            baseSymbol: instrument.info.base.symbol,
+            quoteSymbol: instrument.info.quote.symbol,
+        },
+        PERP_EXPIRY,
+        tickDeltaLower,
+        tickDeltaUpper,
+        margin,
+        pair.amm.sqrtPX96.sub(wmulDown(pair.amm.sqrtPX96, r2w(slipapge))),
+        pair.amm.sqrtPX96.add(wmulDown(pair.amm.sqrtPX96, r2w(slipapge))),
+        now() + 300, // deadline, set to 5 minutes from now
+    );
+
+    // use referral code
+    // NOTICE: channel code must be 6 bytes long
+    const channel = '8test8';
+    const getReferralCode = (channel: string): string => {
+        return '\xff\xff' + channel; // 0xffff means you are sending tx using SDK and private key
+    };
+
+    await sdk.addLiquidityWithAsymmetricRange(
+        signer,
+        {
+            marketType: instrument.marketType,
+            baseSymbol: instrument.info.base.symbol,
+            quoteSymbol: instrument.info.quote.symbol,
+        },
+        PERP_EXPIRY,
+        tickDeltaLower,
+        tickDeltaUpper,
+        margin,
+        pair.amm.sqrtPX96.sub(wmulDown(pair.amm.sqrtPX96, r2w(slipapge))),
+        pair.amm.sqrtPX96.add(wmulDown(pair.amm.sqrtPX96, r2w(slipapge))),
+        now() + 300, // deadline, set to 5 minutes from now
+        {}, // here is overrides, you can pass in custom overrides for gas price and limit
+        getReferralCode(channel),
+    );
+}
 ```
 
 ### Remove liquidity
