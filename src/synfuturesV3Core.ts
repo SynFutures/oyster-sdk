@@ -273,8 +273,8 @@ export class SynFuturesV3 {
         };
     }
 
-    public setProvider(provider: Provider): void {
-        this.ctx.info.isOpSdkCompatible = false;
+    public setProvider(provider: Provider, isOpSdkCompatible = false): void {
+        if (!isOpSdkCompatible) this.ctx.info.isOpSdkCompatible = false;
         this.ctx.setProvider(provider);
         this._initContracts(provider, this.config.contractAddress);
     }
@@ -1255,7 +1255,7 @@ export class SynFuturesV3 {
         let marketSize = await this.getSizeToTargetTick(pair.rootInstrument.info.addr, pair.amm.expiry, targetTick);
         marketSize = long ? marketSize : marketSize.sub(1);
         const side = long ? Side.LONG : Side.SHORT;
-        let res = await this.inquireByBase(pair, side, marketSize.abs());
+        const res = await this.inquireByBase(pair, side, marketSize.abs());
         let quotation = res.quotation;
         if (account.position.size.eq(0) && res.quoteAmount.lt(pair.rootInstrument.minTradeValue)) {
             console.log('lower than min trade value');
