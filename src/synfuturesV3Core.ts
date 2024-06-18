@@ -10,7 +10,7 @@ import {
 } from './config';
 import { BigNumber, CallOverrides, Overrides, PayableOverrides, Signer, ethers } from 'ethers';
 import { Provider } from '@ethersproject/providers';
-import { BlockInfo, CHAIN_ID, ContractParser, now, SECS_PER_MINUTE, ZERO_ADDRESS } from '@derivation-tech/web3-core';
+import { BlockInfo, CHAIN_ID, ContractParser, ZERO_ADDRESS } from '@derivation-tech/web3-core';
 import {
     Instrument__factory,
     Observer__factory,
@@ -47,7 +47,6 @@ import {
     encodeAdjustWithReferralParam,
     encodeTradeWithRiskParam,
     encodeBatchPlaceWithReferralParam,
-    alignTick,
 } from './common/util';
 import {
     AddParam,
@@ -104,6 +103,7 @@ import {
     PEARL_SPACING,
     PERP_EXPIRY,
     RANGE_SPACING,
+    RATIO_BASE,
     RATIO_DECIMALS,
 } from './constants';
 import {
@@ -1569,6 +1569,7 @@ export class SynFuturesV3 {
     simulateBatchPlace(
         pairAccountModel: PairLevelAccountModel,
         targetTicks: number[],
+        ratios: number[],
         baseSize: BigNumber,
         side: Side,
         leverageWad: BigNumber,
@@ -1583,6 +1584,9 @@ export class SynFuturesV3 {
         minOrderValue: BigNumber;
     } {
         if (targetTicks.length > 9) throw new Error('cannot place more than 9 orders');
+        if (targetTicks.length !== ratios.length) throw new Error('ticks and ratios length not equal');
+        if (ratios.reduce((acc, ratio) => acc + ratio, 0) !== RATIO_BASE)
+            throw new Error('ratios sum not equal to RATIO_BASE: 10000');
         // check for same tick and unaligned ticks
         if (new Set(targetTicks).size !== targetTicks.length) throw new Error('duplicated ticks');
         if (targetTicks.find((tick) => tick % PEARL_SPACING !== 0)) throw new Error('unaligned ticks');
@@ -1592,12 +1596,12 @@ export class SynFuturesV3 {
             balance: BigNumber;
             leverageWad: BigNumber;
             minFeeRebate: BigNumber;
-        }[] = targetTicks.map((targetTick) => {
+        }[] = targetTicks.map((targetTick, index) => {
             try {
                 const res = this.simulateOrder(
                     pairAccountModel,
                     targetTick,
-                    baseSize.div(targetTicks.length),
+                    baseSize.mul(ratios[index]).div(RATIO_BASE),
                     side,
                     leverageWad,
                 );
