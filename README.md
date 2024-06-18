@@ -714,13 +714,6 @@ main().catch(console.error);
 ### Add asymmetric liquidity
 
 ```ts
-import { SynFuturesV3 } from './synfuturesV3Core';
-import { ethers } from 'ethers';
-import { alphaWadToTickDelta } from './common/util';
-import { PERP_EXPIRY } from './constants';
-import { r2w, wmulDown } from './math';
-import { now } from '@derivation-tech/web3-core';
-
 export async function demoAddAsymmetricLiquidity(): Promise<void> {
     const sdk = SynFuturesV3.getInstance('Blast');
 
@@ -740,15 +733,28 @@ export async function demoAddAsymmetricLiquidity(): Promise<void> {
     }
 
     const instrument = getInstrumentBySymbol('BTC-USDB-PYTH');
-    const pair = instrument.getPairModel(PERP_EXPIRY);
 
     // update cache for signer
     await sdk.syncVaultCacheWithAllQuotes(await signer.getAddress());
 
-    const tickDeltaLower = alphaWadToTickDelta(ethers.utils.parseEther('1.1'));
-    const tickDeltaUpper = alphaWadToTickDelta(ethers.utils.parseEther('1.2'));
+    // margin to add liquidity
     const margin = ethers.utils.parseUnits('1000', 18);
-    const slipapge = 100; // 1% in bps
+
+    // return value almost same as simulateAddLiquidity, tickDelta => tickDeltaLower and tickDeltaUpper
+    const res = await sdk.simulateAddLiquidityWithAsymmetricRange(
+        await signer.getAddress(),
+        {
+            marketType: instrument.marketType,
+            baseSymbol: instrument.info.base.symbol,
+            quoteSymbol: instrument.info.quote.symbol,
+        },
+        PERP_EXPIRY,
+        ethers.utils.parseUnits('1.8', 18), // alpha lower, liquidity range factor, currPx / 1.8
+        ethers.utils.parseUnits('2', 18), // alpha upper, liquidity range factor, currPx * 2
+        margin,
+        100, // // slippage, 100 means 100 / 10000 = 1%
+    );
+
     await sdk.addLiquidityWithAsymmetricRange(
         signer,
         {
@@ -757,11 +763,11 @@ export async function demoAddAsymmetricLiquidity(): Promise<void> {
             quoteSymbol: instrument.info.quote.symbol,
         },
         PERP_EXPIRY,
-        tickDeltaLower,
-        tickDeltaUpper,
+        res.tickDeltaLower,
+        res.tickDeltaUpper,
         margin,
-        pair.amm.sqrtPX96.sub(wmulDown(pair.amm.sqrtPX96, r2w(slipapge))),
-        pair.amm.sqrtPX96.add(wmulDown(pair.amm.sqrtPX96, r2w(slipapge))),
+        res.sqrtStrikeLowerPX96,
+        res.sqrtStrikeUpperPX96,
         now() + 300, // deadline, set to 5 minutes from now
     );
 
@@ -780,11 +786,11 @@ export async function demoAddAsymmetricLiquidity(): Promise<void> {
             quoteSymbol: instrument.info.quote.symbol,
         },
         PERP_EXPIRY,
-        tickDeltaLower,
-        tickDeltaUpper,
+        res.tickDeltaLower,
+        res.tickDeltaUpper,
         margin,
-        pair.amm.sqrtPX96.sub(wmulDown(pair.amm.sqrtPX96, r2w(slipapge))),
-        pair.amm.sqrtPX96.add(wmulDown(pair.amm.sqrtPX96, r2w(slipapge))),
+        res.sqrtStrikeLowerPX96,
+        res.sqrtStrikeUpperPX96,
         now() + 300, // deadline, set to 5 minutes from now
         {}, // here is overrides, you can pass in custom overrides for gas price and limit
         getReferralCode(channel),
