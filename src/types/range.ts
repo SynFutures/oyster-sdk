@@ -21,7 +21,9 @@ export function entryDelta(
 ): { deltaBase: BigNumber; deltaQuote: BigNumber; liquidity: BigNumber } {
     const upperPX96 = TickMath.getSqrtRatioAtTick(tickUpper);
     const lowerPX96 = TickMath.getSqrtRatioAtTick(tickLower);
-    const liquidity = getLiquidityFromMargin(sqrtEntryPX96, upperPX96, entryMargin, initialMarginRatio);
+    const liquidityByUpper = getLiquidityFromMarginByUpper(sqrtEntryPX96, upperPX96, entryMargin, initialMarginRatio);
+    const liquidityByLower = getLiquidityFromMarginByLower(sqrtEntryPX96, lowerPX96, entryMargin, initialMarginRatio);
+    const liquidity = liquidityByUpper.lt(liquidityByLower) ? liquidityByUpper : liquidityByLower;
     const deltaBase = SqrtPriceMath.getDeltaBaseAutoRoundUp(sqrtEntryPX96, upperPX96, liquidity);
     const deltaQuote = SqrtPriceMath.getDeltaQuoteAutoRoundUp(lowerPX96, sqrtEntryPX96, liquidity);
 
@@ -36,15 +38,26 @@ export function alignRangeTick(tick: number, lower: boolean): number {
     }
 }
 
-export function getLiquidityFromMargin(
+export function getLiquidityFromMarginByUpper(
     sqrtEntryPX96: BigNumber,
     sqrtUpperPX96: BigNumber,
     entryMargin: BigNumber,
     initialMarginRatio: number,
 ): BigNumber {
-    const denominator = wmulUp(sqrtUpperPX96, r2w(10000 + initialMarginRatio)).sub(sqrtEntryPX96);
-    const temp = entryMargin.mul(sqrtEntryPX96).div(sqrtUpperPX96.sub(sqrtEntryPX96));
-    return temp.mul(Q96).div(denominator);
+    const numerator = entryMargin.mul(sqrtEntryPX96).div(sqrtUpperPX96.sub(sqrtEntryPX96));
+    const denominator = sqrtUpperPX96.sub(sqrtEntryPX96).add(wmulUp(sqrtUpperPX96, r2w(initialMarginRatio)));
+    return numerator.mul(Q96).div(denominator);
+}
+
+export function getLiquidityFromMarginByLower(
+    sqrtEntryPX96: BigNumber,
+    sqrtLowerPX96: BigNumber,
+    entryMargin: BigNumber,
+    initialMarginRatio: number,
+): BigNumber {
+    const numerator = entryMargin.mul(sqrtEntryPX96).div(sqrtEntryPX96.sub(sqrtLowerPX96));
+    const denominator = sqrtEntryPX96.sub(sqrtLowerPX96).add(wmulUp(sqrtLowerPX96, r2w(initialMarginRatio)));
+    return numerator.mul(Q96).div(denominator);
 }
 
 export function getMarginFromLiquidity(
