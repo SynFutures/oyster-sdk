@@ -274,6 +274,7 @@ export class SynFuturesV3 {
     }
 
     public setProvider(provider: Provider): void {
+        this.ctx.info.isOpSdkCompatible = false;
         this.ctx.setProvider(provider);
         this._initContracts(provider, this.config.contractAddress);
     }

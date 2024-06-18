@@ -8,6 +8,7 @@ import * as lineaConfig from './linea.json';
 import * as arbitrumConfig from './arbitrum.json';
 import * as blastsepoliaConfig from './blastsepolia.json';
 import * as blastConfig from './blast.json';
+import * as baseConfig from './base.json';
 
 import { CHAIN_ID, TokenInfo } from '@derivation-tech/web3-core';
 import { MarketType, QuoteType } from '../types/enum';
@@ -120,6 +121,9 @@ export class ConfigManager {
             }
             case CHAIN_ID.BLAST: {
                 return ConfigManager.mapSynfConfig(blastConfig);
+            }
+            case CHAIN_ID.BASE: {
+                return ConfigManager.mapSynfConfig(baseConfig);
             }
             default: {
                 throw new Error('Unsupported Network.');
