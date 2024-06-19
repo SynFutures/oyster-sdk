@@ -1719,83 +1719,44 @@ export class SynFuturesV3 {
         minEffectiveQuoteAmount: BigNumber;
         equivalentAlpha: BigNumber;
     }> {
+        const res = await this.simulateAddLiquidityWithAsymmetricRange(
+            targetAddress,
+            instrumentIdentifier,
+            expiry,
+            alphaWad,
+            alphaWad,
+            margin,
+            slippage,
+            currentSqrtPX96,
+        );
         const instrumentAddress = await this.computeInstrumentAddress(
             instrumentIdentifier.marketType,
             instrumentIdentifier.baseSymbol,
             instrumentIdentifier.quoteSymbol,
         );
-        let quoteInfo: TokenInfo;
         let pairModel: PairModel;
-        let setting: InstrumentSetting;
         // see if this instrument is created
         let instrument = this.instrumentMap.get(instrumentAddress.toLowerCase());
         if (!instrument || !instrument.state.pairStates.has(expiry)) {
             // need uncreated instrument
             const benchmarkPrice = await this.simulateBenchmarkPrice(instrumentIdentifier, expiry);
             const { quoteTokenInfo } = await this.getTokenInfo(instrumentIdentifier);
-            quoteInfo = quoteTokenInfo;
-            if (instrument) {
-                setting = instrument.setting;
-            } else {
-                const quoteParam = this.config.quotesParam[quoteInfo.symbol]!;
+            if (!instrument) {
+                const quoteParam = this.config.quotesParam[quoteTokenInfo.symbol]!;
                 instrument = InstrumentModel.minimumInstrumentWithParam(quoteParam);
-                setting = instrument.setting;
             }
             pairModel = PairModel.minimalPairWithAmm(instrument, benchmarkPrice);
         } else {
             pairModel = instrument.getPairModel(expiry);
-            quoteInfo = pairModel.rootInstrument.info.quote;
-            setting = pairModel.rootInstrument.setting;
         }
         const amm = pairModel.amm;
         const tickDelta = alphaWadToTickDelta(alphaWad);
 
         const upperTick = alignRangeTick(amm.tick + tickDelta, false);
         const lowerTick = alignRangeTick(amm.tick - tickDelta, true);
-
-        // if (pairAccountModel.containsRange(lowerTick, upperTick)) throw new Error('range is occupied');
-        const upperPrice = TickMath.getWadAtTick(upperTick);
-        const lowerPrice = TickMath.getWadAtTick(lowerTick);
-        const { liquidity: liquidity } = entryDelta(
-            amm.sqrtPX96,
-            lowerTick,
-            upperTick,
-            margin,
-            setting.initialMarginRatio,
-        );
-        const simulationRangeModel: RangeModel = RangeModel.fromRawRange(
-            pairModel,
-            {
-                liquidity: liquidity,
-                balance: margin,
-                sqrtEntryPX96: amm.sqrtPX96,
-                entryFeeIndex: amm.feeIndex,
-            },
-            rangeKey(lowerTick, upperTick),
-        );
-        const lowerPositionModel = simulationRangeModel.lowerPositionModelIfRemove;
-        const upperPositionModel = simulationRangeModel.upperPositionModelIfRemove;
-        const minMargin = getMarginFromLiquidity(
-            amm.sqrtPX96,
-            upperTick,
-            pairModel.getMinLiquidity(amm.sqrtPX96),
-            setting.initialMarginRatio,
-        );
-        const basedPX96 = currentSqrtPX96 ? currentSqrtPX96 : amm.sqrtPX96;
         return {
-            tickDelta: tickDelta,
-            liquidity: liquidity,
-            upperPrice: simulationRangeModel.upperPrice,
-            lowerPrice: simulationRangeModel.lowerPrice,
-            lowerPosition: lowerPositionModel,
-            lowerLeverageWad: lowerPositionModel.size.mul(lowerPrice).div(lowerPositionModel.balance).abs(),
-            upperPosition: upperPositionModel,
-            upperLeverageWad: upperPositionModel.size.mul(upperPrice).div(upperPositionModel.balance).abs(),
-            sqrtStrikeLowerPX96: basedPX96.sub(wmulDown(basedPX96, r2w(slippage))),
-            sqrtStrikeUpperPX96: basedPX96.add(wmulDown(basedPX96, r2w(slippage))),
-            marginToDepositWad: this.marginToDepositWad(targetAddress, quoteInfo, margin),
-            minMargin: minMargin,
-            minEffectiveQuoteAmount: instrument.minRangeValue,
+            ...res,
+            tickDelta,
             equivalentAlpha: tickDeltaToAlphaWad(~~((upperTick - lowerTick) / 2)),
         };
     }
