@@ -1729,35 +1729,13 @@ export class SynFuturesV3 {
             slippage,
             currentSqrtPX96,
         );
-        const instrumentAddress = await this.computeInstrumentAddress(
-            instrumentIdentifier.marketType,
-            instrumentIdentifier.baseSymbol,
-            instrumentIdentifier.quoteSymbol,
-        );
-        let pairModel: PairModel;
-        // see if this instrument is created
-        let instrument = this.instrumentMap.get(instrumentAddress.toLowerCase());
-        if (!instrument || !instrument.state.pairStates.has(expiry)) {
-            // need uncreated instrument
-            const benchmarkPrice = await this.simulateBenchmarkPrice(instrumentIdentifier, expiry);
-            const { quoteTokenInfo } = await this.getTokenInfo(instrumentIdentifier);
-            if (!instrument) {
-                const quoteParam = this.config.quotesParam[quoteTokenInfo.symbol]!;
-                instrument = InstrumentModel.minimumInstrumentWithParam(quoteParam);
-            }
-            pairModel = PairModel.minimalPairWithAmm(instrument, benchmarkPrice);
-        } else {
-            pairModel = instrument.getPairModel(expiry);
-        }
-        const amm = pairModel.amm;
-        const tickDelta = alphaWadToTickDelta(alphaWad);
 
-        const upperTick = alignRangeTick(amm.tick + tickDelta, false);
-        const lowerTick = alignRangeTick(amm.tick - tickDelta, true);
         return {
             ...res,
-            tickDelta,
-            equivalentAlpha: tickDeltaToAlphaWad(~~((upperTick - lowerTick) / 2)),
+            tickDelta: res.tickDeltaUpper,
+            equivalentAlpha: tickDeltaToAlphaWad(
+                ~~((TickMath.getTickAtPWad(res.upperPrice) - TickMath.getTickAtPWad(res.lowerPrice)) / 2),
+            ),
         };
     }
 
