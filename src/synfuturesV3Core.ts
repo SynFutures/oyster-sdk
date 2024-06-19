@@ -1851,7 +1851,8 @@ export class SynFuturesV3 {
         marginToDepositWad: BigNumber;
         minMargin: BigNumber;
         minEffectiveQuoteAmount: BigNumber;
-        equivalentAlpha: BigNumber;
+        equivalentAlphaLower: BigNumber;
+        equivalentAlphaUpper: BigNumber;
     }> {
         const instrumentAddress = await this.computeInstrumentAddress(
             instrumentIdentifier.marketType,
@@ -1932,7 +1933,8 @@ export class SynFuturesV3 {
             marginToDepositWad: this.marginToDepositWad(targetAddress, quoteInfo, margin),
             minMargin: minMargin,
             minEffectiveQuoteAmount: instrument.minRangeValue,
-            equivalentAlpha: tickDeltaToAlphaWad(~~((upperTick - lowerTick) / 2)),
+            equivalentAlphaLower: tickDeltaToAlphaWad(~~(upperTick - amm.tick)),
+            equivalentAlphaUpper: tickDeltaToAlphaWad(~~(amm.tick - lowerTick)),
         };
     }
 
