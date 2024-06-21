@@ -1,0 +1,31 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "allowSyntheticDefaultImports": true,
+        "allowJs": true,
+        "declaration": true,
+        "importHelpers": true,
+        "jsx": "react",
+        "alwaysStrict": true,
+        "sourceMap": true,
+        "forceConsistentCasingInFileNames": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitReturns": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noImplicitAny": true,
+        "noImplicitThis": true,
+        "strictNullChecks": true,
+        "resolveJsonModule": true,
+        "strict": true,
+        "esModuleInterop": false,
+        "skipLibCheck": true,
+        "rootDir": "./src",
+        "outDir": "./build",
+        "removeComments": true
+    },
+    "exclude": ["node_modules", "temp", "coverage", "build"],
+    "include": ["src/**/*.ts", "src/**/*.json"]
+}

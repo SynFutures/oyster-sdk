@@ -1,0 +1,9 @@
+.env
+node_modules
+docs
+misc
+src
+README.md
+tsconfig.json
+tsconfig.tsbuildinfo
+typedoc.json

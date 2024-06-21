@@ -1,0 +1,11 @@
+{
+    "entryPoints": ["src/index.ts"],
+    "plugin": ["typedoc-plugin-markdown"],
+    "out": "docs",
+    "disableSources": true,
+    "readme": "none",
+    "githubPages": false,
+    "exclude": ["src/math/*.ts", "src/chart/*.ts", "src/types/typechain/*.ts", "src/types/typechain/factories/*.ts"],
+    "excludeNotDocumented": true,
+    "excludeNotDocumentedKinds": ["Function", "Variable"]
+}

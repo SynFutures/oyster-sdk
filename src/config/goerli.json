@@ -1,0 +1,553 @@
+{
+  "chainId": 5,
+  "chainName":"Ethereum Testnet Goerli",
+  "nativeToken":"ETH",
+  "blockExplorerUrl":"https://goerli.etherscan.io",
+  "blockTime":4000,
+  "wrappedNativeAddress":"0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+  "subgraph":"https://api.thegraph.com/subgraphs/name/fan3cn/synfuturesv3-goerli-20240105",
+  "subgraphProxy":"https://api.synfutures.com/thegraph/v3-goerli-dev",
+  "commit":"875234fe40689cfdf58fd8720d0018da03b4bf9c",
+  "contractAddress":{
+    "config": "0x2f35A7cc1e1BAeE06B78B60277C7A4dD2678cCC4",
+    "gate": "0x506a943cA72acDE20fB9CEf3f6369bca5eB04455",
+    "observer": "0xE3eB9DbE184Ffa1537afA4360b9C51B9EbCe0d2e",
+    "guardian": "0x09c2ea7E1EF91b8e978929870E23045287aA682A",
+    "market":{
+      "LINK":{
+        "beacon": "0x94649BAc0eA5404A81eaa62D4EcD7df83E7C21d1",
+        "market": "0x4A5b84c90FE2cE12f40b4006790c2d3cF30Bc815"
+      },
+      "DEXV2":{
+        "beacon": "0x94649BAc0eA5404A81eaa62D4EcD7df83E7C21d1",
+        "market": "0x8E01b0c785dA870D39C5ED2a47D4D6458c7a3a72"
+      },
+      "EMG":{
+        "beacon": "0x94649BAc0eA5404A81eaa62D4EcD7df83E7C21d1",
+        "market": "0xFEE5eD10f097b180Ba31a6488F9e206213cfC01F"
+      },
+      "PYTH":{
+        "beacon": "0x94649BAc0eA5404A81eaa62D4EcD7df83E7C21d1",
+        "market": "0x38Fd0662958B1b1f113dd469D95356A3F94764AC"
+      }
+    },
+    "feederFactory": {
+      "PYTH": {
+        "beacon": "",
+        "factory": ""
+      },
+      "EMG": {
+        "beacon": "0x9A0683D90Bb947e6eb269c7805d8C20448679591",
+        "factory": "0xf9Bff8167c96ffcB86b506C008227b800CFa867e"
+      }
+    }
+  },
+  "marketConfig":{
+    "LINK":{
+      "dailyInterestRate":3,
+      "feederSource": [
+        {
+          "baseSymbol": "BTC",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0xA39434A63A52E749F02807ae27335515BA4b07F7",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "ETH",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "DAI",
+          "quoteSymbol": "USDM",
+          "ftype": 3,
+          "aggregator0": "0x0d79df66BE487753B02D015Fb622DED7f0E9798d",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "BTC",
+          "quoteSymbol": "WETH",
+          "ftype": 0,
+          "aggregator0": "0xA39434A63A52E749F02807ae27335515BA4b07F7",
+          "heartBeat0": 604800,
+          "aggregator1": "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "BNB",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x0F1c4E28A082FC5dbE6320231790299ba76CC06B",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "XRP",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0xeB84F47018D2f84B3e2B63798FbfeF90B5E7a2DE",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "STETH",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x88f3A0bb822553d136418Afd58c40002FD59de91",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "SOL",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0xD722d08fe1aa6d8bD725Be0f8eB9A1F3EFb2A132",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "ADA",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x4e3878aFA7DF9EB1e42c1CcEd4B4d735Cb6aE87F",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "DOGE",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0xd41373cE6c00c6897fbdaE7Ff9D6DC5a04a8BBe2",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "TRX",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0xDA4d1CeF4B49CEBe3751F84faF8fb2466E1D1CE3",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "TON",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x75905DE8083e51efD91BBe078D99095C4bd8afD8",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "MATIC",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x942cC2e29Aa5A84816948177350ec556fF32CcC5",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "DOT",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x0c2eef40900c04fED4010B7e617Aa98eDD9c0DbD",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "LTC",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0xb190a984cA25e0a50aAe00a0786a7cEe1a85D09b",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "WBTC",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0xF9a27522238eB9C8D25505fC39b538F863277476",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "BCH",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0xc253462d97104F839b0C2fdBcA01288a96470585",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "LINK",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x50b2b36233b862F8922C78F64e0eDDD754e7ed50",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "LEO",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x8504EF64adEbF1680a9Ff2110f29460D3026b7dA",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "AVAX",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0xd24d8f9de9f3694d961Aed400125A83D05b6d025",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "UNI",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x0df227f84e9Faf69CAEF5E7dF621d0BdF748676B",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "XLM",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0xf1Ce4fedcACFd62732aB33Ba67F883358365a65D",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "XMR",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x94F165d06a6bed5430191522B679Bd99aC6CfB55",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "OKB",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x67A6438C296017260d4f1cE4De0987FFADcF6A9A",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "ETC",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0xA1A0c19D372D2564DaC65B8D9f99105Ef1a8823D",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "ATOM",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x617eB27C06bc9A0432952A57d14A47Ea2F7F5b4B",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "HBAR",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0xf552071868454303f8E080c36934f8e0d903DC2D",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "FIL",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x19B47138A30ae7ca3d163a0e272907A9D7E190cD",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "ICP",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0xd68CD2B00C056434aaB193CFD20990f738ECE52A",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "CRO",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x65fc4692Dd327a20a18520fa28655d794E32AB1D",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "LDO",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x23be0b6E9a5fe82eE95c487B2CA002fae033129f",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "QNT",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x11B45e422A0c9E9D2d80EF5adBa729D5E8Ac7383",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "MKR",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0xf9D05fe3e100F785b2A265086ff4DC720449Cc44",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "APT",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x8e74a06603245fb37F0deBBeBbcf1b11Cd9e211b",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "VET",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x903237eFF7cB38070eF9fb2fB10EC257063E820E",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "OP",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x2FE87FbCFF6d74D766B0bEA61dBEA8A9d19e9506",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "ARB",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x71aD9Acb0844b3e2c588E42dEfb68a7f8E778724",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "NEAR",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0xf5cdC04549fB874239b5B168328BdAAD1F5f051c",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "KAS",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0xd359f331eEb4Fd98a457373aE4413b2625D6538a",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+
+        },
+        {
+          "baseSymbol": "MNT",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x3Ff57d184105359f58957c26fe4083B81d013F7e",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "AAVE",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0xEc91eeCed3334349D48A756a3A203A85165f62F7",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "RETH",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x7344cB72683225f7932Ca173CEb177A06cD8d8cF",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "STX",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0xaa4Ba81D25641C9d97A697b832Ab5d6237D17173",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "BSV",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x8dCA158Bcf9229525F368B01B3b113f7F74a4bc7",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "WBT",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0xfD266a77CC983a50b4FBBEDce20FC525f6e6a268",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "GRT",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x2F835663a4ABB02B0b5a39EF8193A01446479170",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "ALGO",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0xa1d87E657a9A862C5b02ebB60dbDa2f38cCaAf2C",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "RNDR",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x87B3ff49e7a539856A3f82c556520492a8B39163",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "INJ",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x7fA4Ae11a04eD19e0eE54b11412A28AaeEC9A4ca",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "XDC",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0xb74F08aaa3E2503631066faC13aEF648c9a48f2D",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        },
+        {
+          "baseSymbol": "SNX",
+          "quoteSymbol": "USDM",
+          "ftype": 1,
+          "aggregator0": "0x595d302e21BE1e53bA6d240EF4C85e971a21ae30",
+          "heartBeat0": 604800,
+          "aggregator1": "0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7",
+          "heartBeat1": 604800
+        }
+      ]
+    },
+    "DEXV2":{
+      "dailyInterestRate":3,
+      "feederSource": [
+        {
+          "factory": "0xDB45aeED5d75581ce137f074721804D8b43E9Ce9",
+          "router": "0xDB75F1e90E8B510150cf064D853ad8f1DC6532cA"
+        },
+        {
+          "factory": "0x8566B648A411940EF0777f5b6469a2d97856C0f4",
+          "router": "0x41dc63F3Da87fEE096F3D8fC3a19C09F8Acb48fF"
+        },
+        {
+          "factory": "0x743e84b4C77e98d7BaFC44893F830613298A2613",
+          "router": "0xae1e4f612D3661CA29BbB122Df5AAE052Cc112Be"
+        }
+      ]
+    },
+    "PYTH":{
+      "dailyInterestRate":3,
+      "pythCore":"0x0000000000000000000000000000000000000000",
+      "feederSource": []
+    }
+  },
+  "quotesParam":{
+    "USDM":{
+      "tradingFeeRatio": 30,
+      "protocolFeeRatio": 10,
+      "stabilityFeeRatioParam": "1370113808827263642",
+      "qtype": 1,
+      "minMarginAmount": "1000000000000000000",
+      "tip": "100000000000000000"
+    },
+    "WETH":{
+      "tradingFeeRatio": 30,
+      "protocolFeeRatio": 10,
+      "stabilityFeeRatioParam": "1370113808827263642",
+      "qtype": 2,
+      "minMarginAmount": "100000000000000",
+      "tip": "100000000000000"
+    }
+  },
+  "instrumentProxyByteCode": "0x6080604052604051610799380380610799833981016040819052610022916104b9565b80604051806020016040528060008152506100458282600061012460201b60201c565b50506000336001600160a01b0316634fe128d36040518163ffffffff1660e01b8152600401600060405180830381865afa158015610087573d6000803e3d6000fd5b505050506040513d6000823e601f3d908101601f191682016040526100af919081019061051c565b905061011c826001600160a01b0316635c60da1b6040518163ffffffff1660e01b8152600401602060405180830381865afa1580156100f2573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061011691906104b9565b826101e5565b505050610617565b61012d83610211565b6040516001600160a01b038416907f1cf3b03a6cf19fa2baba4df148e9dcabedea7f8a5c07840e207e5c089be95d3e90600090a260008251118061016e5750805b156101e0576101de836001600160a01b0316635c60da1b6040518163ffffffff1660e01b8152600401602060405180830381865afa1580156101b4573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906101d891906104b9565b836101e5565b505b505050565b606061020a838360405180606001604052806027815260200161077260279139610395565b9392505050565b6001600160a01b0381163b61027b5760405162461bcd60e51b815260206004820152602560248201527f455243313936373a206e657720626561636f6e206973206e6f74206120636f6e6044820152641d1c9858dd60da1b60648201526084015b60405180910390fd5b6102ef816001600160a01b0316635c60da1b6040518163ffffffff1660e01b8152600401602060405180830381865afa1580156102bc573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906102e091906104b9565b6001600160a01b03163b151590565b6103545760405162461bcd60e51b815260206004820152603060248201527f455243313936373a20626561636f6e20696d706c656d656e746174696f6e206960448201526f1cc81b9bdd08184818dbdb9d1c9858dd60821b6064820152608401610272565b7fa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d5080546001600160a01b0319166001600160a01b0392909216919091179055565b6060600080856001600160a01b0316856040516103b291906105c8565b600060405180830381855af49150503d80600081146103ed576040519150601f19603f3d011682016040523d82523d6000602084013e6103f2565b606091505b5090925090506104048683838761040e565b9695505050505050565b6060831561047d578251600003610476576001600160a01b0385163b6104765760405162461bcd60e51b815260206004820152601d60248201527f416464726573733a2063616c6c20746f206e6f6e2d636f6e74726163740000006044820152606401610272565b5081610487565b610487838361048f565b949350505050565b81511561049f5781518083602001fd5b8060405162461bcd60e51b815260040161027291906105e4565b6000602082840312156104cb57600080fd5b81516001600160a01b038116811461020a57600080fd5b634e487b7160e01b600052604160045260246000fd5b60005b838110156105135781810151838201526020016104fb565b50506000910152565b60006020828403121561052e57600080fd5b81516001600160401b038082111561054557600080fd5b818401915084601f83011261055957600080fd5b81518181111561056b5761056b6104e2565b604051601f8201601f19908116603f01168101908382118183101715610593576105936104e2565b816040528281528760208487010111156105ac57600080fd5b6105bd8360208301602088016104f8565b979650505050505050565b600082516105da8184602087016104f8565b9190910192915050565b60208152600082518060208401526106038160408501602087016104f8565b601f01601f19169190910160400192915050565b61014c806106266000396000f3fe60806040523661001357610011610017565b005b6100115b610027610022610029565b6100c2565b565b600061005c7fa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50546001600160a01b031690565b6001600160a01b0316635c60da1b6040518163ffffffff1660e01b8152600401602060405180830381865afa158015610099573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906100bd91906100e6565b905090565b3660008037600080366000845af43d6000803e8080156100e1573d6000f35b3d6000fd5b6000602082840312156100f857600080fd5b81516001600160a01b038116811461010f57600080fd5b939250505056fea2646970667358221220197f6b097d44a52479fabf25701b03d286488b2b844775cd235027385c4832ab64736f6c63430008130033416464726573733a206c6f772d6c6576656c2064656c65676174652063616c6c206661696c6564"
+}

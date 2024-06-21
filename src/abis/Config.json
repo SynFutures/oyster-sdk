@@ -1,0 +1,670 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "admin",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "BadMinMarginAmount",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BadProtocolFeeRatio",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BadTip",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BadTradingFeeRatio",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "LengthMismatch",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "LiquidatorWhitelistAlreadyDisabled",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "LpWhitelistAlreadyDisabled",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "mtype",
+        "type": "string"
+      }
+    ],
+    "name": "ResetMarketInfo",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SetMarketZeroAddress",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [],
+    "name": "DisableLiquidatorWhitelist",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [],
+    "name": "DisableLpWhitelist",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "blastPointsAddress",
+        "type": "address"
+      }
+    ],
+    "name": "SetBlastPointsAddress",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "blastPointsOperator",
+        "type": "address"
+      }
+    ],
+    "name": "SetBlastPointsOperator",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "authorized",
+        "type": "bool"
+      }
+    ],
+    "name": "SetLiquidatorWhitelist",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "authorized",
+        "type": "bool"
+      }
+    ],
+    "name": "SetLpWhitelist",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "mtype",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "market",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "beacon",
+        "type": "address"
+      }
+    ],
+    "name": "SetMarketInfo",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "quote",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint128",
+            "name": "minMarginAmount",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint16",
+            "name": "tradingFeeRatio",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "protocolFeeRatio",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint64",
+            "name": "stabilityFeeRatioParam",
+            "type": "uint64"
+          },
+          {
+            "internalType": "enum QuoteType",
+            "name": "qtype",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint128",
+            "name": "tip",
+            "type": "uint128"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct QuoteParam",
+        "name": "param",
+        "type": "tuple"
+      }
+    ],
+    "name": "SetQuoteParam",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "blastPointsAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "blastPointsOperator",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "disableLiquidatorWhitelist",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "disableLpWhitelist",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getAllMarkets",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "mtype",
+        "type": "string"
+      }
+    ],
+    "name": "getMarketInfo",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "string",
+            "name": "mtype",
+            "type": "string"
+          },
+          {
+            "internalType": "address",
+            "name": "market",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "beacon",
+            "type": "address"
+          }
+        ],
+        "internalType": "struct MarketInfo",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "quote",
+        "type": "address"
+      }
+    ],
+    "name": "getQuoteParam",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint128",
+            "name": "minMarginAmount",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint16",
+            "name": "tradingFeeRatio",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "protocolFeeRatio",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint64",
+            "name": "stabilityFeeRatioParam",
+            "type": "uint64"
+          },
+          {
+            "internalType": "enum QuoteType",
+            "name": "qtype",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint128",
+            "name": "tip",
+            "type": "uint128"
+          }
+        ],
+        "internalType": "struct QuoteParam",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "isAuthorizedLiquidator",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "isAuthorizedLp",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "liquidatorWhitelist",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "authorized",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "lpWhitelist",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "authorized",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "markets",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "marketsLength",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "openLiquidator",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "openLp",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_blastPointsAddress",
+        "type": "address"
+      }
+    ],
+    "name": "setBlastPointsAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_blastPointsOperator",
+        "type": "address"
+      }
+    ],
+    "name": "setBlastPointsOperator",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "users",
+        "type": "address[]"
+      },
+      {
+        "internalType": "bool[]",
+        "name": "flags",
+        "type": "bool[]"
+      }
+    ],
+    "name": "setLiquidatorWhitelist",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "users",
+        "type": "address[]"
+      },
+      {
+        "internalType": "bool[]",
+        "name": "flags",
+        "type": "bool[]"
+      }
+    ],
+    "name": "setLpWhiteList",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "mtype",
+        "type": "string"
+      },
+      {
+        "internalType": "address",
+        "name": "market",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "beacon",
+        "type": "address"
+      }
+    ],
+    "name": "setMarketInfo",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "coins",
+        "type": "address[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint128",
+            "name": "minMarginAmount",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint16",
+            "name": "tradingFeeRatio",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "protocolFeeRatio",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint64",
+            "name": "stabilityFeeRatioParam",
+            "type": "uint64"
+          },
+          {
+            "internalType": "enum QuoteType",
+            "name": "qtype",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint128",
+            "name": "tip",
+            "type": "uint128"
+          }
+        ],
+        "internalType": "struct QuoteParam[]",
+        "name": "params",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "setQuoteParam",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
