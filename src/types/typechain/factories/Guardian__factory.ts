@@ -413,6 +413,24 @@ const _abi = [
   {
     inputs: [
       {
+        internalType: "address",
+        name: "quote",
+        type: "address",
+      },
+      {
+        internalType: "bool",
+        name: "enable",
+        type: "bool",
+      },
+    ],
+    name: "enableLpWhitelistForQuote",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "address[]",
         name: "instruments",
         type: "address[]",
@@ -1087,6 +1105,11 @@ const _abi = [
   },
   {
     inputs: [
+      {
+        internalType: "address[]",
+        name: "quotes",
+        type: "address[]",
+      },
       {
         internalType: "address[]",
         name: "users",
