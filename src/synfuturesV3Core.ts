@@ -719,9 +719,10 @@ export class SynFuturesV3 {
     }
 
     async openLp(quoteAddr?: string, overrides?: CallOverrides): Promise<boolean> {
-        if (this.ctx.chainId === CHAIN_ID.BASE && quoteAddr) {
+        if ((this.ctx.chainId === CHAIN_ID.BASE || this.ctx.chainId === CHAIN_ID.LOCAL) && quoteAddr) {
             try {
-                return this.contracts.config.restrictLp(quoteAddr, overrides ?? {});
+                const restricted = await this.contracts.config.restrictLp(quoteAddr, overrides ?? {});
+                return !restricted;
             } catch (e) {
                 // ignore error since the contract on some network may not have this function
             }
@@ -729,29 +730,32 @@ export class SynFuturesV3 {
         return this.contracts.config.openLp(overrides ?? {});
     }
 
-    async inWhiteListLps(traders: string[], quoteAddr?: string, overrides?: CallOverrides): Promise<boolean[]> {
+    async inWhiteListLps(quoteAddr: string, traders: string[], overrides?: CallOverrides): Promise<boolean[]> {
         let calls = [];
         let results: boolean[] = [];
         let configInterface: ethers.utils.Interface = this.contracts.config.interface;
-        if (this.ctx.chainId === CHAIN_ID.BASE && quoteAddr) {
+        if ((this.ctx.chainId === CHAIN_ID.BASE || this.ctx.chainId === CHAIN_ID.LOCAL) && quoteAddr) {
             for (const trader of traders) {
                 calls.push({
                     target: this.contracts.config.address,
                     callData: configInterface.encodeFunctionData('lpWhitelist', [quoteAddr, trader]),
                 });
             }
-            const rawData = await this.ctx.multicall3.callStatic.aggregate(calls, overrides ?? {});
-            for (const data of rawData.returnData) {
-                results.push(configInterface.decodeFunctionResult('lpWhitelist', data)[0]);
+            try {
+                const rawData = await this.ctx.multicall3.callStatic.aggregate(calls, overrides ?? {});
+                for (const data of rawData.returnData) {
+                    results.push(configInterface.decodeFunctionResult('lpWhitelist', data)[0]);
+                }
+                return results;
+            } catch (e) {
+                // ignore error since the contract on some network may not have this function
             }
-            return results;
         }
-        console.log('inWhiteListLps use legacy function');
         // legacy function for other networks
         calls = [];
         results = [];
         configInterface = new ethers.utils.Interface([
-            'function lpWhitelist(address quote, address user) external view returns (bool)',
+            'function lpWhitelist(address user) external view returns (bool)',
         ]);
 
         for (const trader of traders) {
