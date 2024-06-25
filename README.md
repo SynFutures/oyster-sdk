@@ -658,7 +658,7 @@ async function main() {
             quoteSymbol: instrument.info.quote.symbol,
         },
         PERP_EXPIRY,
-        ethers.utils.parseUnits('1.8', 18), // alpha, liquidity range factor, 1.8 means ± 80%
+        ethers.utils.parseUnits('1.8', 18), // alpha, liquidity range factor, 1.8 means [1/1.8, 1.8]x current price
         margin,
         100, // // slippage, 100 means 100 / 10000 = 1%
     );
@@ -1096,7 +1096,7 @@ async function main() {
     const instruments = await sdk.getAllInstruments();
     const instrument = getInstrumentBySymbol('BTC-USDB-PYTH');
     const pair = instrument.pairs.get(PERP_EXPIRY)!;
-    // alpha means the width of the range -> 1.5 means  +- 50% of the current price
+    // alpha means the width of the range -> 1.5 means [1/1.5, 1.5]x current price
     const alpha = '1.5';
     // compute APY need pairs data
     const pairDatas = await sdk.subgraph.getPairsData();
@@ -1588,11 +1588,11 @@ export async function demoAdd(): Promise<void> {
     const signer = new ethers.Wallet(process.env.ALICE_PRIVATE_KEY as string, synfV3.ctx.provider);
     const margin = parseEther('1000'); // margin to add liquidity, has to be larger than minRangeValue
     console.log(formatWad(instrument.minRangeValue));
-    // alphaWad has to be larger than (1 + imr) and less than maxAlphaWad which is round +- 500%
+    // alphaWad has to be larger than (1 + imr) and less than maxAlphaWad which is round [1/5, 5]x
     const minAlphaWad = parseEther(((RATIO_BASE + instrument.setting.initialMarginRatio) / RATIO_BASE).toString());
     const maxAlphaWad = tickDeltaToAlphaWad(TICK_DELTA_MAX);
     console.log(fromWad(minAlphaWad), fromWad(maxAlphaWad));
-    const alphaWad = parseEther('1.8'); // liquidity range factor, 1.8 means ± 80%
+    const alphaWad = parseEther('1.8'); // liquidity range factor, 1.8 means [1/1.8, 1.8]x current price
     await synfV3.syncVaultCacheWithAllQuotes(signer.address);
     const rangeSimulation = await synfV3.simulateAddLiquidity(
         signer.address,
