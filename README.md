@@ -86,6 +86,7 @@ new Contract(address, INSTRUMENT_ABI, signerOrProvider);
 29. [Direct cancel interface](#direct-cancel-interface)
 30. [Update pair](#update-pair)
 31. [Settle trader](#settle-trader)
+32. [Parse tx](#parse-tx)
 
 ### Prerequisites
 
@@ -1763,4 +1764,61 @@ export async function demoSettle(): Promise<void> {
 }
 
 demoSettle().catch(console.error);
+```
+
+### Parse tx
+
+```ts
+async function demoParseTx(): Promise<void> {
+    const synfV3 = SynFuturesV3.getInstance('Blast');
+    const allInstruments = await synfV3.getAllInstruments();
+    const instrument = allInstruments.find((i) => i.info.symbol.includes('BTC-USDB-PYTH'))!;
+
+    // 1. parse successful tx
+    // to successfully parse instrument event in the tx, you need to register contract parser first
+    synfV3.ctx.registerContractParser(instrument.info.addr, new InstrumentParser());
+    // take add tx for example
+    const addTx = 'add_tx_hash_here';
+    const response = await synfV3.ctx.provider.getTransaction(addTx);
+    // fetch contract parser for parsing tx calldata
+    const contractParser = synfV3.ctx.getContractParser(instrument.info.addr)!;
+    console.log(await contractParser.parseTransaction({ data: response.data, value: response.value }));
+    // parse tx details
+    await synfV3.ctx.handleResponse(response);
+    // get tx receipt for event handling
+    const receipt = await synfV3.ctx.provider.getTransactionReceipt(addTx);
+    // parse events using tx receipt
+    await synfV3.ctx.handleReceipt(receipt);
+
+    // 2. parse revert tx and get revert reason
+    const revertTxHash = 'revert_tx_hash_here';
+    const tx = await synfV3.ctx.provider.getTransaction(revertTxHash);
+    const printRawLog = (log: Log) => {
+        console.log('raw event', 'data:', log.data, 'topics:', log.topics);
+    };
+    try {
+        const receipt = await tx.wait();
+        for (const log of receipt.logs) {
+            const parser = synfV3.ctx.getContractParser(log.address);
+            if (!parser) {
+                printRawLog(log);
+                continue;
+            }
+            let event;
+            try {
+                event = parser.interface.parseLog(log);
+            } catch (err) {
+                printRawLog(log);
+                continue;
+            }
+            const parsedEvent = await parser.parseEvent(event);
+            // add logic here to find log name 'Add' from receipt
+            console.log('event ->', parsedEvent);
+        }
+    } catch (e) {
+        console.log(await synfV3.ctx.normalizeError(e));
+    }
+}
+
+demoParseTx().catch(console.error);
 ```
