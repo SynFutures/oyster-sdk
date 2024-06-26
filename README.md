@@ -1866,3 +1866,54 @@ export async function demoRestrictions(): Promise<void> {
 
 demoRestrictions().catch(console.error);
 ```
+
+## 🔗 Referral Code
+
+### Introduction
+
+On-chain Referral Code is a referral code embedded in transactions on the SynFutures platform, used to track and record user transactions. This referral code is also known as the Channel Code.
+
+### Features
+
+1. Embedded in Transactions: The referral code is written into transactions such as add, trade, place.
+2. Platform Access: Users can access the SynFutures platform via a link with the referral code (e.g., https://oyster.synfutures.com/#/market?channel=8test8).
+3. Recording Referral Code: The referral code is recorded in transactions during user sessions.
+4. Transaction Query: Use the SDK to query transaction records with the referral code.
+
+### Usage Instructions
+
+1. Generate Referral Link: Generate a link with the referral code (format: https://oyster.synfutures.com/#/market?channel={channelCode}) and share it with other users. For example, if the channelCode is 8test8, the link would be https://oyster.synfutures.com/#/market?channel=8test8.
+2. Access Platform: Users access the SynFutures platform via the referral link.
+3. Perform Transactions: Users perform add, trade, place transactions on the platform.
+4. Query Transactions: Use the SDK to query transaction records with the referral code.
+
+### Note
+
+-   Referral Code Length: The channelCode must be 6 characters long.
+-   Make sure to contact us through Discord or Telegram to ensure the uniqueness of the referral code before generating the link.
+
+### Fill in the referral code through the SDK
+
+When calling `adjust`/`add`/`trade`/`tradeWithRisk`/`place`/`batchPlace`/`tradeToTickAndPlaceOrder`/`intuitiveTrade`/`adjustMargin`/`limitOrder`/`addLiquidityWithAsymmetricRange`/`addLiquidity`, you can pass in the last parameter to fill in the referral code, for example:
+
+```ts
+// use referral code
+// NOTICE: channel code must be 6 bytes long
+const channel = '8test8';
+const getReferralCode = (channel: string): string => {
+    return '\xff\xff' + channel; // 0xffff means you are sending tx using SDK and private key
+};
+await synfV3.place(
+    signer,
+    instrument.info.addr,
+    {
+        expiry: pair.amm.expiry,
+        tick, // the price you want to place your order in tick format
+        size: size,
+        amount: margin,
+        deadline: now() + 10 * 60,
+    },
+    {}, // here is overrides, you can pass in custom overrides for gas price and limit
+    getReferralCode(channel),
+);
+```
