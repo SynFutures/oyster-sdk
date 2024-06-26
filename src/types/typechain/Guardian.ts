@@ -99,6 +99,7 @@ export interface GuardianInterface extends utils.Interface {
     "disableLiquidatorWhitelist()": FunctionFragment;
     "disableLpWhitelist()": FunctionFragment;
     "emergingFeederFactory()": FunctionFragment;
+    "enableLpWhitelistForQuote(address,bool)": FunctionFragment;
     "freeze(address[])": FunctionFragment;
     "gate()": FunctionFragment;
     "getRoleAdmin(bytes32)": FunctionFragment;
@@ -132,7 +133,7 @@ export interface GuardianInterface extends utils.Interface {
     "setInstrumentLeverage(address[],uint8[],uint16[])": FunctionFragment;
     "setInstrumentQuoteParam(address[],(uint128,uint16,uint16,uint64,uint8,uint128)[])": FunctionFragment;
     "setLiquidatorWhitelist(address[],bool[])": FunctionFragment;
-    "setLpWhiteList(address[],bool[])": FunctionFragment;
+    "setLpWhiteList(address[],address[],bool[])": FunctionFragment;
     "setMarketInfo(string,address,address)": FunctionFragment;
     "setPendingDuration(uint256)": FunctionFragment;
     "setPythFeederFactoryAddress(address)": FunctionFragment;
@@ -168,6 +169,7 @@ export interface GuardianInterface extends utils.Interface {
       | "disableLiquidatorWhitelist"
       | "disableLpWhitelist"
       | "emergingFeederFactory"
+      | "enableLpWhitelistForQuote"
       | "freeze"
       | "gate"
       | "getRoleAdmin"
@@ -282,6 +284,11 @@ export interface GuardianInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "emergingFeederFactory",
     values?: undefined
+  ): string;
+  
+  encodeFunctionData(
+    functionFragment: "enableLpWhitelistForQuote",
+    values: [PromiseOrValue<string>, PromiseOrValue<boolean>]
   ): string;
   encodeFunctionData(
     functionFragment: "freeze",
@@ -426,7 +433,11 @@ export interface GuardianInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "setLpWhiteList",
-    values: [PromiseOrValue<string>[], PromiseOrValue<boolean>[]]
+    values: [
+      PromiseOrValue<string>[],
+      PromiseOrValue<string>[],
+      PromiseOrValue<boolean>[]
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "setMarketInfo",
@@ -543,6 +554,10 @@ export interface GuardianInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "emergingFeederFactory",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "enableLpWhitelistForQuote",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "freeze", data: BytesLike): Result;
@@ -886,6 +901,12 @@ export interface Guardian extends BaseContract {
 
     emergingFeederFactory(overrides?: CallOverrides): Promise<[string]>;
 
+    enableLpWhitelistForQuote(
+      quote: PromiseOrValue<string>,
+      enable: PromiseOrValue<boolean>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
     freeze(
       instruments: PromiseOrValue<string>[],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -1073,6 +1094,7 @@ export interface Guardian extends BaseContract {
     ): Promise<ContractTransaction>;
 
     setLpWhiteList(
+      quotes: PromiseOrValue<string>[],
       users: PromiseOrValue<string>[],
       flags: PromiseOrValue<boolean>[],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -1211,6 +1233,12 @@ export interface Guardian extends BaseContract {
   ): Promise<ContractTransaction>;
 
   emergingFeederFactory(overrides?: CallOverrides): Promise<string>;
+
+  enableLpWhitelistForQuote(
+    quote: PromiseOrValue<string>,
+    enable: PromiseOrValue<boolean>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
 
   freeze(
     instruments: PromiseOrValue<string>[],
@@ -1534,6 +1562,12 @@ export interface Guardian extends BaseContract {
 
     emergingFeederFactory(overrides?: CallOverrides): Promise<string>;
 
+    enableLpWhitelistForQuote(
+      quote: PromiseOrValue<string>,
+      enable: PromiseOrValue<boolean>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     freeze(
       instruments: PromiseOrValue<string>[],
       overrides?: CallOverrides
@@ -1721,6 +1755,7 @@ export interface Guardian extends BaseContract {
     ): Promise<void>;
 
     setLpWhiteList(
+      quotes: PromiseOrValue<string>[],
       users: PromiseOrValue<string>[],
       flags: PromiseOrValue<boolean>[],
       overrides?: CallOverrides
@@ -1912,6 +1947,12 @@ export interface Guardian extends BaseContract {
 
     emergingFeederFactory(overrides?: CallOverrides): Promise<BigNumber>;
 
+    enableLpWhitelistForQuote(
+      quote: PromiseOrValue<string>,
+      enable: PromiseOrValue<boolean>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
     freeze(
       instruments: PromiseOrValue<string>[],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -2092,6 +2133,7 @@ export interface Guardian extends BaseContract {
     ): Promise<BigNumber>;
 
     setLpWhiteList(
+      quotes: PromiseOrValue<string>[],
       users: PromiseOrValue<string>[],
       flags: PromiseOrValue<boolean>[],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -2236,6 +2278,12 @@ export interface Guardian extends BaseContract {
 
     emergingFeederFactory(
       overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    enableLpWhitelistForQuote(
+      quote: PromiseOrValue<string>,
+      enable: PromiseOrValue<boolean>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
     freeze(
@@ -2418,6 +2466,7 @@ export interface Guardian extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     setLpWhiteList(
+      quotes: PromiseOrValue<string>[],
       users: PromiseOrValue<string>[],
       flags: PromiseOrValue<boolean>[],
       overrides?: Overrides & { from?: PromiseOrValue<string> }

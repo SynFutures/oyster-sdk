@@ -3,48 +3,48 @@
   "chainName":"Base Mainnet",
   "nativeToken":"ETH",
   "blockExplorerUrl":"https://basescan.org/",
-  "blockTime":4000,
+  "blockTime":1000,
   "wrappedNativeAddress":"0x4200000000000000000000000000000000000006",
   "subgraph":"https://api.synfutures.com/thegraph/v3-base",
   "subgraphProxy":"https://api.synfutures.com/thegraph/v3-base",
   "commit":"138e9075500909039420f9ad6f67e71312c6bf11",
-  "contractAddress":{
-    "config": "0x5eE78082B1947a8a418F1A599041D157e2c5c886",
-    "gate": "0xa49B3Fdca2Ec1Ec9DD49A754D4c8f2ae7479aA79",
-    "observer": "0x769B236469AB46F2363a2fFa4d6D0413C5320FB6",
-    "guardian": "0x245bb4abB5c7f09b785E3483057C130a52FAbb7A",
+ "contractAddress": {
+    "config": "0xB63902d38738e353f3f52AdD203C418A0bFEa172",
+    "gate": "0x208B443983D8BcC8578e9D86Db23FbA547071270",
+    "observer": "0xDb166a6E454d2a273Cd50CCD6420703564B2a830",
+    "guardian": "0xBe0F37274AdADb32441acDB74791de159B0BD87E",
     "market": {
       "LINK": {
-        "beacon": "0x7fF25eCD9646376cc2170B4471638dD0D2b27796",
-        "market": "0x3BC7AD40aADc425CD670F8DcAE013E7c5eee3B76"
+        "beacon": "0x9674e2F58485B987d7d537a059FB002aE1d44959",
+        "market": "0x6926cC6875D3721c13325d301B4170A57F2C0b18"
       },
       "DEXV2": {
-        "beacon": "0x7fF25eCD9646376cc2170B4471638dD0D2b27796",
-        "market": "0x730D6aaD0DD58f5d5d25AfEbD13d5A2bf76aC194"
+        "beacon": "0x9674e2F58485B987d7d537a059FB002aE1d44959",
+        "market": "0xc3eC131979979baC0a9a355129671151CfA5725E"
       },
       "EMG": {
-        "beacon": "0x7fF25eCD9646376cc2170B4471638dD0D2b27796",
-        "market": "0x4A5EF7Ba050D7988A4A78020EEAD7202E05ADc08"
+        "beacon": "0x9674e2F58485B987d7d537a059FB002aE1d44959",
+        "market": "0x8F76920D741A6E2d324c9CC8878cd5a9371E81CD"
       },
       "PYTH": {
-        "beacon": "0x7fF25eCD9646376cc2170B4471638dD0D2b27796",
-        "market": "0xc003Fae5a3996A257cca4Db2c3F9101ce14A47D1"
+        "beacon": "0x9674e2F58485B987d7d537a059FB002aE1d44959",
+        "market": "0xBA2593A538df42f4673A5c72A444d70d6B91f3D9"
       }
     },
     "feederFactory": {
       "PYTH": {
-        "beacon": "0x3155d19a219AF263D990e395A36Fb101cC80240B",
-        "factory": "0x034a4f1056A07680205B3eA493004c8ab8a08123"
+        "beacon": "0xA201f6d34Ae42c632a9DFaB2b420036e2Cc005FE",
+        "factory": "0x0b54c57fe93B9d71c29Bd5d466bAa2117bbF4D1D"
       },
       "EMG": {
-        "beacon": "0xAeE5f47D150EE1786B58A6b94BD52616790Eacaa",
-        "factory": "0x3af980f4a4554C4610140f1f2611DC4fF3439db2"
+        "beacon": "0x1F8E1A7E0a94d77BD4FADf629D40aE974C1b7C84",
+        "factory": "0xE73d8117fdBD05aD7d632A3798c6925BFCdCF8AA"
       }
     }
   },
-  "marketConfig":{
-    "LINK":{
-      "dailyInterestRate":3,
+  "marketConfig": {
+    "LINK": {
+      "dailyInterestRate": 3,
       "feederSource": [
         {
           "baseSymbol": "BTC",
@@ -54,16 +54,20 @@
           "heartBeat0": 1200,
           "aggregator1": "0x7e860098F58bBFC8648a4311b374B1D669a2bc6B",
           "heartBeat1": 86400
+        },
+        {
+          "baseSymbol": "ETH",
+          "quoteSymbol": "USDC",
+          "ftype": 1,
+          "aggregator0": "0x71041dddad3595F9CEd3DcCFBe3D1F4b0a16Bb70",
+          "heartBeat0": 1200,
+          "aggregator1": "0x7e860098F58bBFC8648a4311b374B1D669a2bc6B",
+          "heartBeat1": 86400
         }
       ]
     },
-    "PYTH":{
-      "dailyInterestRate":3,
-      "feederSource": [
-      ]
-    },
-    "DEXV2":{
-      "dailyInterestRate":3,
+    "DEXV2": {
+      "dailyInterestRate": 3,
       "feederSource": [
         {
           "name": "UniswapV2",
@@ -71,9 +75,17 @@
           "router": "0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24"
         }
       ]
+    },
+    "EMG": {
+      "dailyInterestRate": 3,
+      "feederSource": []
+    },
+    "PYTH": {
+      "dailyInterestRate": 3,
+      "feederSource": []
     }
   },
-  "quotesParam":{
+  "quotesParam": {
     "USDC": {
       "tradingFeeRatio": 1,
       "stabilityFeeRatioParam": "14415916854096691200",

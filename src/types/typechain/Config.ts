@@ -70,22 +70,24 @@ export interface ConfigInterface extends utils.Interface {
     "blastPointsOperator()": FunctionFragment;
     "disableLiquidatorWhitelist()": FunctionFragment;
     "disableLpWhitelist()": FunctionFragment;
+    "enableLpWhitelistForQuote(address,bool)": FunctionFragment;
     "getAllMarkets()": FunctionFragment;
     "getMarketInfo(string)": FunctionFragment;
     "getQuoteParam(address)": FunctionFragment;
     "isAuthorizedLiquidator(address)": FunctionFragment;
-    "isAuthorizedLp(address)": FunctionFragment;
+    "isAuthorizedLp(address,address)": FunctionFragment;
     "liquidatorWhitelist(address)": FunctionFragment;
-    "lpWhitelist(address)": FunctionFragment;
+    "lpWhitelist(address,address)": FunctionFragment;
     "markets(uint256)": FunctionFragment;
     "marketsLength()": FunctionFragment;
-    "openLiquidator()": FunctionFragment;
+    "openLiquidator()": FunctionFragment;    
     "openLp()": FunctionFragment;
     "owner()": FunctionFragment;
+    "restrictLp(address)": FunctionFragment;
     "setBlastPointsAddress(address)": FunctionFragment;
     "setBlastPointsOperator(address)": FunctionFragment;
     "setLiquidatorWhitelist(address[],bool[])": FunctionFragment;
-    "setLpWhiteList(address[],bool[])": FunctionFragment;
+    "setLpWhiteList(address[],address[],bool[])": FunctionFragment;
     "setMarketInfo(string,address,address)": FunctionFragment;
     "setQuoteParam(address[],(uint128,uint16,uint16,uint64,uint8,uint128)[])": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
@@ -97,6 +99,7 @@ export interface ConfigInterface extends utils.Interface {
       | "blastPointsOperator"
       | "disableLiquidatorWhitelist"
       | "disableLpWhitelist"
+      | "enableLpWhitelistForQuote"
       | "getAllMarkets"
       | "getMarketInfo"
       | "getQuoteParam"
@@ -109,6 +112,7 @@ export interface ConfigInterface extends utils.Interface {
       | "openLiquidator"
       | "openLp"
       | "owner"
+      | "restrictLp"
       | "setBlastPointsAddress"
       | "setBlastPointsOperator"
       | "setLiquidatorWhitelist"
@@ -135,6 +139,10 @@ export interface ConfigInterface extends utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "enableLpWhitelistForQuote",
+    values: [PromiseOrValue<string>, PromiseOrValue<boolean>]
+  ): string;
+  encodeFunctionData(
     functionFragment: "getAllMarkets",
     values?: undefined
   ): string;
@@ -152,7 +160,7 @@ export interface ConfigInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "isAuthorizedLp",
-    values: [PromiseOrValue<string>]
+    values: [PromiseOrValue<string>, PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
     functionFragment: "liquidatorWhitelist",
@@ -160,7 +168,7 @@ export interface ConfigInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "lpWhitelist",
-    values: [PromiseOrValue<string>]
+    values: [PromiseOrValue<string>, PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
     functionFragment: "markets",
@@ -177,6 +185,10 @@ export interface ConfigInterface extends utils.Interface {
   encodeFunctionData(functionFragment: "openLp", values?: undefined): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
+    functionFragment: "restrictLp",
+    values: [PromiseOrValue<string>]
+  ): string;
+  encodeFunctionData(
     functionFragment: "setBlastPointsAddress",
     values: [PromiseOrValue<string>]
   ): string;
@@ -190,7 +202,11 @@ export interface ConfigInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "setLpWhiteList",
-    values: [PromiseOrValue<string>[], PromiseOrValue<boolean>[]]
+    values: [
+      PromiseOrValue<string>[],
+      PromiseOrValue<string>[],
+      PromiseOrValue<boolean>[]
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "setMarketInfo",
@@ -217,12 +233,16 @@ export interface ConfigInterface extends utils.Interface {
     functionFragment: "blastPointsOperator",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(
+    decodeFunctionResult(
     functionFragment: "disableLiquidatorWhitelist",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "disableLpWhitelist",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "enableLpWhitelistForQuote",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -264,6 +284,7 @@ export interface ConfigInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "openLp", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "restrictLp", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "setBlastPointsAddress",
     data: BytesLike
@@ -272,7 +293,7 @@ export interface ConfigInterface extends utils.Interface {
     functionFragment: "setBlastPointsOperator",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(
+    decodeFunctionResult(
     functionFragment: "setLiquidatorWhitelist",
     data: BytesLike
   ): Result;
@@ -295,18 +316,22 @@ export interface ConfigInterface extends utils.Interface {
 
   events: {
     "DisableLiquidatorWhitelist()": EventFragment;
+    "EnableLpWhitelistForQuote(address,bool)": EventFragment;
     "DisableLpWhitelist()": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
     "SetBlastPointsAddress(address)": EventFragment;
     "SetBlastPointsOperator(address)": EventFragment;
     "SetLiquidatorWhitelist(address,bool)": EventFragment;
     "SetLpWhitelist(address,bool)": EventFragment;
+    "SetLpWhitelistForQuote(address,address,bool)": EventFragment;
     "SetMarketInfo(string,address,address)": EventFragment;
     "SetQuoteParam(address,tuple)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "DisableLiquidatorWhitelist"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "EnableLpWhitelistForQuote"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "DisableLpWhitelist"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "SetLpWhitelistForQuote"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "SetBlastPointsAddress"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "SetBlastPointsOperator"): EventFragment;
@@ -334,6 +359,19 @@ export type DisableLpWhitelistEvent = TypedEvent<
 export type DisableLpWhitelistEventFilter =
   TypedEventFilter<DisableLpWhitelistEvent>;
 
+
+export interface EnableLpWhitelistForQuoteEventObject {
+  quote: string;
+  restricted: boolean;
+}
+export type EnableLpWhitelistForQuoteEvent = TypedEvent<
+  [string, boolean],
+  EnableLpWhitelistForQuoteEventObject
+>;
+
+export type EnableLpWhitelistForQuoteEventFilter =
+  TypedEventFilter<EnableLpWhitelistForQuoteEvent>;
+
 export interface OwnershipTransferredEventObject {
   user: string;
   newOwner: string;
@@ -346,29 +384,29 @@ export type OwnershipTransferredEvent = TypedEvent<
 export type OwnershipTransferredEventFilter =
   TypedEventFilter<OwnershipTransferredEvent>;
 
-export interface SetBlastPointsAddressEventObject {
-  blastPointsAddress: string;
-}
-export type SetBlastPointsAddressEvent = TypedEvent<
-  [string],
-  SetBlastPointsAddressEventObject
->;
+  export interface SetBlastPointsAddressEventObject {
+    blastPointsAddress: string;
+  }
+  export type SetBlastPointsAddressEvent = TypedEvent<
+    [string],
+    SetBlastPointsAddressEventObject
+  >;
+  
+  export type SetBlastPointsAddressEventFilter =
+    TypedEventFilter<SetBlastPointsAddressEvent>;
+  
+  export interface SetBlastPointsOperatorEventObject {
+    blastPointsOperator: string;
+  }
+  export type SetBlastPointsOperatorEvent = TypedEvent<
+    [string],
+    SetBlastPointsOperatorEventObject
+  >;
+  
+  export type SetBlastPointsOperatorEventFilter =
+    TypedEventFilter<SetBlastPointsOperatorEvent>;
 
-export type SetBlastPointsAddressEventFilter =
-  TypedEventFilter<SetBlastPointsAddressEvent>;
-
-export interface SetBlastPointsOperatorEventObject {
-  blastPointsOperator: string;
-}
-export type SetBlastPointsOperatorEvent = TypedEvent<
-  [string],
-  SetBlastPointsOperatorEventObject
->;
-
-export type SetBlastPointsOperatorEventFilter =
-  TypedEventFilter<SetBlastPointsOperatorEvent>;
-
-export interface SetLiquidatorWhitelistEventObject {
+  export interface SetLiquidatorWhitelistEventObject {
   user: string;
   authorized: boolean;
 }
@@ -380,16 +418,29 @@ export type SetLiquidatorWhitelistEvent = TypedEvent<
 export type SetLiquidatorWhitelistEventFilter =
   TypedEventFilter<SetLiquidatorWhitelistEvent>;
 
-export interface SetLpWhitelistEventObject {
+  export interface SetLpWhitelistEventObject {
+    user: string;
+    authorized: boolean;
+  }
+  export type SetLpWhitelistEvent = TypedEvent<
+    [string, boolean],
+    SetLpWhitelistEventObject
+  >;
+
+export type SetLpWhitelistEventFilter = TypedEventFilter<SetLpWhitelistEvent>;
+
+export interface SetLpWhitelistForQuoteEventObject {
+  quote: string;
   user: string;
   authorized: boolean;
 }
-export type SetLpWhitelistEvent = TypedEvent<
-  [string, boolean],
-  SetLpWhitelistEventObject
+export type SetLpWhitelistForQuoteEvent = TypedEvent<
+  [string, string, boolean],
+  SetLpWhitelistForQuoteEventObject
 >;
 
-export type SetLpWhitelistEventFilter = TypedEventFilter<SetLpWhitelistEvent>;
+export type SetLpWhitelistForQuoteEventFilter = TypedEventFilter<SetLpWhitelistForQuoteEvent>;
+
 
 export interface SetMarketInfoEventObject {
   mtype: string;
@@ -453,6 +504,12 @@ export interface Config extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
+    enableLpWhitelistForQuote(
+      quote: PromiseOrValue<string>,
+      enable: PromiseOrValue<boolean>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
     getAllMarkets(overrides?: CallOverrides): Promise<[string[]]>;
 
     getMarketInfo(
@@ -471,6 +528,7 @@ export interface Config extends BaseContract {
     ): Promise<[boolean]>;
 
     isAuthorizedLp(
+      quote: PromiseOrValue<string>,
       user: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<[boolean]>;
@@ -481,6 +539,7 @@ export interface Config extends BaseContract {
     ): Promise<[boolean] & { authorized: boolean }>;
 
     lpWhitelist(
+      quote: PromiseOrValue<string>,
       user: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<[boolean] & { authorized: boolean }>;
@@ -498,6 +557,10 @@ export interface Config extends BaseContract {
 
     owner(overrides?: CallOverrides): Promise<[string]>;
 
+    restrictLp(
+      quote: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<[boolean] & { restricted: boolean }>;
     setBlastPointsAddress(
       _blastPointsAddress: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -515,6 +578,7 @@ export interface Config extends BaseContract {
     ): Promise<ContractTransaction>;
 
     setLpWhiteList(
+      quotes: PromiseOrValue<string>[],
       users: PromiseOrValue<string>[],
       flags: PromiseOrValue<boolean>[],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -551,6 +615,12 @@ export interface Config extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
+  enableLpWhitelistForQuote(
+    quote: PromiseOrValue<string>,
+    enable: PromiseOrValue<boolean>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
   getAllMarkets(overrides?: CallOverrides): Promise<string[]>;
 
   getMarketInfo(
@@ -569,6 +639,7 @@ export interface Config extends BaseContract {
   ): Promise<boolean>;
 
   isAuthorizedLp(
+    quote: PromiseOrValue<string>,
     user: PromiseOrValue<string>,
     overrides?: CallOverrides
   ): Promise<boolean>;
@@ -579,6 +650,7 @@ export interface Config extends BaseContract {
   ): Promise<boolean>;
 
   lpWhitelist(
+    quote: PromiseOrValue<string>,
     user: PromiseOrValue<string>,
     overrides?: CallOverrides
   ): Promise<boolean>;
@@ -591,7 +663,6 @@ export interface Config extends BaseContract {
   marketsLength(overrides?: CallOverrides): Promise<BigNumber>;
 
   openLiquidator(overrides?: CallOverrides): Promise<boolean>;
-
   openLp(overrides?: CallOverrides): Promise<boolean>;
 
   owner(overrides?: CallOverrides): Promise<string>;
@@ -606,6 +677,11 @@ export interface Config extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
+  restrictLp(
+    quote: PromiseOrValue<string>,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
   setLiquidatorWhitelist(
     users: PromiseOrValue<string>[],
     flags: PromiseOrValue<boolean>[],
@@ -613,6 +689,7 @@ export interface Config extends BaseContract {
   ): Promise<ContractTransaction>;
 
   setLpWhiteList(
+    quotes: PromiseOrValue<string>[],
     users: PromiseOrValue<string>[],
     flags: PromiseOrValue<boolean>[],
     overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -645,6 +722,12 @@ export interface Config extends BaseContract {
 
     disableLpWhitelist(overrides?: CallOverrides): Promise<void>;
 
+    enableLpWhitelistForQuote(
+      quote: PromiseOrValue<string>,
+      enable: PromiseOrValue<boolean>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     getAllMarkets(overrides?: CallOverrides): Promise<string[]>;
 
     getMarketInfo(
@@ -663,6 +746,7 @@ export interface Config extends BaseContract {
     ): Promise<boolean>;
 
     isAuthorizedLp(
+      quote: PromiseOrValue<string>,
       user: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<boolean>;
@@ -673,6 +757,7 @@ export interface Config extends BaseContract {
     ): Promise<boolean>;
 
     lpWhitelist(
+      quote: PromiseOrValue<string>,
       user: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<boolean>;
@@ -700,6 +785,11 @@ export interface Config extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    restrictLp(
+      quote: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
     setLiquidatorWhitelist(
       users: PromiseOrValue<string>[],
       flags: PromiseOrValue<boolean>[],
@@ -707,6 +797,7 @@ export interface Config extends BaseContract {
     ): Promise<void>;
 
     setLpWhiteList(
+      quotes: PromiseOrValue<string>[],
       users: PromiseOrValue<string>[],
       flags: PromiseOrValue<boolean>[],
       overrides?: CallOverrides
@@ -737,6 +828,15 @@ export interface Config extends BaseContract {
 
     "DisableLpWhitelist()"(): DisableLpWhitelistEventFilter;
     DisableLpWhitelist(): DisableLpWhitelistEventFilter;
+
+    "EnableLpWhitelistForQuote(address,bool)"(
+      quote?: null,
+      restricted?: null
+    ): EnableLpWhitelistForQuoteEventFilter;
+    EnableLpWhitelistForQuote(
+      quote?: null,
+      restricted?: null
+    ): EnableLpWhitelistForQuoteEventFilter;
 
     "OwnershipTransferred(address,address)"(
       user?: PromiseOrValue<string> | null,
@@ -776,6 +876,17 @@ export interface Config extends BaseContract {
     ): SetLpWhitelistEventFilter;
     SetLpWhitelist(user?: null, authorized?: null): SetLpWhitelistEventFilter;
 
+    "SetLpWhitelistForQuote(address,address,bool)"(
+      quote?: null,
+      user?: null,
+      authorized?: null
+    ): SetLpWhitelistForQuoteEventFilter;
+    SetLpWhitelistForQuote(
+      quote?: null,
+      user?: null,
+      authorized?: null
+    ): SetLpWhitelistForQuoteEventFilter;
+
     "SetMarketInfo(string,address,address)"(
       mtype?: null,
       market?: null,
@@ -807,6 +918,12 @@ export interface Config extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
+    enableLpWhitelistForQuote(
+      quote: PromiseOrValue<string>,
+      enable: PromiseOrValue<boolean>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
     getAllMarkets(overrides?: CallOverrides): Promise<BigNumber>;
 
     getMarketInfo(
@@ -825,6 +942,7 @@ export interface Config extends BaseContract {
     ): Promise<BigNumber>;
 
     isAuthorizedLp(
+      quote: PromiseOrValue<string>,
       user: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -835,6 +953,7 @@ export interface Config extends BaseContract {
     ): Promise<BigNumber>;
 
     lpWhitelist(
+      quote: PromiseOrValue<string>,
       user: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -862,6 +981,11 @@ export interface Config extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
+    restrictLp(
+      quote: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     setLiquidatorWhitelist(
       users: PromiseOrValue<string>[],
       flags: PromiseOrValue<boolean>[],
@@ -869,6 +993,7 @@ export interface Config extends BaseContract {
     ): Promise<BigNumber>;
 
     setLpWhiteList(
+      quotes: PromiseOrValue<string>[],
       users: PromiseOrValue<string>[],
       flags: PromiseOrValue<boolean>[],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -910,6 +1035,12 @@ export interface Config extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
+    enableLpWhitelistForQuote(
+      quote: PromiseOrValue<string>,
+      enable: PromiseOrValue<boolean>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
     getAllMarkets(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     getMarketInfo(
@@ -928,6 +1059,7 @@ export interface Config extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     isAuthorizedLp(
+      quote: PromiseOrValue<string>,
       user: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
@@ -938,6 +1070,7 @@ export interface Config extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     lpWhitelist(
+      quote: PromiseOrValue<string>,
       user: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
@@ -954,6 +1087,11 @@ export interface Config extends BaseContract {
     openLp(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    restrictLp(
+      quote: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
 
     setBlastPointsAddress(
       _blastPointsAddress: PromiseOrValue<string>,
@@ -972,6 +1110,7 @@ export interface Config extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     setLpWhiteList(
+      quotes: PromiseOrValue<string>[],
       users: PromiseOrValue<string>[],
       flags: PromiseOrValue<boolean>[],
       overrides?: Overrides & { from?: PromiseOrValue<string> }

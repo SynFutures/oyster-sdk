@@ -146,11 +146,13 @@ export class SynFuturesV3Ext {
 
     async setLpWhiteList(
         signer: Signer,
+        quotes: string[],
         targets: string[],
         flags: boolean[],
         overrides?: Overrides,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
         const unsignedTx = await this.core.contracts.config.populateTransaction.setLpWhiteList(
+            quotes,
             targets,
             flags,
             overrides ?? {},
@@ -159,21 +161,23 @@ export class SynFuturesV3Ext {
     }
 
     async addToWhitelistLps(
+        quotes: string[],
         signer: Signer,
         targets: string[],
         overrides?: Overrides,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
         const flags = new Array<boolean>(targets.length).fill(true);
-        return await this.setLpWhiteList(signer, targets, flags, overrides ?? {});
+        return await this.setLpWhiteList(signer, quotes, targets, flags, overrides ?? {});
     }
 
     async removeFromWhitelistLps(
+        quotes: string[],
         signer: Signer,
         targets: string[],
         overrides?: Overrides,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
         const flags = new Array<boolean>(targets.length).fill(false);
-        return await this.setLpWhiteList(signer, targets, flags, overrides ?? {});
+        return await this.setLpWhiteList(signer, quotes, targets, flags, overrides ?? {});
     }
 
     async setPendingDuration(
@@ -202,7 +206,6 @@ export class SynFuturesV3Ext {
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
         const { quoteTokenInfo } = await this.core.getTokenInfo(param);
         const quoteAddress = quoteTokenInfo.address;
-        await this.core.contracts.config.connect(signer).setLpWhiteList([await signer.getAddress()], [true]);
         const quote = ERC20__factory.connect(quoteAddress, signer);
         // should prepare enough quote token outside sdk
         // await quote.mint(await signer.getAddress(), ethers.utils.parseEther('10000000'));

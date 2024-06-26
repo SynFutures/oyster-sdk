@@ -85,6 +85,25 @@ const _abi = [
     anonymous: false,
     inputs: [
       {
+        indexed: false,
+        internalType: "address",
+        name: "quote",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "bool",
+        name: "restricted",
+        type: "bool",
+      },
+    ],
+    name: "EnableLpWhitelistForQuote",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
         indexed: true,
         internalType: "address",
         name: "user",
@@ -162,6 +181,31 @@ const _abi = [
       },
     ],
     name: "SetLpWhitelist",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "address",
+        name: "quote",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "bool",
+        name: "authorized",
+        type: "bool",
+      },
+    ],
+    name: "SetLpWhitelistForQuote",
     type: "event",
   },
   {
@@ -273,9 +317,27 @@ const _abi = [
     stateMutability: "nonpayable",
     type: "function",
   },
-  {
+    {
     inputs: [],
     name: "disableLpWhitelist",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "quote",
+        type: "address",
+      },
+      {
+        internalType: "bool",
+        name: "enable",
+        type: "bool",
+      },
+    ],
+    name: "enableLpWhitelistForQuote",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -403,6 +465,11 @@ const _abi = [
     inputs: [
       {
         internalType: "address",
+        name: "quote",
+        type: "address",
+      },
+      {
+        internalType: "address",
         name: "user",
         type: "address",
       },
@@ -439,6 +506,11 @@ const _abi = [
   },
   {
     inputs: [
+      {
+        internalType: "address",
+        name: "quote",
+        type: "address",
+      },
       {
         internalType: "address",
         name: "user",
@@ -556,6 +628,25 @@ const _abi = [
   {
     inputs: [
       {
+        internalType: "address",
+        name: "quote",
+        type: "address",
+      },
+    ],
+    name: "restrictLp",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "restricted",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "address[]",
         name: "users",
         type: "address[]",
@@ -573,6 +664,11 @@ const _abi = [
   },
   {
     inputs: [
+      {
+        internalType: "address[]",
+        name: "quotes",
+        type: "address[]",
+      },
       {
         internalType: "address[]",
         name: "users",

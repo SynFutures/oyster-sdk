@@ -382,7 +382,14 @@ export class SynFuturesV3 {
     }
 
     async updateConfigState(): Promise<void> {
-        this.configState.openLp = await this.contracts.config.openLp();
+        this.configState.openLp = true;
+        if (this.ctx.chainId !== CHAIN_ID.BASE) {
+            try {
+                this.configState.openLp = await this.contracts.config.openLp();
+            } catch (e) {
+                // ignore error since the contract on some network may not have this function
+            }
+        }
         this.configState.openLiquidator = await this.contracts.config.openLiquidator();
         for (const [symbol, param] of Object.entries(this.config.quotesParam)) {
             const quoteInfo = await this.ctx.getTokenInfo(symbol);
@@ -711,14 +718,46 @@ export class SynFuturesV3 {
         return trimObj(await instrument.callStatic.inquire(expiry, size));
     }
 
-    async openLp(overrides?: CallOverrides): Promise<boolean> {
+    async openLp(quoteAddr?: string, overrides?: CallOverrides): Promise<boolean> {
+        if ((this.ctx.chainId === CHAIN_ID.BASE || this.ctx.chainId === CHAIN_ID.LOCAL) && quoteAddr) {
+            try {
+                const restricted = await this.contracts.config.restrictLp(quoteAddr, overrides ?? {});
+                return !restricted;
+            } catch (e) {
+                // ignore error since the contract on some network may not have this function
+            }
+        }
         return this.contracts.config.openLp(overrides ?? {});
     }
 
-    async inWhiteListLps(traders: string[], overrides?: CallOverrides): Promise<boolean[]> {
-        const calls = [];
-        const results: boolean[] = [];
-        const configInterface = this.contracts.config.interface;
+    async inWhiteListLps(quoteAddr: string, traders: string[], overrides?: CallOverrides): Promise<boolean[]> {
+        let calls = [];
+        let results: boolean[] = [];
+        let configInterface: ethers.utils.Interface = this.contracts.config.interface;
+        if ((this.ctx.chainId === CHAIN_ID.BASE || this.ctx.chainId === CHAIN_ID.LOCAL) && quoteAddr) {
+            for (const trader of traders) {
+                calls.push({
+                    target: this.contracts.config.address,
+                    callData: configInterface.encodeFunctionData('lpWhitelist', [quoteAddr, trader]),
+                });
+            }
+            try {
+                const rawData = await this.ctx.multicall3.callStatic.aggregate(calls, overrides ?? {});
+                for (const data of rawData.returnData) {
+                    results.push(configInterface.decodeFunctionResult('lpWhitelist', data)[0]);
+                }
+                return results;
+            } catch (e) {
+                // ignore error since the contract on some network may not have this function
+            }
+        }
+        // legacy function for other networks
+        calls = [];
+        results = [];
+        configInterface = new ethers.utils.Interface([
+            'function lpWhitelist(address user) external view returns (bool)',
+        ]);
+
         for (const trader of traders) {
             calls.push({
                 target: this.contracts.config.address,
