@@ -87,6 +87,7 @@ new Contract(address, INSTRUMENT_ABI, signerOrProvider);
 30. [Update pair](#update-pair)
 31. [Settle trader](#settle-trader)
 32. [Parse tx](#parse-tx)
+33. [Restrictions on add, trade and place](#restrictions-on-add-trade-and-place)
 
 ### Prerequisites
 
@@ -1821,4 +1822,47 @@ async function demoParseTx(): Promise<void> {
 }
 
 demoParseTx().catch(console.error);
+```
+
+### Restrictions on add, trade and place
+
+```ts
+import { formatUnits } from '@derivation-tech/web3-core';
+import { SynFuturesV3 } from './synfuturesV3Core';
+import { ORDER_SPACING, PERP_EXPIRY } from './constants';
+import { InstrumentCondition, Status } from './types';
+import { alignTick, calcMinTickDelta } from './common/util';
+import { TICK_DELTA_MAX } from './math';
+
+export async function demoRestrictions(): Promise<void> {
+    const synfV3 = SynFuturesV3.getInstance('Blast');
+    const allInstruments = await synfV3.getAllInstruments();
+    const instrument = allInstruments.find((i) => i.info.symbol.includes('BTC-USDB'))!;
+    const pair = instrument.getPairModel(PERP_EXPIRY)!;
+    // get your own signer
+    const signer = await synfV3.ctx.getSigner('TEST');
+    // general restrictions
+    console.log(`pair has to be tradeable, i.e., instrument in NORMAL condition, pair not in SETTLING, SETTLED status`);
+    console.log(
+        `instrument condition: ${InstrumentCondition[instrument.state.condition]}, pair status: ${
+            Status[pair.amm.status]
+        }`,
+    );
+    // add restrictions
+    console.log(`isAuthorizedLp: ${await synfV3.contracts.config.isAuthorizedLp(await signer.getAddress())}`);
+    console.log(
+        `tickDelta has to be within [${calcMinTickDelta(instrument.setting.initialMarginRatio)}, ${TICK_DELTA_MAX}]`,
+    );
+    console.log(`minRangeValue: ${formatUnits(instrument.minRangeValue, instrument.info.quote.decimals)}`); // quote
+    console.log(`minLiquidity: ${formatUnits(pair.getMinLiquidity(), 18)}`);
+    // place order restrictions
+    console.log(`minOrderValue: ${formatUnits(instrument.minOrderValue, instrument.info.quote.decimals)}`); // quote
+    console.log(`valid order tick range: [${pair.placeOrderLimit.lowerTick}, ${pair.placeOrderLimit.upperTick}]`); // can only place order within this tick range
+    console.log(`order tick has to be aligned with ORDER_SPACING: ${alignTick(pair.amm.tick, ORDER_SPACING)}`);
+    console.log(`can only place long order below amm current tick and short order above amm current tick`);
+    // trade restrictions
+    console.log(`minTradeValue: ${formatUnits(instrument.minTradeValue, instrument.info.quote.decimals)}`); // quote
+}
+
+demoRestrictions().catch(console.error);
 ```
