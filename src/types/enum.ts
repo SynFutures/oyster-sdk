@@ -58,6 +58,13 @@ export enum MarketType {
     PYTH = 'PYTH',
 }
 
+export enum BatchOrderSizeDistribution {
+    FLAT,
+    UPPER,
+    LOWER,
+    RANDOM,
+}
+
 export function cexMarket(marketType: MarketType): boolean {
     return marketType === MarketType.LINK || marketType === MarketType.EMG || marketType === MarketType.PYTH;
 }

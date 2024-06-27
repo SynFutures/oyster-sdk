@@ -47,6 +47,7 @@ import {
     encodeAdjustWithReferralParam,
     encodeTradeWithRiskParam,
     encodeBatchPlaceWithReferralParam,
+    alignTick,
 } from './common/util';
 import {
     AddParam,
@@ -91,7 +92,16 @@ import {
     BatchPlaceParam,
 } from './types';
 import { r2w, sqrtX96ToWad, TickMath, wadToTick, wdiv, wmul, wmulDown, wmulUp, ZERO, wdivUp, max } from './math';
-import { cexMarket, FeederType, InstrumentCondition, MarketType, QuoteType, Side, signOfSide } from './types/enum';
+import {
+    BatchOrderSizeDistribution,
+    cexMarket,
+    FeederType,
+    InstrumentCondition,
+    MarketType,
+    QuoteType,
+    Side,
+    signOfSide,
+} from './types/enum';
 import { AssembledInstrumentData, InstrumentInfo, InstrumentModel, InstrumentState } from './types/instrument';
 import {
     DEFAULT_REFERRAL_CODE,
@@ -1671,6 +1681,123 @@ export class SynFuturesV3 {
             ),
             minOrderValue: pairModel.rootInstrument.minOrderValue,
         };
+    }
+
+    simulateBatchOrder(
+        pairAccountModel: PairLevelAccountModel,
+        lowerPrice: BigNumber,
+        upperPrice: BigNumber,
+        orderCount: number,
+        sizeDistribution: BatchOrderSizeDistribution,
+        baseSize: BigNumber,
+        side: Side,
+        leverageWad: BigNumber,
+    ): {
+        orders: {
+            tick: number;
+            baseSize: BigNumber;
+            ratio: number;
+            balance: BigNumber;
+            leverageWad: BigNumber;
+            minFeeRebate: BigNumber;
+        }[];
+        marginToDepositWad: BigNumber;
+        minOrderValue: BigNumber;
+    } {
+        if (orderCount < 2 || orderCount > 9) throw new Error('order count should be between 2 and 9');
+        const targetTicks = this.getBatchOrderTicks(lowerPrice, upperPrice, orderCount);
+        const ratios = this.getBatchOrderRatios(sizeDistribution, orderCount);
+        const res = this.simulateBatchPlace(pairAccountModel, targetTicks, ratios, baseSize, side, leverageWad);
+        return {
+            ...res,
+            orders: targetTicks.map((tick: number, index: number) => {
+                return {
+                    tick: tick,
+                    baseSize: res.orders[index].baseSize,
+                    ratio: ratios[index],
+                    balance: res.orders[index].balance,
+                    leverageWad: res.orders[index].leverageWad,
+                    minFeeRebate: res.orders[index].minFeeRebate,
+                };
+            }),
+        };
+    }
+
+    // given lower price and upper price, return the ticks for batch orders
+    // last tick should be upper tick
+    getBatchOrderTicks(lowerPrice: BigNumber, upperPrice: BigNumber, orderCount: number): number[] {
+        const lowerTick = alignTick(wadToTick(lowerPrice), ORDER_SPACING);
+        const upperTick = alignTick(wadToTick(upperPrice), ORDER_SPACING);
+        const tickDiff = upperTick - lowerTick;
+        const step = Math.floor(tickDiff / (orderCount - 1) / ORDER_SPACING);
+        const ticks = [];
+        for (let i = 0; i < orderCount; i++) {
+            ticks.push(lowerTick + step * i * ORDER_SPACING);
+        }
+        ticks[ticks.length - 1] = upperTick;
+        return ticks;
+    }
+
+    // given size distribution, return the ratios for batch orders
+    getBatchOrderRatios(sizeDistribution: BatchOrderSizeDistribution, orderCount: number): number[] {
+        let ratios: number[] = [];
+        switch (sizeDistribution) {
+            case BatchOrderSizeDistribution.FLAT: {
+                ratios = Array(orderCount).fill(Math.floor(RATIO_BASE / orderCount));
+                break;
+            }
+            case BatchOrderSizeDistribution.UPPER: {
+                // first order is 1, second order is 2, ..., last order is orderCount pieces
+                const sum = Array.from({ length: orderCount }, (_, i) => i + 1).reduce((acc, i) => acc + i, 0);
+                ratios = Array.from({ length: orderCount }, (_, i) => Math.floor((i + 1) * (RATIO_BASE / sum)));
+                break;
+            }
+            case BatchOrderSizeDistribution.LOWER: {
+                // first order is orderCount, second order is orderCount - 1, ..., last order is 1 piece
+                const sum = Array.from({ length: orderCount }, (_, i) => orderCount - i).reduce((acc, i) => acc + i, 0);
+                ratios = Array.from({ length: orderCount }, (_, i) =>
+                    Math.floor((orderCount - i) * (RATIO_BASE / sum)),
+                );
+                break;
+            }
+            case BatchOrderSizeDistribution.RANDOM: {
+                // Generate initial ratios within a target range
+                let totalRatio = 0;
+                const averageRatio = RATIO_BASE / orderCount;
+                const minRatio = Math.ceil(averageRatio * 0.95);
+                const maxRatio = Math.floor(averageRatio * 1.05);
+
+                // Generate initial ratios
+                for (let i = 0; i < orderCount; i++) {
+                    let ratio = Math.floor(averageRatio * (1 - 0.05 + Math.random() * 0.1));
+                    ratio = Math.max(minRatio, Math.min(maxRatio, ratio));
+                    ratios.push(ratio);
+                    totalRatio += ratio;
+                }
+
+                // Adjust the ratios to ensure the sum is RATIO_BASE
+                let adjustment = RATIO_BASE - totalRatio;
+                const increment = adjustment > 0 ? 1 : -1;
+
+                // Randomly adjust each ratio slightly to balance to RATIO_BASE
+                while (adjustment !== 0) {
+                    for (let i = 0; i < orderCount && adjustment !== 0; i++) {
+                        const newRatio = ratios[i] + increment;
+                        if (newRatio >= minRatio && newRatio <= maxRatio) {
+                            ratios[i] = newRatio;
+                            adjustment -= increment;
+                        }
+                    }
+                }
+                break;
+            }
+            default:
+                throw new Error('Invalid size distribution');
+        }
+        // make sure the sum of ratios is 10000
+        ratios[ratios.length - 1] =
+            RATIO_BASE - ratios.slice(0, ratios.length - 1).reduce((acc, ratio) => acc + ratio, 0);
+        return ratios;
     }
 
     // @param transferAmount: decimal in 18 units; positive if transferIn, negative if transferOut
