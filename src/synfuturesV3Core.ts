@@ -1685,8 +1685,8 @@ export class SynFuturesV3 {
 
     simulateBatchOrder(
         pairAccountModel: PairLevelAccountModel,
-        lowerPrice: BigNumber,
-        upperPrice: BigNumber,
+        lowerTick: number,
+        upperTick: number,
         orderCount: number,
         sizeDistribution: BatchOrderSizeDistribution,
         baseSize: BigNumber,
@@ -1705,7 +1705,7 @@ export class SynFuturesV3 {
         minOrderValue: BigNumber;
     } {
         if (orderCount < 2 || orderCount > 9) throw new Error('order count should be between 2 and 9');
-        const targetTicks = this.getBatchOrderTicks(lowerPrice, upperPrice, orderCount);
+        const targetTicks = this.getBatchOrderTicks(lowerTick, upperTick, orderCount);
         const ratios = this.getBatchOrderRatios(sizeDistribution, orderCount);
         const res = this.simulateBatchPlace(pairAccountModel, targetTicks, ratios, baseSize, side, leverageWad);
         return {
@@ -1725,9 +1725,9 @@ export class SynFuturesV3 {
 
     // given lower price and upper price, return the ticks for batch orders
     // last tick should be upper tick
-    getBatchOrderTicks(lowerPrice: BigNumber, upperPrice: BigNumber, orderCount: number): number[] {
-        const lowerTick = alignTick(wadToTick(lowerPrice), ORDER_SPACING);
-        const upperTick = alignTick(wadToTick(upperPrice), ORDER_SPACING);
+    getBatchOrderTicks(lowerTick: number, upperTick: number, orderCount: number): number[] {
+        lowerTick = alignTick(lowerTick, ORDER_SPACING);
+        upperTick = alignTick(upperTick, ORDER_SPACING);
         const tickDiff = upperTick - lowerTick;
         const step = Math.floor(tickDiff / (orderCount - 1) / ORDER_SPACING);
         const ticks = [];
