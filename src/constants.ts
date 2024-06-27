@@ -44,8 +44,8 @@ export const DEFAULT_MAINTENANCE_MARGIN_RATIO = DEFAULT_INITIAL_MARGIN_RATIO / 2
 
 export const DEFAULT_REFERRAL_CODE = '\xff\xff\x00\x00\x00\x00\x00\x00';
 
-export const MAX_BATCH_ORDER_SIZE = 9;
-export const MIN_BATCH_ORDER_SIZE = 2;
+export const MAX_BATCH_ORDER_COUNT = 9;
+export const MIN_BATCH_ORDER_COUNT = 2;
 
 // getAddress(
 //     hexDataSlice(
