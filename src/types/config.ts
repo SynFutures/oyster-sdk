@@ -103,15 +103,24 @@ export class ConfigState extends EventHandler {
             typeof serialized.quotesParam !== 'object' ||
             typeof serialized.marketsInfo !== 'object' ||
             typeof serialized.lpWhitelist !== 'object' ||
-            typeof serialized.liquidatorWhitelist !== 'object' ||
-            typeof serialized.restrictLp !== 'object' ||
-            typeof serialized.lpWhitelistPerQuote !== 'object'
+            typeof serialized.liquidatorWhitelist !== 'object'
         ) {
             throw new Error('invalid deserialize');
         }
 
-        this.openLp = serialized.openLp;
-        this.openLiquidator = serialized.openLiquidator;
+        // support legacy snapshot
+        if (serialized.restrictLp === undefined) {
+            serialized.restrictLp = {};
+        }
+
+        // support legacy snapshot
+        if (serialized.lpWhitelistPerQuote === undefined) {
+            serialized.lpWhitelistPerQuote = {};
+        }
+
+        // convert to boolean
+        this.openLp = !!serialized.openLp;
+        this.openLiquidator = !!serialized.openLiquidator;
 
         for (const [k, v] of Object.entries(serialized.quotesParam)) {
             if (typeof v !== 'object' || v === null) {
