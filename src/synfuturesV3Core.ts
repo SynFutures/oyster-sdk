@@ -107,6 +107,8 @@ import {
     DEFAULT_REFERRAL_CODE,
     INT24_MAX,
     INT24_MIN,
+    MAX_BATCH_ORDER_SIZE,
+    MIN_BATCH_ORDER_SIZE,
     NATIVE_TOKEN_ADDRESS,
     ONE_RATIO,
     ORDER_SPACING,
@@ -1633,7 +1635,8 @@ export class SynFuturesV3 {
         marginToDepositWad: BigNumber;
         minOrderValue: BigNumber;
     } {
-        if (targetTicks.length > 9) throw new Error('cannot place more than 9 orders');
+        if (targetTicks.length < MIN_BATCH_ORDER_SIZE || targetTicks.length > MAX_BATCH_ORDER_SIZE)
+            throw new Error(`order count should be between ${MIN_BATCH_ORDER_SIZE} and ${MAX_BATCH_ORDER_SIZE}`);
         if (targetTicks.length !== ratios.length) throw new Error('ticks and ratios length not equal');
         if (ratios.reduce((acc, ratio) => acc + ratio, 0) !== RATIO_BASE)
             throw new Error('ratios sum not equal to RATIO_BASE: 10000');
@@ -1704,7 +1707,8 @@ export class SynFuturesV3 {
         marginToDepositWad: BigNumber;
         minOrderValue: BigNumber;
     } {
-        if (orderCount < 2 || orderCount > 9) throw new Error('order count should be between 2 and 9');
+        if (orderCount < MIN_BATCH_ORDER_SIZE || orderCount > MAX_BATCH_ORDER_SIZE)
+            throw new Error(`order count should be between ${MIN_BATCH_ORDER_SIZE} and ${MAX_BATCH_ORDER_SIZE}`);
         const targetTicks = this.getBatchOrderTicks(lowerTick, upperTick, orderCount);
         const ratios = this.getBatchOrderRatios(sizeDistribution, orderCount);
         const res = this.simulateBatchPlace(pairAccountModel, targetTicks, ratios, baseSize, side, leverageWad);
