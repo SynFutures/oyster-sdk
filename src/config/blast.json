@@ -321,6 +321,15 @@
           "heartBeat0": 129600,
           "aggregator1": "0xF2D9EdeB173e23c65d2a8DeBeE1b8C93F48008aD",
           "heartBeat1": 129600
+        },
+        {
+          "baseSymbol": "ETH",
+          "quoteSymbol": "BLAST",
+          "ftype": 0,
+          "aggregator0": "0x81c73EE3AC8cd2Ce9B077d0111a0961dC8929a91",
+          "heartBeat0": 129600,
+          "aggregator1": "0x62CdC38bb47fadd7437EB9cc4B5d58a7224fC514",
+          "heartBeat1": 129600
         }
       ]
     }
@@ -389,6 +398,14 @@
       "qtype": 2,
       "minMarginAmount": "2000000000000000",
       "tip": "100000000000000"
+    },
+    "BLAST": {
+      "tradingFeeRatio": 3,
+      "stabilityFeeRatioParam": "14415916854096691000",
+      "protocolFeeRatio": 6,
+      "qtype": 2,
+      "minMarginAmount": "500000000000000000000",
+      "tip": "15000000000000000000"
     }
   },
   "tokenInfo":[
