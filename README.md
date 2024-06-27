@@ -88,6 +88,7 @@ new Contract(address, INSTRUMENT_ABI, signerOrProvider);
 31. [Settle trader](#settle-trader)
 32. [Parse tx](#parse-tx)
 33. [Restrictions on add, trade and place](#restrictions-on-add-trade-and-place)
+34. [Query subgraph using referral code as filter](#query-subgraph-using-referral-code-as-filter)
 
 ### Prerequisites
 
@@ -1900,6 +1901,137 @@ export async function demoRestrictions(): Promise<void> {
 }
 
 demoRestrictions().catch(console.error);
+```
+
+### Query subgraph using referral code as filter
+
+```ts
+import { getHexReferral } from './common';
+import { SynFuturesV3 } from './synfuturesV3Core';
+
+export async function demoQueryWithReferralCode(): Promise<void> {
+    const synfV3 = SynFuturesV3.getInstance('blast');
+
+    // NOTICE: you can query AddEvent, TradeEvent, PlaceEvent, Order and VirtualTrade using referralCode as filter
+    // get user trade history
+    const getReferralCode = (channel: string): string => {
+        return '\xff\xff' + channel; // 0xffff means you are sending tx using SDK and private key
+    };
+    // query using full referralCode
+    const userTradeHistory1 = await synfV3.subgraph.getVirtualTrades({
+        referralCode: getReferralCode('8test8'), // query all trades using '\xff\xff8test8' as referralCode
+    });
+    // query using partial referralCode
+    await synfV3.subgraph.getVirtualTrades({
+        referralCode: '8test8', // query all trades with referral code which contains '8test8'
+    });
+    // query add, trade, place events using referralCode
+    const addEvents = await synfV3.subgraph.query(
+        `query($skip: Int, $first: Int, $lastID: String){
+            addEvents(
+                skip: $skip, first: $first, 
+                where: {
+                referralCode_contains: "${getReferralCode('8test8')}"
+                id_gt: $lastID
+                }
+            ) {
+                id
+                logIndex
+                transaction {
+                id
+                }
+                address
+                expiry
+                trader
+                tickLower
+                tickUpper
+                liquidity
+                balance
+                sqrtEntryPX96
+                entryFeeIndex
+                referralCode
+            }
+        }`,
+        0,
+        1000,
+    );
+    console.log(addEvents);
+    const tradeEvents = await synfV3.subgraph.query(
+        `query($skip: Int, $first: Int, $lastID: String){
+            tradeEvents(
+                skip: $skip, first: $first, 
+                where: {
+                referralCode_contains: "${getReferralCode('8test8')}"
+                id_gt: $lastID
+                }
+            ) {
+                id
+                logIndex
+                transaction {
+                id
+                }
+                address
+                expiry
+                trader
+                size
+                amount
+                takenSize
+                takenValue
+                entryNotional
+                feeRatio
+                mark
+                sqrtPX96
+                tradingFeeRatio
+                protocolFeeRatio
+                referralCode
+            }
+        }`,
+        0,
+        1000,
+    );
+    console.log(tradeEvents);
+    const placeEvents = await synfV3.subgraph.query(
+        `query($skip: Int, $first: Int, $lastID: String){
+            placeEvents(
+                skip: $skip, first: $first, 
+                where: {
+                referralCode_contains: "${getReferralCode('8test8')}"
+                id_gt: $lastID
+                }
+            ) {
+                id
+                logIndex
+                transaction {
+                id
+                }
+                address
+                expiry
+                trader
+                tick
+                nonce
+                balance
+                size
+                referralCode
+            }
+        }`,
+        0,
+        1000,
+    );
+    console.log(placeEvents);
+    // query user orders
+    const orders = await synfV3.subgraph.getUserOrders({
+        referralCode: getReferralCode('8test8'),
+    });
+    console.log(orders[0]);
+    // to access referralCode from userTradeHistory
+    console.log(userTradeHistory1[0].referralCode!);
+    // but since return value is string, while wallet and platform code could range from \x01 to \xff
+    // however, code larger than \x7f is not valid in utf-8 encoding and would be treated as unicode
+    // so, to get original platform and wallet code, you can use getHexReferral
+    console.log(getHexReferral(userTradeHistory1[0].referralCode!));
+}
+
+demoQueryWithReferralCode().catch(console.error);
 ```
 
 ## 🔗 Referral Code
