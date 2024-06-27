@@ -553,6 +553,41 @@ export async function demoBatchPlace(): Promise<void> {
     console.log(formatUnits(res.marginToDepositWad, 18));
     console.log(formatUnits(res.minOrderValue, 18));
 
+    // to simulate batch place with frontend input, use simulateBatchOrder interface
+    const lowerTick = TickMath.getTickAtPWad(pair.fairPriceWad.mul(10050).div(10000));
+    const upperTick = TickMath.getTickAtPWad(pair.fairPriceWad.mul(10150).div(10000));
+    const orderCount = 9;
+    const res2 = sdk.simulateBatchOrder(
+        account,
+        lowerTick,
+        upperTick,
+        orderCount,
+        BatchOrderSizeDistribution.FLAT,
+        size,
+        Side.SHORT,
+        leverage,
+    );
+    for (const order of res2.orders) {
+        console.log(
+            order.tick,
+            formatUnits(TickMath.getWadAtTick(order.tick), 18),
+            order.ratio,
+            formatUnits(order.baseSize, 18),
+            formatUnits(wmul(order.baseSize, sqrtX96ToWad(pair.amm.sqrtPX96)), 18),
+            formatUnits(wdiv(wmul(order.baseSize, sqrtX96ToWad(pair.amm.sqrtPX96)), order.balance), 18),
+            formatUnits(order.balance, 18),
+            formatUnits(order.minFeeRebate, 18),
+        );
+    }
+    console.log(
+        formatUnits(
+            res2.orders.reduce((acc, order) => acc.add(order.balance), ethers.BigNumber.from(0)),
+            18,
+        ),
+    );
+    console.log(formatUnits(res2.marginToDepositWad, 18));
+    console.log(formatUnits(res2.minOrderValue, 18));
+
     await sdk.batchPlace(signer, instrument.info.addr, {
         expiry: PERP_EXPIRY,
         ticks,
