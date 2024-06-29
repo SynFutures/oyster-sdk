@@ -6,7 +6,6 @@
         "allowSyntheticDefaultImports": true,
         "allowJs": true,
         "declaration": true,
-        "importHelpers": true,
         "jsx": "react",
         "alwaysStrict": true,
         "sourceMap": true,
