@@ -72,6 +72,7 @@ export interface VirtualTrade {
     type: VirtualTradeType;
     // this field only apply for Remove event, true means the range is liquidated; false means the range is removed by user
     isRangeLiquidated?: boolean;
+    referralCode?: string;
 }
 
 export interface UserOrder {
@@ -89,6 +90,7 @@ export interface UserOrder {
     placeTxHash: string;
     fillTxHash?: string;
     cancelTxHash?: string;
+    referralCode?: string;
 }
 
 export interface PairData {
@@ -128,6 +130,7 @@ export interface QueryParam extends Pagination {
     expiry?: number;
     startTs?: number;
     endTs?: number;
+    referralCode?: string;
 }
 
 export interface QueryEventParam extends QueryParam {
@@ -539,6 +542,7 @@ export class Subgraph extends Graph {
         let pairCondition = '';
         let traderCondition = '';
         let eventCondition = '';
+        let referralCondition = '';
 
         if (param.eventNames && param.eventNames.length > 0) {
             eventCondition = `name_in: [${param.eventNames.map((e) => fn(e)).join(',')}],`;
@@ -556,10 +560,14 @@ export class Subgraph extends Graph {
                 : `amm_:{instrument: ${fn(param.instrumentAddr.toLowerCase())}},`;
         }
 
+        if (param.referralCode) {
+            referralCondition = `referralCode_contains: ${fn(param.referralCode)},`;
+        }
+
         const startTsCondition = `timestamp_gte: ${param.startTs || 0},`;
         const endTsCondition = `timestamp_lt: ${param.endTs || now()},`;
 
-        const condition = `${eventCondition}${instrumentCondition}${pairCondition}${traderCondition}${startTsCondition}${endTsCondition}`;
+        const condition = `${eventCondition}${instrumentCondition}${pairCondition}${traderCondition}${referralCondition}${startTsCondition}${endTsCondition}`;
         return `where: {${condition} id_gt: $lastID}, `;
     }
 
@@ -702,6 +710,7 @@ export class Subgraph extends Graph {
                         id
                     }
                 }
+                referralCode
             }
         }`;
         const resp = await this.query(graphQL, skip, first);
@@ -722,6 +731,7 @@ export class Subgraph extends Graph {
                 placeTxHash: order.placeEvent.transaction.id,
                 fillTxHash: order.fillEvent?.transaction.id,
                 cancelTxHash: order.cancelEvent?.transaction.id,
+                referralCode: order.referralCode,
             });
         }
         return result;
@@ -829,6 +839,7 @@ export class Subgraph extends Graph {
                 tradeValue
                 trader
                 type
+                referralCode
             }
         }`;
         const resp = await this.query(graphQL, skip, first);
@@ -864,6 +875,7 @@ export class Subgraph extends Graph {
                 tradeValue: BigNumber.from(trade.tradeValue),
                 type: trade.type as VirtualTradeType,
                 isRangeLiquidated,
+                referralCode: trade.referralCode,
             });
         }
         // newest first
