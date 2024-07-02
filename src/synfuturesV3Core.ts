@@ -10,7 +10,7 @@ import {
 } from './config';
 import { BigNumber, CallOverrides, Overrides, PayableOverrides, Signer, ethers } from 'ethers';
 import { Provider } from '@ethersproject/providers';
-import { BlockInfo, CHAIN_ID, ContractParser, ZERO_ADDRESS } from '@derivation-tech/web3-core';
+import { BlockInfo, CHAIN_ID, ContractParser, WAD, ZERO_ADDRESS } from '@derivation-tech/web3-core';
 import {
     Instrument__factory,
     Observer__factory,
@@ -1703,14 +1703,38 @@ export class SynFuturesV3 {
             balance: BigNumber;
             leverageWad: BigNumber;
             minFeeRebate: BigNumber;
+            minOrderSize: BigNumber;
         }[];
         marginToDepositWad: BigNumber;
         minOrderValue: BigNumber;
+        totalMinSize: BigNumber;
     } {
         if (orderCount < MIN_BATCH_ORDER_COUNT || orderCount > MAX_BATCH_ORDER_COUNT)
             throw new Error(`order count should be between ${MIN_BATCH_ORDER_COUNT} and ${MAX_BATCH_ORDER_COUNT}`);
         const targetTicks = this.getBatchOrderTicks(lowerTick, upperTick, orderCount);
-        const ratios = this.getBatchOrderRatios(sizeDistribution, orderCount);
+        let ratios = this.getBatchOrderRatios(sizeDistribution, orderCount);
+        // if sizeDistribution is random, we need to adjust the ratios to make sure orderValue meet minOrderValue with best effort
+        const minOrderValue = pairAccountModel.rootPair.rootInstrument.minOrderValue;
+        const minSizes = targetTicks.map((tick) => wdivUp(minOrderValue, TickMath.getWadAtTick(tick)));
+        if (sizeDistribution === BatchOrderSizeDistribution.RANDOM) {
+            // only adjust sizes if possible
+            if (minSizes.reduce((acc, minSize) => acc.add(minSize), ZERO).lt(baseSize)) {
+                ratios = this.getBatchOrderRatios(BatchOrderSizeDistribution.FLAT, orderCount);
+            }
+        }
+
+        // calculate totalMinSize
+        const sizes = ratios.map((ratio) => baseSize.mul(ratio).div(RATIO_BASE));
+        const bnMax = (a: BigNumber, b: BigNumber): BigNumber => (a.gt(b) ? a : b);
+        // pick the max minSize/size ratio
+        const minSizeToSizeRatio = minSizes
+            .map((minSize, i) => bnMax(wdivUp(minSize, sizes[i]), WAD))
+            .reduce((acc, ratio) => bnMax(acc, ratio), WAD);
+        const totalMinSize = wmulUp(
+            minSizes.reduce((acc, minSize) => acc.add(minSize), ZERO),
+            minSizeToSizeRatio,
+        );
+
         const res = this.simulateBatchPlace(pairAccountModel, targetTicks, ratios, baseSize, side, leverageWad);
         return {
             ...res,
@@ -1722,8 +1746,10 @@ export class SynFuturesV3 {
                     balance: res.orders[index].balance,
                     leverageWad: res.orders[index].leverageWad,
                     minFeeRebate: res.orders[index].minFeeRebate,
+                    minOrderSize: minSizes[index],
                 };
             }),
+            totalMinSize,
         };
     }
 
