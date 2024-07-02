@@ -10,7 +10,7 @@ import {
 } from './config';
 import { BigNumber, CallOverrides, Overrides, PayableOverrides, Signer, ethers } from 'ethers';
 import { Provider } from '@ethersproject/providers';
-import { BlockInfo, CHAIN_ID, ContractParser, WAD, ZERO_ADDRESS } from '@derivation-tech/web3-core';
+import { BlockInfo, CHAIN_ID, ContractParser, ZERO_ADDRESS } from '@derivation-tech/web3-core';
 import {
     Instrument__factory,
     Observer__factory,
@@ -1728,12 +1728,9 @@ export class SynFuturesV3 {
         const bnMax = (a: BigNumber, b: BigNumber): BigNumber => (a.gt(b) ? a : b);
         // pick the max minSize/size ratio
         const minSizeToSizeRatio = minSizes
-            .map((minSize, i) => bnMax(wdivUp(minSize, sizes[i]), WAD))
-            .reduce((acc, ratio) => bnMax(acc, ratio), WAD);
-        const totalMinSize = wmulUp(
-            minSizes.reduce((acc, minSize) => acc.add(minSize), ZERO),
-            minSizeToSizeRatio,
-        );
+            .map((minSize, i) => bnMax(wdivUp(minSize, sizes[i]), ZERO))
+            .reduce((acc, ratio) => bnMax(acc, ratio), ZERO);
+        const totalMinSize = wmulUp(baseSize, minSizeToSizeRatio);
 
         const res = this.simulateBatchPlace(pairAccountModel, targetTicks, ratios, baseSize, side, leverageWad);
         return {
