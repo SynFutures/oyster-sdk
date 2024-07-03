@@ -1,6 +1,6 @@
 {
     "name": "@synfutures/oyster-sdk",
-    "version": "0.2.5",
+    "version": "0.2.6-beta-1",
     "description": "SynFutures V3 SDK",
     "author": "SynFutures",
     "license": "MIT",
