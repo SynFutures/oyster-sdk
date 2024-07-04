@@ -2097,6 +2097,87 @@ const _abi = [
     inputs: [
       {
         internalType: "address",
+        name: "instrument",
+        type: "address",
+      },
+      {
+        internalType: "uint32",
+        name: "expiry",
+        type: "uint32",
+      },
+      {
+        internalType: "int24",
+        name: "tick",
+        type: "int24",
+      },
+    ],
+    name: "inquireByTick",
+    outputs: [
+      {
+        internalType: "int256",
+        name: "size",
+        type: "int256",
+      },
+      {
+        components: [
+          {
+            internalType: "uint256",
+            name: "benchmark",
+            type: "uint256",
+          },
+          {
+            internalType: "uint160",
+            name: "sqrtFairPX96",
+            type: "uint160",
+          },
+          {
+            internalType: "int24",
+            name: "tick",
+            type: "int24",
+          },
+          {
+            internalType: "uint256",
+            name: "mark",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "entryNotional",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "fee",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "minAmount",
+            type: "uint256",
+          },
+          {
+            internalType: "uint160",
+            name: "sqrtPostFairPX96",
+            type: "uint160",
+          },
+          {
+            internalType: "int24",
+            name: "postTick",
+            type: "int24",
+          },
+        ],
+        internalType: "struct Quotation",
+        name: "quotation",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
         name: "base",
         type: "address",
       },
@@ -2236,6 +2317,35 @@ const _abi = [
       },
     ],
     name: "sizeByNotional",
+    outputs: [
+      {
+        internalType: "int256",
+        name: "",
+        type: "int256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "instrument",
+        type: "address",
+      },
+      {
+        internalType: "uint32",
+        name: "expiry",
+        type: "uint32",
+      },
+      {
+        internalType: "int24",
+        name: "destTick",
+        type: "int24",
+      },
+    ],
+    name: "sizeToTick",
     outputs: [
       {
         internalType: "int256",
