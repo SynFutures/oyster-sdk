@@ -1382,8 +1382,8 @@ export class SynFuturesV3 {
 
         slippage: number,
         deadline: number,
-        overrides?: PayableOverrides,
         referralCode = DEFAULT_REFERRAL_CODE,
+        overrides?: PayableOverrides,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
         const sign = signOfSide(side);
         const instrument = this.getInstrumentContract(pair.rootInstrument.info.addr);
