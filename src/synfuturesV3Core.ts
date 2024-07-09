@@ -110,6 +110,7 @@ import {
     INT24_MAX,
     INT24_MIN,
     MAX_BATCH_ORDER_COUNT,
+    MAX_CANCEL_ORDER_COUNT,
     MIN_BATCH_ORDER_COUNT,
     NATIVE_TOKEN_ADDRESS,
     ONE_RATIO,
@@ -1767,6 +1768,8 @@ export class SynFuturesV3 {
     // given lower price and upper price, return the ticks for batch orders
     // last tick should be upper tick
     getBatchOrderTicks(lowerTick: number, upperTick: number, orderCount: number): number[] {
+        // adapt reserve price pair
+        [lowerTick, upperTick] = [lowerTick, upperTick].sort((a, b) => a - b);
         lowerTick = alignTick(lowerTick, ORDER_SPACING);
         upperTick = alignTick(upperTick, ORDER_SPACING);
         const tickDiff = upperTick - lowerTick;
@@ -2312,11 +2315,24 @@ export class SynFuturesV3 {
 
         const ticks = ordersToCancel.map((order) => order.tick);
 
-        const unsignedTx = await instrument.populateTransaction.cancel(
-            encodeCancelParam(expiry, ticks, deadline),
-            overrides ?? {},
-        );
-        return this.ctx.sendTx(signer, unsignedTx);
+        if (ticks.length <= MAX_CANCEL_ORDER_COUNT) {
+            const unsignedTx = await instrument.populateTransaction.cancel(
+                encodeCancelParam(expiry, ticks, deadline),
+                overrides ?? {},
+            );
+            return this.ctx.sendTx(signer, unsignedTx);
+        } else {
+            // split ticks by size of MAX_CANCEL_ORDER_COUNT
+            const tickGroups = [];
+            for (let i = 0; i < ticks.length; i += MAX_CANCEL_ORDER_COUNT) {
+                tickGroups.push(ticks.slice(i, i + MAX_CANCEL_ORDER_COUNT));
+            }
+            const calldatas = tickGroups.map((group) => {
+                return instrument.interface.encodeFunctionData('cancel', [encodeCancelParam(expiry, group, deadline)]);
+            });
+            const unsignedTx = await instrument.populateTransaction.multicall(calldatas, overrides ?? {});
+            return this.ctx.sendTx(signer, unsignedTx);
+        }
     }
 
     public async vaultOperation(

@@ -2,6 +2,7 @@
 import { BigNumber, BigNumberish, ethers } from 'ethers';
 import {
     INT24_MAX,
+    MAX_CANCEL_ORDER_COUNT,
     MAX_STABILITY_FEE_RATIO,
     MAX_TICK,
     MIN_TICK,
@@ -349,9 +350,10 @@ export function encodeFillParam(expiry: number, target: string, tick: number, no
 
 /// encode cancel param to contract input format (bytes32)
 export function encodeCancelParam(expiry: number, ticks: number[], deadline: number): string {
-    if (ticks.length < 1 || ticks.length > 8) throw new Error('ticks length must be between 1 and 8');
+    if (ticks.length < 1 || ticks.length > MAX_CANCEL_ORDER_COUNT)
+        throw new Error(`ticks length must be between 1 and ${MAX_CANCEL_ORDER_COUNT}`);
     let encodedTicks = ZERO;
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < MAX_CANCEL_ORDER_COUNT; i++) {
         const tick = i < ticks.length ? ticks[i] : INT24_MAX;
         encodedTicks = encodedTicks.add(BigNumber.from(asUint24(tick)).shl(24 * i));
     }
@@ -553,7 +555,7 @@ export function decodeCancelParam(arg: string): { expiry: number; ticks: number[
     const value = bytes32ToBigNumber(arg);
     const expiry = pickNumber(value, offset, (offset += expiryLength));
     const ticks: number[] = [];
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < MAX_CANCEL_ORDER_COUNT; i++) {
         const tick = asInt24(pickNumber(value, offset, (offset += tickLength)));
         if (tick === MAX_INT_24.toNumber()) {
             continue;

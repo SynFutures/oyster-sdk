@@ -47,6 +47,8 @@ export const DEFAULT_REFERRAL_CODE = '\xff\xff\x00\x00\x00\x00\x00\x00';
 export const MAX_BATCH_ORDER_COUNT = 9;
 export const MIN_BATCH_ORDER_COUNT = 2;
 
+export const MAX_CANCEL_ORDER_COUNT = 8;
+
 // getAddress(
 //     hexDataSlice(
 //         BigNumber.from(keccak256(toUtf8Bytes('SYNFUTURES-NATIVE')))
