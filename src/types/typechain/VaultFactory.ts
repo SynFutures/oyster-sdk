@@ -25,7 +25,7 @@ import type {
   TypedListener,
   OnEvent,
   PromiseOrValue,
-} from "../../../common";
+} from "./common";
 
 export interface VaultFactoryInterface extends utils.Interface {
   functions: {
@@ -141,7 +141,7 @@ export interface VaultFactoryInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "vaults", data: BytesLike): Result;
 
   events: {
-    "CreateVault(address,address,address)": EventFragment;
+    "CreateVault(address,address,address,string)": EventFragment;
     "Initialized(uint8)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
   };
@@ -155,9 +155,10 @@ export interface CreateVaultEventObject {
   quote: string;
   vault: string;
   manager: string;
+  name: string;
 }
 export type CreateVaultEvent = TypedEvent<
-  [string, string, string],
+  [string, string, string, string],
   CreateVaultEventObject
 >;
 
@@ -349,15 +350,17 @@ export interface VaultFactory extends BaseContract {
   };
 
   filters: {
-    "CreateVault(address,address,address)"(
+    "CreateVault(address,address,address,string)"(
       quote?: null,
       vault?: null,
-      manager?: null
+      manager?: null,
+      name?: null
     ): CreateVaultEventFilter;
     CreateVault(
       quote?: null,
       vault?: null,
-      manager?: null
+      manager?: null,
+      name?: null
     ): CreateVaultEventFilter;
 
     "Initialized(uint8)"(version?: null): InitializedEventFilter;

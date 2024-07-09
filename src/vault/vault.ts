@@ -1,5 +1,5 @@
 import { ChainContext, ContractParser } from '@derivation-tech/web3-core';
-import { VaultFactory } from '../types/typechain/vault';
+import { VaultFactory } from '../types/typechain/';
 import { VAULT_FACTORY_ADDRESSES } from './constants';
 import {
     AddParam,
@@ -25,7 +25,7 @@ import {
     encodeTradeParam,
 } from '../common';
 import { encodeBatchCancelTicks, encodeInstrumentExpiry, encodeLiquidateParam } from './util';
-import { PairConfig } from './types';
+import { PairConfig, VaultStatus } from './types';
 
 export class VaultFactoryClient {
     ctx: ChainContext;
@@ -302,10 +302,11 @@ export class VaultClient {
         return await this.ctx.sendTx(manager, ptx);
     }
 
-    async switchVaultStatus(
+    async setVaultStatus(
         manager: Signer,
+        status: VaultStatus,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const ptx = await this.vault.populateTransaction.switchVaultStatus();
+        const ptx = await this.vault.populateTransaction.setVaultStatus(status);
         return await this.ctx.sendTx(manager, ptx);
     }
 

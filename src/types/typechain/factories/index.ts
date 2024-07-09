@@ -15,6 +15,5 @@ export { MerkleDistributorWithDeadline__factory } from './MerkleDistributorWithD
 export { Observer__factory } from './Observer__factory';
 export { PythFeeder__factory } from './PythFeeder__factory';
 export { PythFeederFactory__factory } from './PythFeederFactory__factory';
-export { Vault__factory } from './vault/Vault__factory';
-export { VaultFactory__factory } from './vault/VaultFactory__factory';
-export { LibVault__factory } from './vault/LibVault__factory';
+export { Vault__factory } from './Vault__factory';
+export { VaultFactory__factory } from './VaultFactory__factory';

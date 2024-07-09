@@ -26,7 +26,7 @@ import type {
   TypedListener,
   OnEvent,
   PromiseOrValue,
-} from "../../../common";
+} from "./common";
 
 export type PairConfigStruct = {
   maxRangeNumber: PromiseOrValue<BigNumberish>;
@@ -126,6 +126,7 @@ export interface VaultInterface extends utils.Interface {
     "initialize(address,address,address)": FunctionFragment;
     "launch(address,string,address,bytes,bytes32[2])": FunctionFragment;
     "liquidate(bytes32[3])": FunctionFragment;
+    "liveThreshold()": FunctionFragment;
     "markReady(address[])": FunctionFragment;
     "mode()": FunctionFragment;
     "multicall(bytes[])": FunctionFragment;
@@ -137,14 +138,15 @@ export interface VaultInterface extends utils.Interface {
     "quote()": FunctionFragment;
     "remove(address,bytes32[2])": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
+    "setLiveThreshold(uint256)": FunctionFragment;
     "setPairConfig((uint8,uint8,uint8))": FunctionFragment;
     "setProfitFeeRatio(uint32)": FunctionFragment;
+    "setVaultStatus(uint8)": FunctionFragment;
     "settle(bytes32)": FunctionFragment;
     "sharesInfoOf(address)": FunctionFragment;
     "status()": FunctionFragment;
     "sweep(bytes32,address,int256)": FunctionFragment;
     "switchOperationMode()": FunctionFragment;
-    "switchVaultStatus()": FunctionFragment;
     "totalFee()": FunctionFragment;
     "totalPendingShares()": FunctionFragment;
     "totalShares()": FunctionFragment;
@@ -175,6 +177,7 @@ export interface VaultInterface extends utils.Interface {
       | "initialize"
       | "launch"
       | "liquidate"
+      | "liveThreshold"
       | "markReady"
       | "mode"
       | "multicall"
@@ -186,14 +189,15 @@ export interface VaultInterface extends utils.Interface {
       | "quote"
       | "remove"
       | "renounceOwnership"
+      | "setLiveThreshold"
       | "setPairConfig"
       | "setProfitFeeRatio"
+      | "setVaultStatus"
       | "settle"
       | "sharesInfoOf"
       | "status"
       | "sweep"
       | "switchOperationMode"
-      | "switchVaultStatus"
       | "totalFee"
       | "totalPendingShares"
       | "totalShares"
@@ -301,6 +305,10 @@ export interface VaultInterface extends utils.Interface {
     ]
   ): string;
   encodeFunctionData(
+    functionFragment: "liveThreshold",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "markReady",
     values: [PromiseOrValue<string>[]]
   ): string;
@@ -342,11 +350,19 @@ export interface VaultInterface extends utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "setLiveThreshold",
+    values: [PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(
     functionFragment: "setPairConfig",
     values: [PairConfigStruct]
   ): string;
   encodeFunctionData(
     functionFragment: "setProfitFeeRatio",
+    values: [PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setVaultStatus",
     values: [PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
@@ -368,10 +384,6 @@ export interface VaultInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "switchOperationMode",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "switchVaultStatus",
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "totalFee", values?: undefined): string;
@@ -440,6 +452,10 @@ export interface VaultInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "launch", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "liquidate", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "liveThreshold",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "markReady", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "mode", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "multicall", data: BytesLike): Result;
@@ -458,11 +474,19 @@ export interface VaultInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "setLiveThreshold",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "setPairConfig",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "setProfitFeeRatio",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setVaultStatus",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "settle", data: BytesLike): Result;
@@ -474,10 +498,6 @@ export interface VaultInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "sweep", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "switchOperationMode",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "switchVaultStatus",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "totalFee", data: BytesLike): Result;
@@ -506,26 +526,34 @@ export interface VaultInterface extends utils.Interface {
     "Initialized(uint8)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
     "RemoveInvolvedPair(address,uint32)": EventFragment;
+    "SetLiveThreshold(uint256)": EventFragment;
     "SetPairConfig(tuple)": EventFragment;
     "SetProfitFeeRatio(uint32)": EventFragment;
+    "SetVaultStatus(uint8)": EventFragment;
     "SwitchOperationMode(uint8)": EventFragment;
-    "SwitchVaultStatus(uint8)": EventFragment;
     "UpdatePending(address,tuple,uint256)": EventFragment;
     "UpdateShareInfo(address,tuple,uint128)": EventFragment;
     "UpdateTotalFee(uint128)": EventFragment;
+    "AdminChanged(address,address)": EventFragment;
+    "BeaconUpgraded(address)": EventFragment;
+    "Upgraded(address)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "AddInvolvedPair"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Initialized"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RemoveInvolvedPair"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "SetLiveThreshold"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "SetPairConfig"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "SetProfitFeeRatio"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "SetVaultStatus"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "SwitchOperationMode"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SwitchVaultStatus"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "UpdatePending"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "UpdateShareInfo"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "UpdateTotalFee"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "AdminChanged"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "BeaconUpgraded"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Upgraded"): EventFragment;
 }
 
 export interface AddInvolvedPairEventObject {
@@ -570,6 +598,17 @@ export type RemoveInvolvedPairEvent = TypedEvent<
 export type RemoveInvolvedPairEventFilter =
   TypedEventFilter<RemoveInvolvedPairEvent>;
 
+export interface SetLiveThresholdEventObject {
+  quoteAmount: BigNumber;
+}
+export type SetLiveThresholdEvent = TypedEvent<
+  [BigNumber],
+  SetLiveThresholdEventObject
+>;
+
+export type SetLiveThresholdEventFilter =
+  TypedEventFilter<SetLiveThresholdEvent>;
+
 export interface SetPairConfigEventObject {
   pairConfig: PairConfigStructOutput;
 }
@@ -591,6 +630,16 @@ export type SetProfitFeeRatioEvent = TypedEvent<
 export type SetProfitFeeRatioEventFilter =
   TypedEventFilter<SetProfitFeeRatioEvent>;
 
+export interface SetVaultStatusEventObject {
+  status: number;
+}
+export type SetVaultStatusEvent = TypedEvent<
+  [number],
+  SetVaultStatusEventObject
+>;
+
+export type SetVaultStatusEventFilter = TypedEventFilter<SetVaultStatusEvent>;
+
 export interface SwitchOperationModeEventObject {
   mode: number;
 }
@@ -601,17 +650,6 @@ export type SwitchOperationModeEvent = TypedEvent<
 
 export type SwitchOperationModeEventFilter =
   TypedEventFilter<SwitchOperationModeEvent>;
-
-export interface SwitchVaultStatusEventObject {
-  status: number;
-}
-export type SwitchVaultStatusEvent = TypedEvent<
-  [number],
-  SwitchVaultStatusEventObject
->;
-
-export type SwitchVaultStatusEventFilter =
-  TypedEventFilter<SwitchVaultStatusEvent>;
 
 export interface UpdatePendingEventObject {
   user: string;
@@ -646,6 +684,34 @@ export type UpdateTotalFeeEvent = TypedEvent<
 >;
 
 export type UpdateTotalFeeEventFilter = TypedEventFilter<UpdateTotalFeeEvent>;
+
+export interface AdminChangedEventObject {
+  previousAdmin: string;
+  newAdmin: string;
+}
+export type AdminChangedEvent = TypedEvent<
+  [string, string],
+  AdminChangedEventObject
+>;
+
+export type AdminChangedEventFilter = TypedEventFilter<AdminChangedEvent>;
+
+export interface BeaconUpgradedEventObject {
+  beacon: string;
+}
+export type BeaconUpgradedEvent = TypedEvent<
+  [string],
+  BeaconUpgradedEventObject
+>;
+
+export type BeaconUpgradedEventFilter = TypedEventFilter<BeaconUpgradedEvent>;
+
+export interface UpgradedEventObject {
+  implementation: string;
+}
+export type UpgradedEvent = TypedEvent<[string], UpgradedEventObject>;
+
+export type UpgradedEventFilter = TypedEventFilter<UpgradedEvent>;
 
 export interface Vault extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
@@ -767,6 +833,8 @@ export interface Vault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
+    liveThreshold(overrides?: CallOverrides): Promise<[BigNumber]>;
+
     markReady(
       users: PromiseOrValue<string>[],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -816,6 +884,11 @@ export interface Vault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
+    setLiveThreshold(
+      quoteAmount: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
     setPairConfig(
       newPairConfig: PairConfigStruct,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -823,6 +896,11 @@ export interface Vault extends BaseContract {
 
     setProfitFeeRatio(
       newProfitFeeRatio: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
+    setVaultStatus(
+      _status: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -848,10 +926,6 @@ export interface Vault extends BaseContract {
     ): Promise<ContractTransaction>;
 
     switchOperationMode(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    switchVaultStatus(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -978,6 +1052,8 @@ export interface Vault extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
+  liveThreshold(overrides?: CallOverrides): Promise<BigNumber>;
+
   markReady(
     users: PromiseOrValue<string>[],
     overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -1027,6 +1103,11 @@ export interface Vault extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
+  setLiveThreshold(
+    quoteAmount: PromiseOrValue<BigNumberish>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
   setPairConfig(
     newPairConfig: PairConfigStruct,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -1034,6 +1115,11 @@ export interface Vault extends BaseContract {
 
   setProfitFeeRatio(
     newProfitFeeRatio: PromiseOrValue<BigNumberish>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  setVaultStatus(
+    _status: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -1059,10 +1145,6 @@ export interface Vault extends BaseContract {
   ): Promise<ContractTransaction>;
 
   switchOperationMode(
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  switchVaultStatus(
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -1196,6 +1278,8 @@ export interface Vault extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    liveThreshold(overrides?: CallOverrides): Promise<BigNumber>;
+
     markReady(
       users: PromiseOrValue<string>[],
       overrides?: CallOverrides
@@ -1245,6 +1329,11 @@ export interface Vault extends BaseContract {
 
     renounceOwnership(overrides?: CallOverrides): Promise<void>;
 
+    setLiveThreshold(
+      quoteAmount: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     setPairConfig(
       newPairConfig: PairConfigStruct,
       overrides?: CallOverrides
@@ -1252,6 +1341,11 @@ export interface Vault extends BaseContract {
 
     setProfitFeeRatio(
       newProfitFeeRatio: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setVaultStatus(
+      _status: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1277,8 +1371,6 @@ export interface Vault extends BaseContract {
     ): Promise<void>;
 
     switchOperationMode(overrides?: CallOverrides): Promise<void>;
-
-    switchVaultStatus(overrides?: CallOverrides): Promise<void>;
 
     totalFee(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -1341,6 +1433,11 @@ export interface Vault extends BaseContract {
       expiry?: null
     ): RemoveInvolvedPairEventFilter;
 
+    "SetLiveThreshold(uint256)"(
+      quoteAmount?: null
+    ): SetLiveThresholdEventFilter;
+    SetLiveThreshold(quoteAmount?: null): SetLiveThresholdEventFilter;
+
     "SetPairConfig(tuple)"(pairConfig?: null): SetPairConfigEventFilter;
     SetPairConfig(pairConfig?: null): SetPairConfigEventFilter;
 
@@ -1349,11 +1446,11 @@ export interface Vault extends BaseContract {
     ): SetProfitFeeRatioEventFilter;
     SetProfitFeeRatio(newProfitFeeRatio?: null): SetProfitFeeRatioEventFilter;
 
+    "SetVaultStatus(uint8)"(status?: null): SetVaultStatusEventFilter;
+    SetVaultStatus(status?: null): SetVaultStatusEventFilter;
+
     "SwitchOperationMode(uint8)"(mode?: null): SwitchOperationModeEventFilter;
     SwitchOperationMode(mode?: null): SwitchOperationModeEventFilter;
-
-    "SwitchVaultStatus(uint8)"(status?: null): SwitchVaultStatusEventFilter;
-    SwitchVaultStatus(status?: null): SwitchVaultStatusEventFilter;
 
     "UpdatePending(address,tuple,uint256)"(
       user?: PromiseOrValue<string> | null,
@@ -1379,6 +1476,29 @@ export interface Vault extends BaseContract {
 
     "UpdateTotalFee(uint128)"(totalFee?: null): UpdateTotalFeeEventFilter;
     UpdateTotalFee(totalFee?: null): UpdateTotalFeeEventFilter;
+
+    "AdminChanged(address,address)"(
+      previousAdmin?: null,
+      newAdmin?: null
+    ): AdminChangedEventFilter;
+    AdminChanged(
+      previousAdmin?: null,
+      newAdmin?: null
+    ): AdminChangedEventFilter;
+
+    "BeaconUpgraded(address)"(
+      beacon?: PromiseOrValue<string> | null
+    ): BeaconUpgradedEventFilter;
+    BeaconUpgraded(
+      beacon?: PromiseOrValue<string> | null
+    ): BeaconUpgradedEventFilter;
+
+    "Upgraded(address)"(
+      implementation?: PromiseOrValue<string> | null
+    ): UpgradedEventFilter;
+    Upgraded(
+      implementation?: PromiseOrValue<string> | null
+    ): UpgradedEventFilter;
   };
 
   estimateGas: {
@@ -1471,6 +1591,8 @@ export interface Vault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
+    liveThreshold(overrides?: CallOverrides): Promise<BigNumber>;
+
     markReady(
       users: PromiseOrValue<string>[],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -1512,6 +1634,11 @@ export interface Vault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
+    setLiveThreshold(
+      quoteAmount: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
     setPairConfig(
       newPairConfig: PairConfigStruct,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -1519,6 +1646,11 @@ export interface Vault extends BaseContract {
 
     setProfitFeeRatio(
       newProfitFeeRatio: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
+    setVaultStatus(
+      _status: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -1542,10 +1674,6 @@ export interface Vault extends BaseContract {
     ): Promise<BigNumber>;
 
     switchOperationMode(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    switchVaultStatus(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -1669,6 +1797,8 @@ export interface Vault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
+    liveThreshold(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     markReady(
       users: PromiseOrValue<string>[],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -1710,6 +1840,11 @@ export interface Vault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
+    setLiveThreshold(
+      quoteAmount: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
     setPairConfig(
       newPairConfig: PairConfigStruct,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -1717,6 +1852,11 @@ export interface Vault extends BaseContract {
 
     setProfitFeeRatio(
       newProfitFeeRatio: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setVaultStatus(
+      _status: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -1740,10 +1880,6 @@ export interface Vault extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     switchOperationMode(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    switchVaultStatus(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
