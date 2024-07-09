@@ -5,7 +5,6 @@ import {
     AddParam,
     BatchPlaceParam,
     FillParam,
-    InstrumentIdentifier,
     LiquidateParam,
     PlaceParam,
     RemoveParam,
