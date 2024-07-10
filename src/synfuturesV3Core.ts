@@ -1338,6 +1338,8 @@ export class SynFuturesV3 {
             leverageWad,
             slippage,
         );
+        if (pairAccountModel.getMainPosition().size.isZero() && quotation.entryNotional.lt(tradeSimulate.minTradeValue))
+            throw Error('size to tick is trivial');
         const minOrderValue = pair.rootInstrument.minOrderValue;
         const targetTickPrice = TickMath.getWadAtTick(targetTick);
         const minOrderSize = wdivUp(minOrderValue, targetTickPrice);

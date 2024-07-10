@@ -11,7 +11,7 @@
   "contractAddress": {
     "config": "0x03f2E7452095a708ff19516eDe92F757adE2816c",
     "gate": "0x6A372dBc1968f4a07cf2ce352f410962A972c257",
-    "observer": "0xE73d8117fdBD05aD7d632A3798c6925BFCdCF8AA",
+    "observer": "0x730D6aaD0DD58f5d5d25AfEbD13d5A2bf76aC194",
     "guardian": "0xB85b77f32DBDb7e4895b288e70770C90E232C751",
     "market": {
       "LINK": {
