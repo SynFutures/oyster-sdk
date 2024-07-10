@@ -19,7 +19,7 @@
         "strictNullChecks": true,
         "resolveJsonModule": true,
         "strict": true,
-        "esModuleInterop": false,
+        "esModuleInterop": true,
         "skipLibCheck": true,
         "rootDir": "./src",
         "outDir": "./build",

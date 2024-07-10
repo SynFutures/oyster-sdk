@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { ChainContext, GRAPH_PAGE_SIZE, SECS_PER_HOUR, now } from '@derivation-tech/web3-core';
+import { ChainContext, SECS_PER_HOUR, now } from '@derivation-tech/web3-core';
 import { SynFuturesV3 } from '../synfuturesV3Core';
 import { PairModel } from '../types/pair';
 import { BigNumber } from 'ethers';
 import { wdiv } from '../math';
 import { asInt128, concatId, hourIdFromTimestamp } from '../common/util';
+import retry from 'async-retry';
+import fetch, { RequestInit } from 'node-fetch';
 
 export enum FundingChartInterval {
     HOUR = '1h',
@@ -189,42 +191,77 @@ export class FundingChartDataProvider {
         instrumentAddr: string,
         expiry: number,
         timestamp = now(),
-        numDays = 14,
+        numDays = 15,
     ): Promise<HourlyData[]> {
         const fn = (str: string): string => `"${str}"`;
-        const ammId = `${fn(concatId(instrumentAddr, expiry).toLowerCase())}`;
 
         const hourId = hourIdFromTimestamp(timestamp);
-        const nDaysAgoHourId = hourId - numDays * 24 * SECS_PER_HOUR - 1;
-
-        // console.info(timestamp, dayId, hourId, _7d, _24h);
-        const graphQL = `
-            query($skip: Int, $first: Int, $lastID: String){
-                hourlyAmmDatas(skip: $skip, first: $first, where: {
-                    amm_contains: ${ammId} timestamp_gt: ${nDaysAgoHourId}, timestamp_lte: ${hourId}
-                }, orderBy: timestamp, orderDirection: desc) {
-                    id
-                    timestamp
-                    firstFundingIndex
-                    lastFundingIndex
-                    firstMarkPrice
-                    lastMarkPrice
-                }
-            }`;
+        const nDaysAgoHourId = hourId - numDays * 24 * SECS_PER_HOUR;
+        const PAYLOAD_SIZE = 20;
         const result: HourlyData[] = [];
-        const resp = await this.synfV3.subgraph.query(graphQL, 0, GRAPH_PAGE_SIZE);
 
-        for (let i = 0; i < resp.hourlyAmmDatas.length; i++) {
-            const hourlyData = resp.hourlyAmmDatas[i];
+        const temp = [];
+        for (let i = hourId; i >= nDaysAgoHourId; i -= PAYLOAD_SIZE * SECS_PER_HOUR) {
+            let graphQL = `{`;
+
+            for (let j = 0; j < PAYLOAD_SIZE && i - j * SECS_PER_HOUR >= nDaysAgoHourId; j++) {
+                const currentHourId = i - j * SECS_PER_HOUR;
+                const ammId = `${fn(concatId(concatId(instrumentAddr, expiry), currentHourId).toLowerCase())}`;
+                graphQL += `
+                    a${currentHourId}: hourlyAmmData(id: ${ammId}) {
+                        id
+                        timestamp
+                        firstFundingIndex
+                        lastFundingIndex
+                        firstMarkPrice
+                        lastMarkPrice
+                    }`;
+            }
+
+            graphQL += `}`;
+
+            const graphql = JSON.stringify({
+                query: `${graphQL}`,
+            });
+
+            // requestOptions
+            const opts: RequestInit = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: graphql,
+                redirect: 'follow',
+                timeout: 100000,
+            };
+
+            const resp = await retry(async () => {
+                const response = await fetch(this.synfV3.subgraph.endpoint, opts);
+                const json = await response.json();
+                if (!json.data || json.errors) {
+                    this.synfV3.subgraph.logger.error('subgraph query error:', json);
+                    throw new Error('subgraph query error' + JSON.stringify(json.errors));
+                }
+                return json.data;
+            }, this.synfV3.subgraph.retryOption);
+
+            // Process response and add to result
+            for (const key in resp) {
+                if (Object.prototype.hasOwnProperty.call(resp, key)) {
+                    temp.push(resp[key]);
+                }
+            }
+        }
+
+        for (let i = 0; i < temp.length; i++) {
+            const hourlyData = temp[i];
 
             let lastMarkPrice = BigNumber.from(hourlyData.lastMarkPrice);
             let offset = 1;
-            while (lastMarkPrice.eq(0) && (i + offset < resp.hourlyAmmDatas.length || i - offset >= 0)) {
-                if (i + offset < resp.hourlyAmmDatas.length) {
-                    lastMarkPrice = BigNumber.from(resp.hourlyAmmDatas[i + offset].lastMarkPrice);
+            while (lastMarkPrice.eq(0) && (i + offset < temp.length || i - offset >= 0)) {
+                if (i + offset < temp.length) {
+                    lastMarkPrice = BigNumber.from(temp[i + offset].lastMarkPrice);
                 }
                 if (lastMarkPrice.eq(0) && i - offset >= 0) {
-                    lastMarkPrice = BigNumber.from(resp.hourlyAmmDatas[i - offset].lastMarkPrice);
+                    lastMarkPrice = BigNumber.from(temp[i - offset].lastMarkPrice);
                 }
                 offset++;
             }
