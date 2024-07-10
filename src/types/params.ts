@@ -1,5 +1,5 @@
 import { BigNumber } from 'ethers';
-import { Position } from './index';
+import { Position, PositionModel } from './index';
 import { FeederType, MarketType, QuoteType } from './enum';
 import { ZERO } from '../math/constants';
 import { TokenInfo } from '@derivation-tech/web3-core';
@@ -154,7 +154,27 @@ export interface ClaimAirDropParam {
     proof: string[];
 }
 
-export interface queryAirDropStatusParam {
-    epoch: number;
-    index: BigNumber;
+export interface SimulateTradeResult {
+    tradePrice: BigNumber;
+    estimatedTradeValue: BigNumber;
+    minTradeValue: BigNumber;
+    tradingFee: BigNumber;
+    stabilityFee: BigNumber;
+    margin: BigNumber;
+    leverageWad: BigNumber;
+    priceImpactWad: BigNumber;
+    realized: BigNumber;
+    simulationMainPosition: PositionModel;
+    marginToDepositWad: BigNumber;
+    limitTick: number;
+    exceedMaxLeverage: boolean;
+}
+
+export interface SimulateOrderResult {
+    baseSize: BigNumber;
+    balance: BigNumber;
+    leverageWad: BigNumber;
+    marginToDepositWad: BigNumber;
+    minOrderValue: BigNumber;
+    minFeeRebate: BigNumber;
 }

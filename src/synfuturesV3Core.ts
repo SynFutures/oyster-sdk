@@ -90,6 +90,8 @@ import {
     alignRangeTick,
     EMPTY_QUOTE_PARAM,
     BatchPlaceParam,
+    SimulateTradeResult,
+    SimulateOrderResult,
 } from './types';
 import { r2w, sqrtX96ToWad, TickMath, wadToTick, wdiv, wmul, wmulDown, wmulUp, ZERO, wdivUp, max } from './math';
 import {
@@ -108,6 +110,7 @@ import {
     INT24_MAX,
     INT24_MIN,
     MAX_BATCH_ORDER_COUNT,
+    MAX_CANCEL_ORDER_COUNT,
     MIN_BATCH_ORDER_COUNT,
     NATIVE_TOKEN_ADDRESS,
     ONE_RATIO,
@@ -1288,104 +1291,116 @@ export class SynFuturesV3 {
     // Frontend Simulation API
     //////////////////////////////////////////////////////////
 
-    async simulateTradeToTickAndPlaceOrder(
-        account: PairLevelAccountModel,
+    async simulateCrossMarketOrder(
+        pairAccountModel: PairLevelAccountModel,
+        targetTick: number,
+        side: Side,
         baseSize: BigNumber,
-        tick: number,
-        wadLeverage: BigNumber,
-        priceSlippage: number,
-    ) {
-        if (tick % ORDER_SPACING != 0) throw Error('tick not aligned');
-        const pair = account.rootPair;
-        const long = baseSize.gt(0);
-
-        if ((long && tick < pair.amm.tick) || (!long && tick > pair.amm.tick)) throw Error('invalid tick');
-
-        const targetTick = long ? tick + 1 : tick;
-        console.log('targetTick', targetTick);
-        let marketSize = await this.getSizeToTargetTick(pair.rootInstrument.info.addr, pair.amm.expiry, targetTick);
-        marketSize = long ? marketSize : marketSize.sub(1);
-        const side = long ? Side.LONG : Side.SHORT;
-        const res = await this.inquireByBase(pair, side, marketSize.abs());
-        let quotation = res.quotation;
-        if (account.position.size.eq(0) && res.quoteAmount.lt(pair.rootInstrument.minTradeValue)) {
-            console.log('lower than min trade value');
-            const res = await this.inquireByQuote(pair, side, pair.rootInstrument.minTradeValue);
-            marketSize = res.baseAmount.mul(long ? 1 : -1);
-            quotation = res.quotation;
+        leverageWad: BigNumber,
+        slippage: number,
+    ): Promise<{
+        canPlaceOrder: boolean;
+        tradeQuotation: Quotation;
+        tradeSize: BigNumber;
+        orderSize: BigNumber;
+        tradeSimulation: SimulateTradeResult;
+        orderSimulation: SimulateOrderResult;
+    }> {
+        const sign = signOfSide(side);
+        const pair = pairAccountModel.rootPair;
+        const long = sign > 0;
+        const currentTick = pair.amm.tick;
+        if ((long && targetTick <= currentTick) || (!long && targetTick >= currentTick))
+            throw Error('please place normal order');
+        let swapToTick = long ? targetTick + 1 : targetTick - 1;
+        let { size: swapSize, quotation: quotation } = await this.contracts.observer.inquireByTick(
+            pair.rootInstrument.info.addr,
+            pair.amm.expiry,
+            swapToTick,
+        );
+        if ((long && quotation.postTick <= targetTick) || (!long && quotation.postTick >= targetTick)) {
+            swapToTick = long ? swapToTick + 1 : swapToTick - 1;
+            const retry = await this.contracts.observer.inquireByTick(
+                pair.rootInstrument.info.addr,
+                pair.amm.expiry,
+                swapToTick,
+            );
+            swapSize = retry.size;
+            quotation = retry.quotation;
         }
-
-        console.log('size', ethers.utils.formatEther(marketSize), ethers.utils.formatEther(baseSize));
-        if (marketSize.abs().gte(baseSize.abs())) {
-            // throw Error('invalid size');
-            baseSize = marketSize;
-        }
-
-        console.log('after trade', quotation.postTick);
-        const { marginToDepositWad, ...tradeSimulation } = this.simulateTrade(
-            account,
+        if ((long && swapSize.lt(0)) || (!long && swapSize.gt(0))) throw Error('Wrong Side');
+        const tradeSimulate = this.simulateTrade(
+            pairAccountModel,
             quotation,
             side,
-            marketSize.abs(),
+            swapSize.abs(),
             undefined,
-            wadLeverage,
-            priceSlippage,
+            leverageWad,
+            slippage,
         );
-
-        let leftSize = baseSize.abs().sub(marketSize.abs());
-        leftSize = leftSize.gt(0) ? leftSize : ZERO;
-
-        const accountAfterTrade = new PairLevelAccountModel(account.rootPair, account.traderAddr, account.account);
-        accountAfterTrade.rootPair.amm.tick = quotation.postTick;
-        // only changed tick affects simulation result
-        const { marginToDepositWad: marginToDepositWadOrder, ...orderSimulation } = this.simulateOrder(
-            accountAfterTrade,
-            tick,
-            leftSize,
-            side,
-            wadLeverage,
-        );
-        const orderValue = wmul(orderSimulation.baseSize.abs(), TickMath.getWadAtTick(tick));
-        console.log(
-            'orderValue',
-            ethers.utils.formatEther(orderValue),
-            'minOrderValue',
-            ethers.utils.formatEther(orderSimulation.minOrderValue),
-        );
-        if (orderValue.lt(orderSimulation.minOrderValue)) {
-            throw Error('invalid size');
+        if (pairAccountModel.getMainPosition().size.isZero() && quotation.entryNotional.lt(tradeSimulate.minTradeValue))
+            throw Error('size to tick is trivial');
+        const minOrderValue = pair.rootInstrument.minOrderValue;
+        const targetTickPrice = TickMath.getWadAtTick(targetTick);
+        const minOrderSize = wdivUp(minOrderValue, targetTickPrice);
+        if (swapSize.abs().add(minOrderSize).gt(baseSize.abs())) {
+            // in this case we can't place order since size is too small
+            return {
+                canPlaceOrder: false,
+                tradeSize: swapSize.abs(),
+                tradeQuotation: quotation,
+                tradeSimulation: tradeSimulate,
+                orderSize: minOrderSize,
+                orderSimulation: this._simulateOrder(pairAccountModel, targetTick, minOrderSize, leverageWad),
+            };
+        } else {
+            return {
+                canPlaceOrder: true,
+                tradeSize: swapSize.abs(),
+                tradeQuotation: quotation,
+                tradeSimulation: tradeSimulate,
+                orderSize: baseSize.abs().sub(swapSize.abs()),
+                orderSimulation: this._simulateOrder(
+                    pairAccountModel,
+                    targetTick,
+                    baseSize.abs().sub(swapSize.abs()),
+                    leverageWad,
+                ),
+            };
         }
-        return {
-            marketSize: marketSize,
-            orderSize: long ? leftSize : leftSize.mul(-1),
-            tradeSimulation,
-            orderSimulation,
-            marginToDepositWad: this.marginToDepositWad(
-                account.traderAddr,
-                account.rootPair.rootInstrument.info.quote,
-                tradeSimulation.margin.add(orderSimulation.balance),
-            ),
-        };
     }
 
-    async tradeToTickAndPlaceOrder(
+    async placeCrossMarketOrder(
         signer: Signer,
-        instrumentAddr: string,
-        tradeParam: TradeParam,
-        orderParam: PlaceParam,
-        overrides?: Overrides,
+        pair: PairModel,
+        side: Side,
+
+        swapSize: BigNumber,
+        swapMargin: BigNumber,
+        swapTradePrice: BigNumber,
+
+        orderTickNumber: number,
+        orderBaseWad: BigNumber,
+        orderMargin: BigNumber,
+
+        slippage: number,
+        deadline: number,
         referralCode = DEFAULT_REFERRAL_CODE,
-    ) {
-        const instrument = this.getInstrumentContract(instrumentAddr, signer);
+        overrides?: PayableOverrides,
+    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
+        const sign = signOfSide(side);
+        const instrument = this.getInstrumentContract(pair.rootInstrument.info.addr);
+        const swapLimitTick = this.getLimitTick(swapTradePrice, slippage, side);
+
         const callData = [];
         callData.push(
             instrument.interface.encodeFunctionData('trade', [
                 encodeTradeWithReferralParam(
-                    tradeParam.expiry,
-                    tradeParam.size,
-                    tradeParam.amount,
-                    tradeParam.limitTick,
-                    tradeParam.deadline,
+                    pair.amm.expiry,
+                    swapSize.mul(sign),
+                    swapMargin,
+                    swapLimitTick,
+                    deadline,
                     referralCode,
                 ),
             ]),
@@ -1394,16 +1409,26 @@ export class SynFuturesV3 {
         callData.push(
             instrument.interface.encodeFunctionData('place', [
                 encodePlaceWithReferralParam(
-                    orderParam.expiry,
-                    orderParam.size,
-                    orderParam.amount,
-                    orderParam.tick,
-                    orderParam.deadline,
+                    pair.amm.expiry,
+                    orderBaseWad.mul(sign),
+                    orderMargin,
+                    orderTickNumber,
+                    deadline,
                     referralCode,
                 ),
             ]),
         );
+        // const results = await instrument.callStatic.multicall(
+        //     callData,
+        //     overrides ?? { from: '' },
+        // );
+        // const decode0 = instrument.interface.decodeFunctionResult('trade', results[0]);
+        // const decode1 = instrument.interface.decodeFunctionResult('place', results[1]);
+        // console.log('trade', decode0);
+        // console.log('place', decode1);
 
+        // signer;
+        // return undefined as any;
         const tx = await instrument.populateTransaction.multicall(callData, overrides ?? {});
         return await this.ctx.sendTx(signer, tx);
     }
@@ -1418,21 +1443,7 @@ export class SynFuturesV3 {
         margin: BigNumber | undefined,
         leverageWad: BigNumber | undefined,
         slippage: number,
-    ): {
-        tradePrice: BigNumber;
-        estimatedTradeValue: BigNumber;
-        minTradeValue: BigNumber;
-        tradingFee: BigNumber;
-        stabilityFee: BigNumber;
-        margin: BigNumber;
-        leverageWad: BigNumber;
-        priceImpactWad: BigNumber;
-        realized: BigNumber;
-        simulationMainPosition: PositionModel;
-        marginToDepositWad: BigNumber;
-        limitTick: number;
-        exceedMaxLeverage: boolean;
-    } {
+    ): SimulateTradeResult {
         const sign = signOfSide(side);
         const tradePrice = wdiv(quotation.entryNotional, baseSize.abs());
         const limitTick = this.getLimitTick(tradePrice, slippage, side);
@@ -1562,20 +1573,13 @@ export class SynFuturesV3 {
         baseSize: BigNumber,
         side: Side,
         leverageWad: BigNumber,
-    ): {
-        baseSize: BigNumber;
-        balance: BigNumber;
-        leverageWad: BigNumber;
-        marginToDepositWad: BigNumber;
-        minOrderValue: BigNumber;
-        minFeeRebate: BigNumber;
-    } {
-        baseSize = baseSize.abs();
+    ): SimulateOrderResult {
         const pairModel = pairAccountModel.rootPair;
-        const targetPrice = TickMath.getWadAtTick(targetTick);
         const currentTick = pairModel.amm.tick;
         if (currentTick === targetTick) throw new Error('Invalid price');
         const isLong = targetTick < currentTick;
+        const targetPrice = TickMath.getWadAtTick(targetTick);
+
         if ((side === Side.LONG && !isLong) || (side === Side.SHORT && isLong)) throw new Error('Invalid price');
 
         const maxLeverage = this.getMaxLeverage(pairModel.rootInstrument.setting.initialMarginRatio);
@@ -1586,6 +1590,19 @@ export class SynFuturesV3 {
         if (!withinOrderLimit(targetPrice, pairModel.markPrice, pairModel.rootInstrument.setting.initialMarginRatio)) {
             throw new Error('Limit order price is too far away from mark price');
         }
+
+        return this._simulateOrder(pairAccountModel, targetTick, baseSize, leverageWad);
+    }
+
+    private _simulateOrder(
+        pairAccountModel: PairLevelAccountModel,
+        targetTick: number,
+        baseSize: BigNumber,
+        leverageWad: BigNumber,
+    ): SimulateOrderResult {
+        baseSize = baseSize.abs();
+        const pairModel = pairAccountModel.rootPair;
+        const targetPrice = TickMath.getWadAtTick(targetTick);
         const markPrice = pairModel.markPrice;
         let margin = wdivUp(wmulUp(targetPrice, baseSize), leverageWad);
         const minMargin = wmulUp(
@@ -1703,14 +1720,35 @@ export class SynFuturesV3 {
             balance: BigNumber;
             leverageWad: BigNumber;
             minFeeRebate: BigNumber;
+            minOrderSize: BigNumber;
         }[];
         marginToDepositWad: BigNumber;
         minOrderValue: BigNumber;
+        totalMinSize: BigNumber;
     } {
         if (orderCount < MIN_BATCH_ORDER_COUNT || orderCount > MAX_BATCH_ORDER_COUNT)
             throw new Error(`order count should be between ${MIN_BATCH_ORDER_COUNT} and ${MAX_BATCH_ORDER_COUNT}`);
         const targetTicks = this.getBatchOrderTicks(lowerTick, upperTick, orderCount);
-        const ratios = this.getBatchOrderRatios(sizeDistribution, orderCount);
+        let ratios = this.getBatchOrderRatios(sizeDistribution, orderCount);
+        // if sizeDistribution is random, we need to adjust the ratios to make sure orderValue meet minOrderValue with best effort
+        const minOrderValue = pairAccountModel.rootPair.rootInstrument.minOrderValue;
+        const minSizes = targetTicks.map((tick) => wdivUp(minOrderValue, TickMath.getWadAtTick(tick)));
+        if (sizeDistribution === BatchOrderSizeDistribution.RANDOM) {
+            // only adjust sizes if possible
+            if (minSizes.reduce((acc, minSize) => acc.add(minSize), ZERO).lt(baseSize)) {
+                ratios = this.getBatchOrderRatios(BatchOrderSizeDistribution.FLAT, orderCount);
+            }
+        }
+
+        // calculate totalMinSize
+        const sizes = ratios.map((ratio) => baseSize.mul(ratio).div(RATIO_BASE));
+        const bnMax = (a: BigNumber, b: BigNumber): BigNumber => (a.gt(b) ? a : b);
+        // pick the max minSize/size ratio
+        const minSizeToSizeRatio = minSizes
+            .map((minSize, i) => bnMax(wdivUp(minSize, sizes[i]), ZERO))
+            .reduce((acc, ratio) => bnMax(acc, ratio), ZERO);
+        const totalMinSize = wmulUp(baseSize, minSizeToSizeRatio);
+
         const res = this.simulateBatchPlace(pairAccountModel, targetTicks, ratios, baseSize, side, leverageWad);
         return {
             ...res,
@@ -1722,14 +1760,18 @@ export class SynFuturesV3 {
                     balance: res.orders[index].balance,
                     leverageWad: res.orders[index].leverageWad,
                     minFeeRebate: res.orders[index].minFeeRebate,
+                    minOrderSize: minSizes[index],
                 };
             }),
+            totalMinSize,
         };
     }
 
     // given lower price and upper price, return the ticks for batch orders
     // last tick should be upper tick
     getBatchOrderTicks(lowerTick: number, upperTick: number, orderCount: number): number[] {
+        // adapt reserve price pair
+        [lowerTick, upperTick] = [lowerTick, upperTick].sort((a, b) => a - b);
         lowerTick = alignTick(lowerTick, ORDER_SPACING);
         upperTick = alignTick(upperTick, ORDER_SPACING);
         const tickDiff = upperTick - lowerTick;
@@ -2275,11 +2317,24 @@ export class SynFuturesV3 {
 
         const ticks = ordersToCancel.map((order) => order.tick);
 
-        const unsignedTx = await instrument.populateTransaction.cancel(
-            encodeCancelParam(expiry, ticks, deadline),
-            overrides ?? {},
-        );
-        return this.ctx.sendTx(signer, unsignedTx);
+        if (ticks.length <= MAX_CANCEL_ORDER_COUNT) {
+            const unsignedTx = await instrument.populateTransaction.cancel(
+                encodeCancelParam(expiry, ticks, deadline),
+                overrides ?? {},
+            );
+            return this.ctx.sendTx(signer, unsignedTx);
+        } else {
+            // split ticks by size of MAX_CANCEL_ORDER_COUNT
+            const tickGroups = [];
+            for (let i = 0; i < ticks.length; i += MAX_CANCEL_ORDER_COUNT) {
+                tickGroups.push(ticks.slice(i, i + MAX_CANCEL_ORDER_COUNT));
+            }
+            const calldatas = tickGroups.map((group) => {
+                return instrument.interface.encodeFunctionData('cancel', [encodeCancelParam(expiry, group, deadline)]);
+            });
+            const unsignedTx = await instrument.populateTransaction.multicall(calldatas, overrides ?? {});
+            return this.ctx.sendTx(signer, unsignedTx);
+        }
     }
 
     public async vaultOperation(

@@ -472,9 +472,11 @@ export interface ObserverInterface extends utils.Interface {
     "getTickBitmaps(address,uint32,int16[])": FunctionFragment;
     "getVaultBalances(address,address[])": FunctionFragment;
     "inquireByNotional(address,uint32,uint256,bool)": FunctionFragment;
+    "inquireByTick(address,uint32,int24)": FunctionFragment;
     "inspectMaxReserveDexV2Pair(address,address)": FunctionFragment;
     "liquidityDetails(address,uint32,uint24)": FunctionFragment;
     "sizeByNotional(address,uint32,uint256,bool)": FunctionFragment;
+    "sizeToTick(address,uint32,int24)": FunctionFragment;
   };
 
   getFunction(
@@ -501,9 +503,11 @@ export interface ObserverInterface extends utils.Interface {
       | "getTickBitmaps"
       | "getVaultBalances"
       | "inquireByNotional"
+      | "inquireByTick"
       | "inspectMaxReserveDexV2Pair"
       | "liquidityDetails"
       | "sizeByNotional"
+      | "sizeToTick"
   ): FunctionFragment;
 
   encodeFunctionData(functionFragment: "gate", values?: undefined): string;
@@ -645,6 +649,14 @@ export interface ObserverInterface extends utils.Interface {
     ]
   ): string;
   encodeFunctionData(
+    functionFragment: "inquireByTick",
+    values: [
+      PromiseOrValue<string>,
+      PromiseOrValue<BigNumberish>,
+      PromiseOrValue<BigNumberish>
+    ]
+  ): string;
+  encodeFunctionData(
     functionFragment: "inspectMaxReserveDexV2Pair",
     values: [PromiseOrValue<string>, PromiseOrValue<string>]
   ): string;
@@ -663,6 +675,14 @@ export interface ObserverInterface extends utils.Interface {
       PromiseOrValue<BigNumberish>,
       PromiseOrValue<BigNumberish>,
       PromiseOrValue<boolean>
+    ]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "sizeToTick",
+    values: [
+      PromiseOrValue<string>,
+      PromiseOrValue<BigNumberish>,
+      PromiseOrValue<BigNumberish>
     ]
   ): string;
 
@@ -728,6 +748,10 @@ export interface ObserverInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "inquireByTick",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "inspectMaxReserveDexV2Pair",
     data: BytesLike
   ): Result;
@@ -739,6 +763,7 @@ export interface ObserverInterface extends utils.Interface {
     functionFragment: "sizeByNotional",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "sizeToTick", data: BytesLike): Result;
 
   events: {};
 }
@@ -932,6 +957,18 @@ export interface Observer extends BaseContract {
       }
     >;
 
+    inquireByTick(
+      instrument: PromiseOrValue<string>,
+      expiry: PromiseOrValue<BigNumberish>,
+      tick: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, QuotationStructOutput] & {
+        size: BigNumber;
+        quotation: QuotationStructOutput;
+      }
+    >;
+
     inspectMaxReserveDexV2Pair(
       base: PromiseOrValue<string>,
       quote: PromiseOrValue<string>,
@@ -968,6 +1005,13 @@ export interface Observer extends BaseContract {
       expiry: PromiseOrValue<BigNumberish>,
       notional: PromiseOrValue<BigNumberish>,
       long: PromiseOrValue<boolean>,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
+    sizeToTick(
+      instrument: PromiseOrValue<string>,
+      expiry: PromiseOrValue<BigNumberish>,
+      destTick: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
   };
@@ -1134,6 +1178,18 @@ export interface Observer extends BaseContract {
     }
   >;
 
+  inquireByTick(
+    instrument: PromiseOrValue<string>,
+    expiry: PromiseOrValue<BigNumberish>,
+    tick: PromiseOrValue<BigNumberish>,
+    overrides?: CallOverrides
+  ): Promise<
+    [BigNumber, QuotationStructOutput] & {
+      size: BigNumber;
+      quotation: QuotationStructOutput;
+    }
+  >;
+
   inspectMaxReserveDexV2Pair(
     base: PromiseOrValue<string>,
     quote: PromiseOrValue<string>,
@@ -1170,6 +1226,13 @@ export interface Observer extends BaseContract {
     expiry: PromiseOrValue<BigNumberish>,
     notional: PromiseOrValue<BigNumberish>,
     long: PromiseOrValue<boolean>,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  sizeToTick(
+    instrument: PromiseOrValue<string>,
+    expiry: PromiseOrValue<BigNumberish>,
+    destTick: PromiseOrValue<BigNumberish>,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
@@ -1336,6 +1399,18 @@ export interface Observer extends BaseContract {
       }
     >;
 
+    inquireByTick(
+      instrument: PromiseOrValue<string>,
+      expiry: PromiseOrValue<BigNumberish>,
+      tick: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, QuotationStructOutput] & {
+        size: BigNumber;
+        quotation: QuotationStructOutput;
+      }
+    >;
+
     inspectMaxReserveDexV2Pair(
       base: PromiseOrValue<string>,
       quote: PromiseOrValue<string>,
@@ -1372,6 +1447,13 @@ export interface Observer extends BaseContract {
       expiry: PromiseOrValue<BigNumberish>,
       notional: PromiseOrValue<BigNumberish>,
       long: PromiseOrValue<boolean>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    sizeToTick(
+      instrument: PromiseOrValue<string>,
+      expiry: PromiseOrValue<BigNumberish>,
+      destTick: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
   };
@@ -1516,6 +1598,13 @@ export interface Observer extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    inquireByTick(
+      instrument: PromiseOrValue<string>,
+      expiry: PromiseOrValue<BigNumberish>,
+      tick: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     inspectMaxReserveDexV2Pair(
       base: PromiseOrValue<string>,
       quote: PromiseOrValue<string>,
@@ -1534,6 +1623,13 @@ export interface Observer extends BaseContract {
       expiry: PromiseOrValue<BigNumberish>,
       notional: PromiseOrValue<BigNumberish>,
       long: PromiseOrValue<boolean>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    sizeToTick(
+      instrument: PromiseOrValue<string>,
+      expiry: PromiseOrValue<BigNumberish>,
+      destTick: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
   };
@@ -1676,6 +1772,13 @@ export interface Observer extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    inquireByTick(
+      instrument: PromiseOrValue<string>,
+      expiry: PromiseOrValue<BigNumberish>,
+      tick: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     inspectMaxReserveDexV2Pair(
       base: PromiseOrValue<string>,
       quote: PromiseOrValue<string>,
@@ -1694,6 +1797,13 @@ export interface Observer extends BaseContract {
       expiry: PromiseOrValue<BigNumberish>,
       notional: PromiseOrValue<BigNumberish>,
       long: PromiseOrValue<boolean>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    sizeToTick(
+      instrument: PromiseOrValue<string>,
+      expiry: PromiseOrValue<BigNumberish>,
+      destTick: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
   };
