@@ -1343,6 +1343,19 @@ export class SynFuturesV3 {
         const minOrderValue = pair.rootInstrument.minOrderValue;
         const targetTickPrice = TickMath.getWadAtTick(targetTick);
         const minOrderSize = wdivUp(minOrderValue, targetTickPrice);
+        const quoteInfo = pair.rootInstrument.info.quote;
+        const balanceInVaultWad = NumericConverter.scaleQuoteAmount(
+            this.getCachedVaultBalance(quoteInfo.address, pairAccountModel.traderAddr),
+            quoteInfo.decimals,
+        );
+        function getBalanceInVaultWadOverride(
+            balanceInVaultWad: BigNumber,
+            depositWad: BigNumber,
+            consumedWad: BigNumber,
+        ): BigNumber {
+            const balance = balanceInVaultWad.add(depositWad).sub(consumedWad);
+            return balance.lt(0) ? ZERO : balance;
+        }
         if (swapSize.abs().add(minOrderSize).gt(baseSize.abs())) {
             // in this case we can't place order since size is too small
             return {
@@ -1351,7 +1364,17 @@ export class SynFuturesV3 {
                 tradeQuotation: quotation,
                 tradeSimulation: tradeSimulate,
                 orderSize: minOrderSize,
-                orderSimulation: this._simulateOrder(pairAccountModel, targetTick, minOrderSize, leverageWad),
+                orderSimulation: this._simulateOrder(
+                    pairAccountModel,
+                    targetTick,
+                    minOrderSize,
+                    leverageWad,
+                    getBalanceInVaultWadOverride(
+                        balanceInVaultWad,
+                        tradeSimulate.marginToDepositWad,
+                        tradeSimulate.margin,
+                    ),
+                ),
             };
         } else {
             return {
@@ -1365,6 +1388,11 @@ export class SynFuturesV3 {
                     targetTick,
                     baseSize.abs().sub(swapSize.abs()),
                     leverageWad,
+                    getBalanceInVaultWadOverride(
+                        balanceInVaultWad,
+                        tradeSimulate.marginToDepositWad,
+                        tradeSimulate.margin,
+                    ),
                 ),
             };
         }
@@ -1599,6 +1627,7 @@ export class SynFuturesV3 {
         targetTick: number,
         baseSize: BigNumber,
         leverageWad: BigNumber,
+        balanceInVaultWadOverride?: BigNumber,
     ): SimulateOrderResult {
         baseSize = baseSize.abs();
         const pairModel = pairAccountModel.rootPair;
@@ -1626,6 +1655,7 @@ export class SynFuturesV3 {
                 pairAccountModel.traderAddr,
                 pairModel.rootInstrument.info.quote,
                 margin,
+                balanceInVaultWadOverride,
             ),
             minOrderValue: pairModel.rootInstrument.minOrderValue,
             minFeeRebate: wmul(
@@ -2367,11 +2397,21 @@ export class SynFuturesV3 {
         return this.ctx.sendTx(signer, unsignedTx);
     }
 
-    private marginToDepositWad(traderAddress: string, quoteInfo: TokenInfo, marginNeedWad: BigNumber): BigNumber {
-        const balanceInVaultWad = NumericConverter.scaleQuoteAmount(
-            this.getCachedVaultBalance(quoteInfo.address, traderAddress),
-            quoteInfo.decimals,
-        );
+    private marginToDepositWad(
+        traderAddress: string,
+        quoteInfo: TokenInfo,
+        marginNeedWad: BigNumber,
+        balanceInVaultWadOverride?: BigNumber,
+    ): BigNumber {
+        let balanceInVaultWad;
+        if (balanceInVaultWadOverride) {
+            balanceInVaultWad = balanceInVaultWadOverride;
+        } else {
+            balanceInVaultWad = NumericConverter.scaleQuoteAmount(
+                this.getCachedVaultBalance(quoteInfo.address, traderAddress),
+                quoteInfo.decimals,
+            );
+        }
         if (marginNeedWad.gt(balanceInVaultWad)) {
             return marginNeedWad.sub(balanceInVaultWad);
         } else {
