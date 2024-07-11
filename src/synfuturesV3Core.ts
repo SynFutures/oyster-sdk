@@ -1734,8 +1734,16 @@ export class SynFuturesV3 {
         const minOrderValue = pairAccountModel.rootPair.rootInstrument.minOrderValue;
         const minSizes = targetTicks.map((tick) => wdivUp(minOrderValue, TickMath.getWadAtTick(tick)));
         if (sizeDistribution === BatchOrderSizeDistribution.RANDOM) {
+            // check if any baseSize * ratio is less than minSize
+            let needNewRatios = false;
+            for (let i = 0; i < minSizes.length; i++) {
+                if (baseSize.mul(ratios[i]).div(RATIO_BASE).lt(minSizes[i])) {
+                    needNewRatios = true;
+                    break;
+                }
+            }
             // only adjust sizes if possible
-            if (minSizes.reduce((acc, minSize) => acc.add(minSize), ZERO).lt(baseSize)) {
+            if (needNewRatios && minSizes.reduce((acc, minSize) => acc.add(minSize), ZERO).lt(baseSize)) {
                 ratios = this.getBatchOrderRatios(BatchOrderSizeDistribution.FLAT, orderCount);
             }
         }
