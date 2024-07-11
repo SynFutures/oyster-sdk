@@ -15,6 +15,7 @@ import {
     Vault__factory,
 } from '../types';
 import { Signer, ethers, BigNumber } from 'ethers';
+import { parseUnits } from 'ethers/lib/utils';
 import { AbiCoder } from 'ethers/lib/utils';
 import {
     encodeAddParam,
@@ -25,7 +26,7 @@ import {
     encodeTradeParam,
 } from '../common';
 import { encodeBatchCancelTicks, encodeInstrumentExpiry, encodeLiquidateParam } from './util';
-import { PairConfig, VaultStatus } from './types';
+import { VaultStatus } from './types';
 
 export class VaultFactoryClient {
     ctx: ChainContext;
@@ -44,8 +45,26 @@ export class VaultFactoryClient {
     }
 
     // admin method
-    async createVault(signer: Signer, quoteAddr: string, managerAddr: string, name: string): Promise<string> {
-        const tx = await this.vaultFactory.populateTransaction.createVault(quoteAddr, managerAddr, name);
+    async createVault(
+        signer: Signer,
+        quoteAddr: string,
+        managerAddr: string,
+        name: string,
+        liveThreshold: number,
+        maxRangeNumber: number,
+        maxOrderNumber: number,
+        maxPairNumber: number,
+    ): Promise<string> {
+        const tokenInfo = await this.ctx.getTokenInfo(quoteAddr);
+        const tx = await this.vaultFactory.populateTransaction.createVault(
+            quoteAddr,
+            managerAddr,
+            name,
+            parseUnits(liveThreshold.toString(), tokenInfo.decimals),
+            maxRangeNumber,
+            maxOrderNumber,
+            maxPairNumber,
+        );
         await this.ctx.sendTx(signer, tx);
 
         const vaultAddr = await this.getVaultAddr(quoteAddr, managerAddr, name);
@@ -320,9 +339,11 @@ export class VaultClient {
 
     async setPairConfig(
         manager: Signer,
-        pairConfig: PairConfig,
+        maxRangeNumber: number,
+        maxOrderNumber: number,
+        maxPairNumber: number,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const ptx = await this.vault.populateTransaction.setPairConfig(pairConfig);
+        const ptx = await this.vault.populateTransaction.setPairConfig(maxRangeNumber, maxOrderNumber, maxPairNumber);
         return await this.ctx.sendTx(manager, ptx);
     }
 
