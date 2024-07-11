@@ -108,6 +108,26 @@ const _abi = [
         name: "name",
         type: "string",
       },
+      {
+        internalType: "uint256",
+        name: "liveThreshold",
+        type: "uint256",
+      },
+      {
+        internalType: "uint8",
+        name: "maxRangeNumber",
+        type: "uint8",
+      },
+      {
+        internalType: "uint8",
+        name: "maxOrderNumber",
+        type: "uint8",
+      },
+      {
+        internalType: "uint8",
+        name: "maxPairNumber",
+        type: "uint8",
+      },
     ],
     name: "createVault",
     outputs: [

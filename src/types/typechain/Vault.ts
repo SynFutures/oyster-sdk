@@ -28,18 +28,6 @@ import type {
   PromiseOrValue,
 } from "./common";
 
-export type PairConfigStruct = {
-  maxRangeNumber: PromiseOrValue<BigNumberish>;
-  maxOrderNumber: PromiseOrValue<BigNumberish>;
-  maxPairNumber: PromiseOrValue<BigNumberish>;
-};
-
-export type PairConfigStructOutput = [number, number, number] & {
-  maxRangeNumber: number;
-  maxOrderNumber: number;
-  maxPairNumber: number;
-};
-
 export type PendingWithdrawStruct = {
   status: PromiseOrValue<BigNumberish>;
   quantity: PromiseOrValue<BigNumberish>;
@@ -123,15 +111,17 @@ export interface VaultInterface extends utils.Interface {
     "gate()": FunctionFragment;
     "getInvolvedPairs()": FunctionFragment;
     "getTotalValue()": FunctionFragment;
-    "initialize(address,address,address)": FunctionFragment;
+    "initialize(address,address,address,uint256,uint8,uint8,uint8)": FunctionFragment;
     "launch(address,string,address,bytes,bytes32[2])": FunctionFragment;
     "liquidate(bytes32[3])": FunctionFragment;
     "liveThreshold()": FunctionFragment;
     "markReady(address[])": FunctionFragment;
+    "maxOrderNumber()": FunctionFragment;
+    "maxPairNumber()": FunctionFragment;
+    "maxRangeNumber()": FunctionFragment;
     "mode()": FunctionFragment;
     "multicall(bytes[])": FunctionFragment;
     "owner()": FunctionFragment;
-    "pairConfig()": FunctionFragment;
     "pendingsOf(address)": FunctionFragment;
     "place(address,bytes32[2])": FunctionFragment;
     "profitFeeRatio()": FunctionFragment;
@@ -139,7 +129,7 @@ export interface VaultInterface extends utils.Interface {
     "remove(address,bytes32[2])": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
     "setLiveThreshold(uint256)": FunctionFragment;
-    "setPairConfig((uint8,uint8,uint8))": FunctionFragment;
+    "setPairConfig(uint8,uint8,uint8)": FunctionFragment;
     "setProfitFeeRatio(uint32)": FunctionFragment;
     "setVaultStatus(uint8)": FunctionFragment;
     "settle(bytes32)": FunctionFragment;
@@ -179,10 +169,12 @@ export interface VaultInterface extends utils.Interface {
       | "liquidate"
       | "liveThreshold"
       | "markReady"
+      | "maxOrderNumber"
+      | "maxPairNumber"
+      | "maxRangeNumber"
       | "mode"
       | "multicall"
       | "owner"
-      | "pairConfig"
       | "pendingsOf"
       | "place"
       | "profitFeeRatio"
@@ -281,7 +273,11 @@ export interface VaultInterface extends utils.Interface {
     values: [
       PromiseOrValue<string>,
       PromiseOrValue<string>,
-      PromiseOrValue<string>
+      PromiseOrValue<string>,
+      PromiseOrValue<BigNumberish>,
+      PromiseOrValue<BigNumberish>,
+      PromiseOrValue<BigNumberish>,
+      PromiseOrValue<BigNumberish>
     ]
   ): string;
   encodeFunctionData(
@@ -312,16 +308,24 @@ export interface VaultInterface extends utils.Interface {
     functionFragment: "markReady",
     values: [PromiseOrValue<string>[]]
   ): string;
+  encodeFunctionData(
+    functionFragment: "maxOrderNumber",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "maxPairNumber",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "maxRangeNumber",
+    values?: undefined
+  ): string;
   encodeFunctionData(functionFragment: "mode", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "multicall",
     values: [PromiseOrValue<BytesLike>[]]
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "pairConfig",
-    values?: undefined
-  ): string;
   encodeFunctionData(
     functionFragment: "pendingsOf",
     values: [PromiseOrValue<string>]
@@ -355,7 +359,11 @@ export interface VaultInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "setPairConfig",
-    values: [PairConfigStruct]
+    values: [
+      PromiseOrValue<BigNumberish>,
+      PromiseOrValue<BigNumberish>,
+      PromiseOrValue<BigNumberish>
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "setProfitFeeRatio",
@@ -457,10 +465,21 @@ export interface VaultInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "markReady", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "maxOrderNumber",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "maxPairNumber",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "maxRangeNumber",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "mode", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "multicall", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "pairConfig", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "pendingsOf", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "place", data: BytesLike): Result;
   decodeFunctionResult(
@@ -527,7 +546,7 @@ export interface VaultInterface extends utils.Interface {
     "OwnershipTransferred(address,address)": EventFragment;
     "RemoveInvolvedPair(address,uint32)": EventFragment;
     "SetLiveThreshold(uint256)": EventFragment;
-    "SetPairConfig(tuple)": EventFragment;
+    "SetPairConfig(uint8,uint8,uint8)": EventFragment;
     "SetProfitFeeRatio(uint32)": EventFragment;
     "SetVaultStatus(uint8)": EventFragment;
     "SwitchOperationMode(uint8)": EventFragment;
@@ -610,10 +629,12 @@ export type SetLiveThresholdEventFilter =
   TypedEventFilter<SetLiveThresholdEvent>;
 
 export interface SetPairConfigEventObject {
-  pairConfig: PairConfigStructOutput;
+  maxRangeNumber: number;
+  maxOrderNumber: number;
+  maxPairNumber: number;
 }
 export type SetPairConfigEvent = TypedEvent<
-  [PairConfigStructOutput],
+  [number, number, number],
   SetPairConfigEventObject
 >;
 
@@ -812,6 +833,10 @@ export interface Vault extends BaseContract {
       _quote: PromiseOrValue<string>,
       _admin: PromiseOrValue<string>,
       manager: PromiseOrValue<string>,
+      _liveThreshold: PromiseOrValue<BigNumberish>,
+      _maxRangeNumber: PromiseOrValue<BigNumberish>,
+      _maxOrderNumber: PromiseOrValue<BigNumberish>,
+      _maxPairNumber: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -840,6 +865,12 @@ export interface Vault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
+    maxOrderNumber(overrides?: CallOverrides): Promise<[number]>;
+
+    maxPairNumber(overrides?: CallOverrides): Promise<[number]>;
+
+    maxRangeNumber(overrides?: CallOverrides): Promise<[number]>;
+
     mode(overrides?: CallOverrides): Promise<[number]>;
 
     multicall(
@@ -848,16 +879,6 @@ export interface Vault extends BaseContract {
     ): Promise<ContractTransaction>;
 
     owner(overrides?: CallOverrides): Promise<[string]>;
-
-    pairConfig(
-      overrides?: CallOverrides
-    ): Promise<
-      [number, number, number] & {
-        maxRangeNumber: number;
-        maxOrderNumber: number;
-        maxPairNumber: number;
-      }
-    >;
 
     pendingsOf(
       user: PromiseOrValue<string>,
@@ -890,7 +911,9 @@ export interface Vault extends BaseContract {
     ): Promise<ContractTransaction>;
 
     setPairConfig(
-      newPairConfig: PairConfigStruct,
+      newMaxRangeNumber: PromiseOrValue<BigNumberish>,
+      newMaxOrderNumber: PromiseOrValue<BigNumberish>,
+      newMaxPairNumber: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -1031,6 +1054,10 @@ export interface Vault extends BaseContract {
     _quote: PromiseOrValue<string>,
     _admin: PromiseOrValue<string>,
     manager: PromiseOrValue<string>,
+    _liveThreshold: PromiseOrValue<BigNumberish>,
+    _maxRangeNumber: PromiseOrValue<BigNumberish>,
+    _maxOrderNumber: PromiseOrValue<BigNumberish>,
+    _maxPairNumber: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -1059,6 +1086,12 @@ export interface Vault extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
+  maxOrderNumber(overrides?: CallOverrides): Promise<number>;
+
+  maxPairNumber(overrides?: CallOverrides): Promise<number>;
+
+  maxRangeNumber(overrides?: CallOverrides): Promise<number>;
+
   mode(overrides?: CallOverrides): Promise<number>;
 
   multicall(
@@ -1067,16 +1100,6 @@ export interface Vault extends BaseContract {
   ): Promise<ContractTransaction>;
 
   owner(overrides?: CallOverrides): Promise<string>;
-
-  pairConfig(
-    overrides?: CallOverrides
-  ): Promise<
-    [number, number, number] & {
-      maxRangeNumber: number;
-      maxOrderNumber: number;
-      maxPairNumber: number;
-    }
-  >;
 
   pendingsOf(
     user: PromiseOrValue<string>,
@@ -1109,7 +1132,9 @@ export interface Vault extends BaseContract {
   ): Promise<ContractTransaction>;
 
   setPairConfig(
-    newPairConfig: PairConfigStruct,
+    newMaxRangeNumber: PromiseOrValue<BigNumberish>,
+    newMaxOrderNumber: PromiseOrValue<BigNumberish>,
+    newMaxPairNumber: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -1257,6 +1282,10 @@ export interface Vault extends BaseContract {
       _quote: PromiseOrValue<string>,
       _admin: PromiseOrValue<string>,
       manager: PromiseOrValue<string>,
+      _liveThreshold: PromiseOrValue<BigNumberish>,
+      _maxRangeNumber: PromiseOrValue<BigNumberish>,
+      _maxOrderNumber: PromiseOrValue<BigNumberish>,
+      _maxPairNumber: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1285,6 +1314,12 @@ export interface Vault extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    maxOrderNumber(overrides?: CallOverrides): Promise<number>;
+
+    maxPairNumber(overrides?: CallOverrides): Promise<number>;
+
+    maxRangeNumber(overrides?: CallOverrides): Promise<number>;
+
     mode(overrides?: CallOverrides): Promise<number>;
 
     multicall(
@@ -1293,16 +1328,6 @@ export interface Vault extends BaseContract {
     ): Promise<string[]>;
 
     owner(overrides?: CallOverrides): Promise<string>;
-
-    pairConfig(
-      overrides?: CallOverrides
-    ): Promise<
-      [number, number, number] & {
-        maxRangeNumber: number;
-        maxOrderNumber: number;
-        maxPairNumber: number;
-      }
-    >;
 
     pendingsOf(
       user: PromiseOrValue<string>,
@@ -1335,7 +1360,9 @@ export interface Vault extends BaseContract {
     ): Promise<void>;
 
     setPairConfig(
-      newPairConfig: PairConfigStruct,
+      newMaxRangeNumber: PromiseOrValue<BigNumberish>,
+      newMaxOrderNumber: PromiseOrValue<BigNumberish>,
+      newMaxPairNumber: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1438,8 +1465,16 @@ export interface Vault extends BaseContract {
     ): SetLiveThresholdEventFilter;
     SetLiveThreshold(quoteAmount?: null): SetLiveThresholdEventFilter;
 
-    "SetPairConfig(tuple)"(pairConfig?: null): SetPairConfigEventFilter;
-    SetPairConfig(pairConfig?: null): SetPairConfigEventFilter;
+    "SetPairConfig(uint8,uint8,uint8)"(
+      maxRangeNumber?: null,
+      maxOrderNumber?: null,
+      maxPairNumber?: null
+    ): SetPairConfigEventFilter;
+    SetPairConfig(
+      maxRangeNumber?: null,
+      maxOrderNumber?: null,
+      maxPairNumber?: null
+    ): SetPairConfigEventFilter;
 
     "SetProfitFeeRatio(uint32)"(
       newProfitFeeRatio?: null
@@ -1570,6 +1605,10 @@ export interface Vault extends BaseContract {
       _quote: PromiseOrValue<string>,
       _admin: PromiseOrValue<string>,
       manager: PromiseOrValue<string>,
+      _liveThreshold: PromiseOrValue<BigNumberish>,
+      _maxRangeNumber: PromiseOrValue<BigNumberish>,
+      _maxOrderNumber: PromiseOrValue<BigNumberish>,
+      _maxPairNumber: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -1598,6 +1637,12 @@ export interface Vault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
+    maxOrderNumber(overrides?: CallOverrides): Promise<BigNumber>;
+
+    maxPairNumber(overrides?: CallOverrides): Promise<BigNumber>;
+
+    maxRangeNumber(overrides?: CallOverrides): Promise<BigNumber>;
+
     mode(overrides?: CallOverrides): Promise<BigNumber>;
 
     multicall(
@@ -1606,8 +1651,6 @@ export interface Vault extends BaseContract {
     ): Promise<BigNumber>;
 
     owner(overrides?: CallOverrides): Promise<BigNumber>;
-
-    pairConfig(overrides?: CallOverrides): Promise<BigNumber>;
 
     pendingsOf(
       user: PromiseOrValue<string>,
@@ -1640,7 +1683,9 @@ export interface Vault extends BaseContract {
     ): Promise<BigNumber>;
 
     setPairConfig(
-      newPairConfig: PairConfigStruct,
+      newMaxRangeNumber: PromiseOrValue<BigNumberish>,
+      newMaxOrderNumber: PromiseOrValue<BigNumberish>,
+      newMaxPairNumber: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -1776,6 +1821,10 @@ export interface Vault extends BaseContract {
       _quote: PromiseOrValue<string>,
       _admin: PromiseOrValue<string>,
       manager: PromiseOrValue<string>,
+      _liveThreshold: PromiseOrValue<BigNumberish>,
+      _maxRangeNumber: PromiseOrValue<BigNumberish>,
+      _maxOrderNumber: PromiseOrValue<BigNumberish>,
+      _maxPairNumber: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -1804,6 +1853,12 @@ export interface Vault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
+    maxOrderNumber(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    maxPairNumber(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    maxRangeNumber(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     mode(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     multicall(
@@ -1812,8 +1867,6 @@ export interface Vault extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    pairConfig(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     pendingsOf(
       user: PromiseOrValue<string>,
@@ -1846,7 +1899,9 @@ export interface Vault extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     setPairConfig(
-      newPairConfig: PairConfigStruct,
+      newMaxRangeNumber: PromiseOrValue<BigNumberish>,
+      newMaxOrderNumber: PromiseOrValue<BigNumberish>,
+      newMaxPairNumber: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 

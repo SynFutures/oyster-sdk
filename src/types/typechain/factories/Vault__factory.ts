@@ -41,11 +41,6 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "FrozenVault",
-    type: "error",
-  },
-  {
-    inputs: [],
     name: "InsufficientShares",
     type: "error",
   },
@@ -62,6 +57,16 @@ const _abi = [
   {
     inputs: [],
     name: "InvalidProfitFeeChange",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidVaultStatus",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "LiveThresholdNotReached",
     type: "error",
   },
   {
@@ -107,6 +112,11 @@ const _abi = [
   {
     inputs: [],
     name: "NotReady",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "SuspendedVault",
     type: "error",
   },
   {
@@ -217,27 +227,22 @@ const _abi = [
     anonymous: false,
     inputs: [
       {
-        components: [
-          {
-            internalType: "uint8",
-            name: "maxRangeNumber",
-            type: "uint8",
-          },
-          {
-            internalType: "uint8",
-            name: "maxOrderNumber",
-            type: "uint8",
-          },
-          {
-            internalType: "uint8",
-            name: "maxPairNumber",
-            type: "uint8",
-          },
-        ],
         indexed: false,
-        internalType: "struct PairConfig",
-        name: "pairConfig",
-        type: "tuple",
+        internalType: "uint8",
+        name: "maxRangeNumber",
+        type: "uint8",
+      },
+      {
+        indexed: false,
+        internalType: "uint8",
+        name: "maxOrderNumber",
+        type: "uint8",
+      },
+      {
+        indexed: false,
+        internalType: "uint8",
+        name: "maxPairNumber",
+        type: "uint8",
       },
     ],
     name: "SetPairConfig",
@@ -693,6 +698,26 @@ const _abi = [
         name: "manager",
         type: "address",
       },
+      {
+        internalType: "uint256",
+        name: "_liveThreshold",
+        type: "uint256",
+      },
+      {
+        internalType: "uint8",
+        name: "_maxRangeNumber",
+        type: "uint8",
+      },
+      {
+        internalType: "uint8",
+        name: "_maxOrderNumber",
+        type: "uint8",
+      },
+      {
+        internalType: "uint8",
+        name: "_maxPairNumber",
+        type: "uint8",
+      },
     ],
     name: "initialize",
     outputs: [],
@@ -750,9 +775,9 @@ const _abi = [
     name: "liveThreshold",
     outputs: [
       {
-        internalType: "uint128",
+        internalType: "uint256",
         name: "",
-        type: "uint128",
+        type: "uint256",
       },
     ],
     stateMutability: "view",
@@ -769,6 +794,45 @@ const _abi = [
     name: "markReady",
     outputs: [],
     stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "maxOrderNumber",
+    outputs: [
+      {
+        internalType: "uint8",
+        name: "",
+        type: "uint8",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "maxPairNumber",
+    outputs: [
+      {
+        internalType: "uint8",
+        name: "",
+        type: "uint8",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "maxRangeNumber",
+    outputs: [
+      {
+        internalType: "uint8",
+        name: "",
+        type: "uint8",
+      },
+    ],
+    stateMutability: "view",
     type: "function",
   },
   {
@@ -811,29 +875,6 @@ const _abi = [
         internalType: "address",
         name: "",
         type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "pairConfig",
-    outputs: [
-      {
-        internalType: "uint8",
-        name: "maxRangeNumber",
-        type: "uint8",
-      },
-      {
-        internalType: "uint8",
-        name: "maxOrderNumber",
-        type: "uint8",
-      },
-      {
-        internalType: "uint8",
-        name: "maxPairNumber",
-        type: "uint8",
       },
     ],
     stateMutability: "view",
@@ -971,26 +1012,19 @@ const _abi = [
   {
     inputs: [
       {
-        components: [
-          {
-            internalType: "uint8",
-            name: "maxRangeNumber",
-            type: "uint8",
-          },
-          {
-            internalType: "uint8",
-            name: "maxOrderNumber",
-            type: "uint8",
-          },
-          {
-            internalType: "uint8",
-            name: "maxPairNumber",
-            type: "uint8",
-          },
-        ],
-        internalType: "struct PairConfig",
-        name: "newPairConfig",
-        type: "tuple",
+        internalType: "uint8",
+        name: "newMaxRangeNumber",
+        type: "uint8",
+      },
+      {
+        internalType: "uint8",
+        name: "newMaxOrderNumber",
+        type: "uint8",
+      },
+      {
+        internalType: "uint8",
+        name: "newMaxPairNumber",
+        type: "uint8",
       },
     ],
     name: "setPairConfig",

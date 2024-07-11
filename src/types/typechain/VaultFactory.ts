@@ -29,7 +29,7 @@ import type {
 
 export interface VaultFactoryInterface extends utils.Interface {
   functions: {
-    "createVault(address,address,string)": FunctionFragment;
+    "createVault(address,address,string,uint256,uint8,uint8,uint8)": FunctionFragment;
     "gate()": FunctionFragment;
     "getAllVaults()": FunctionFragment;
     "indexToVault(bytes32)": FunctionFragment;
@@ -64,7 +64,11 @@ export interface VaultFactoryInterface extends utils.Interface {
     values: [
       PromiseOrValue<string>,
       PromiseOrValue<string>,
-      PromiseOrValue<string>
+      PromiseOrValue<string>,
+      PromiseOrValue<BigNumberish>,
+      PromiseOrValue<BigNumberish>,
+      PromiseOrValue<BigNumberish>,
+      PromiseOrValue<BigNumberish>
     ]
   ): string;
   encodeFunctionData(functionFragment: "gate", values?: undefined): string;
@@ -214,6 +218,10 @@ export interface VaultFactory extends BaseContract {
       quote: PromiseOrValue<string>,
       manager: PromiseOrValue<string>,
       name: PromiseOrValue<string>,
+      liveThreshold: PromiseOrValue<BigNumberish>,
+      maxRangeNumber: PromiseOrValue<BigNumberish>,
+      maxOrderNumber: PromiseOrValue<BigNumberish>,
+      maxPairNumber: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -261,6 +269,10 @@ export interface VaultFactory extends BaseContract {
     quote: PromiseOrValue<string>,
     manager: PromiseOrValue<string>,
     name: PromiseOrValue<string>,
+    liveThreshold: PromiseOrValue<BigNumberish>,
+    maxRangeNumber: PromiseOrValue<BigNumberish>,
+    maxOrderNumber: PromiseOrValue<BigNumberish>,
+    maxPairNumber: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -308,6 +320,10 @@ export interface VaultFactory extends BaseContract {
       quote: PromiseOrValue<string>,
       manager: PromiseOrValue<string>,
       name: PromiseOrValue<string>,
+      liveThreshold: PromiseOrValue<BigNumberish>,
+      maxRangeNumber: PromiseOrValue<BigNumberish>,
+      maxOrderNumber: PromiseOrValue<BigNumberish>,
+      maxPairNumber: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<string>;
 
@@ -381,6 +397,10 @@ export interface VaultFactory extends BaseContract {
       quote: PromiseOrValue<string>,
       manager: PromiseOrValue<string>,
       name: PromiseOrValue<string>,
+      liveThreshold: PromiseOrValue<BigNumberish>,
+      maxRangeNumber: PromiseOrValue<BigNumberish>,
+      maxOrderNumber: PromiseOrValue<BigNumberish>,
+      maxPairNumber: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -429,6 +449,10 @@ export interface VaultFactory extends BaseContract {
       quote: PromiseOrValue<string>,
       manager: PromiseOrValue<string>,
       name: PromiseOrValue<string>,
+      liveThreshold: PromiseOrValue<BigNumberish>,
+      maxRangeNumber: PromiseOrValue<BigNumberish>,
+      maxOrderNumber: PromiseOrValue<BigNumberish>,
+      maxPairNumber: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
