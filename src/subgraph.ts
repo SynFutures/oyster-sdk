@@ -808,12 +808,14 @@ export class Subgraph extends Graph {
     }
 
     async getVirtualTrades(param: QueryParam): Promise<VirtualTrade[]> {
+        const queryAll = param.size === undefined && param.page === undefined;
         const first = param.size || 1000;
         const skip = (param.page || 0) * first;
-        const condition = this.buildQueryEventCondition(param, false);
+        let condition = this.buildQueryEventCondition(param);
+        condition = queryAll ? condition : condition + 'orderBy: blockNumber, orderDirection: desc';
 
         const graphQL = `query($skip: Int, $first: Int, $lastID: String){
-            virtualTrades(skip: $skip, first: $first, ${condition} orderBy: blockNumber, orderDirection: desc){
+            virtualTrades(skip: $skip, first: $first, ${condition}){
                 id
                 amm {
                     id
@@ -842,9 +844,17 @@ export class Subgraph extends Graph {
                 referralCode
             }
         }`;
-        const resp = await this.query(graphQL, skip, first);
+
+        let virtualTrades;
+        if (queryAll) {
+            virtualTrades = await this.queryAll(graphQL, GRAPH_PAGE_SIZE, true);
+        } else {
+            const resp = await this.query(graphQL, skip, first);
+            virtualTrades = resp.virtualTrades;
+        }
+
         let result: VirtualTrade[] = [];
-        for (const trade of resp.virtualTrades) {
+        for (const trade of virtualTrades) {
             let isRangeLiquidated = false;
             if (trade.original.name === 'Remove') {
                 const args = JSON.parse(trade.original.args);
@@ -934,3 +944,4 @@ export class Subgraph extends Graph {
 // main()
 //     .then()
 //     .catch((e) => console.log(e));
+
