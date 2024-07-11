@@ -1,4 +1,4 @@
-import { ChainContext, ContractParser } from '@derivation-tech/web3-core';
+import { ChainContext, ContractParser, formatUnits, TokenInfo } from '@derivation-tech/web3-core';
 import { VaultFactory } from '../types/typechain/';
 import { VAULT_FACTORY_ADDRESSES } from './constants';
 import {
@@ -95,6 +95,8 @@ export class VaultClient {
     vault: Vault;
 
     quoteAddr = '';
+    quoteToken?: TokenInfo;
+
     constructor(ctx: ChainContext, vaultAddr: string) {
         this.ctx = ctx;
         this.vault = Vault__factory.connect(vaultAddr, ctx.provider);
@@ -104,10 +106,26 @@ export class VaultClient {
 
     async _init(): Promise<void> {
         this.quoteAddr = await this.vault.quote();
+        this.quoteToken = await this.ctx.getTokenInfo(this.quoteAddr);
     }
 
     async getTotalValue(): Promise<BigNumber> {
         return await this.vault.getTotalValue();
+    }
+
+    async getVaultStatus(): Promise<string> {
+        return VaultStatus[await this.vault.status()];
+    }
+
+    async getUserDeposit(user: string): Promise<{
+        shares: BigNumber;
+        entryValue: BigNumber;
+    }> {
+        return await this.vault.sharesInfoOf(user);
+    }
+
+    async getLiveThreshold(): Promise<number> {
+        return Number(formatUnits(await this.vault.liveThreshold(), this.quoteToken!.decimals));
     }
 
     async deposit(
