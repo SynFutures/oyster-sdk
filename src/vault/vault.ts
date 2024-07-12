@@ -97,11 +97,15 @@ export class VaultClient {
     quoteAddr = '';
     quoteToken?: TokenInfo;
 
-    constructor(ctx: ChainContext, vaultAddr: string) {
+    constructor(ctx: ChainContext, vaultAddr: string, quoteToken?: TokenInfo) {
         this.ctx = ctx;
         this.vault = Vault__factory.connect(vaultAddr, ctx.provider);
         this.ctx.registerAddress(vaultAddr, 'Vault');
         this.ctx.registerContractParser(vaultAddr, new ContractParser(Vault__factory.createInterface()));
+        if (quoteToken) {
+            this.quoteAddr = quoteToken.address;
+            this.quoteToken = quoteToken;
+        }
     }
 
     async _init(): Promise<void> {
