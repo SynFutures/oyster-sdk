@@ -200,7 +200,7 @@ export class FundingChartDataProvider {
         const PAYLOAD_SIZE = 20;
         const result: HourlyData[] = [];
 
-        const temp = [];
+        let temp = [];
         for (let i = hourId; i >= nDaysAgoHourId; i -= PAYLOAD_SIZE * SECS_PER_HOUR) {
             let graphQL = `{`;
 
@@ -250,6 +250,7 @@ export class FundingChartDataProvider {
                 }
             }
         }
+        temp = temp.filter((x) => x !== null);
 
         for (let i = 0; i < temp.length; i++) {
             const hourlyData = temp[i];
