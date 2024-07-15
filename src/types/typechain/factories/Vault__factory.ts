@@ -116,6 +116,11 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "SetLiveThresholdNotAllowed",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "SuspendedVault",
     type: "error",
   },
@@ -356,6 +361,12 @@ const _abi = [
         internalType: "uint128",
         name: "totalShares",
         type: "uint128",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "quantity",
+        type: "uint256",
       },
     ],
     name: "UpdateShareInfo",
@@ -1249,7 +1260,38 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "AddLiquidityExceedMax",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "AddOverflow",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "BadAmmTiming",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "BadMaintenanceMarginRatio",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "int256",
+        name: "totalSize",
+        type: "int256",
+      },
+      {
+        internalType: "int256",
+        name: "requestedSize",
+        type: "int256",
+      },
+    ],
+    name: "BadTargetSize",
     type: "error",
   },
   {
@@ -1259,12 +1301,285 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "InvariantBroken",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "LiquidatePostImrUnsafe",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bool",
+        name: "noShortParty",
+        type: "bool",
+      },
+      {
+        internalType: "uint256",
+        name: "socialLoss",
+        type: "uint256",
+      },
+    ],
+    name: "NoCounterparty",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "OrderFull",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "minAmount",
+        type: "uint256",
+      },
+    ],
+    name: "OrderImrUnsafe",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "OrderNotExist",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "int256",
+        name: "requested",
+        type: "int256",
+      },
+      {
+        internalType: "int256",
+        name: "taken",
+        type: "int256",
+      },
+    ],
+    name: "OrderNotFullyTaken",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "OrderOccupied",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "OrderTickUnaligned",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "OrderTooFar",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "OrderTrivial",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "OrderWrongSide",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "PositionBankrupt",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "PositionNotExist",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "RangeNotExist",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "ReuseNonEmptyRecord",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "RoundHalfUpBadParam",
     type: "error",
   },
   {
     inputs: [],
+    name: "TargetSafe",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "TickOutOfBound",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "token",
+        type: "address",
+      },
+    ],
+    name: "GetErc20DecimalsFailed",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "token",
+        type: "address",
+      },
+    ],
+    name: "GetErc20NameFailed",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "token",
+        type: "address",
+      },
+    ],
+    name: "GetErc20SymbolFailed",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "AddInvalidTickDelta",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "AddSlippage",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "liquidity",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "minLiquidity",
+        type: "uint256",
+      },
+    ],
+    name: "AddTrivial",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "CrazySpot",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "ExpiryBelowSettlingDuration",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "ExpiryExceedMaxExpiryPeriod",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "RangeFull",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "RangeOccupied",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "RemoveActiveRange",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "RemoveSlippage",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "SqrtPX96OutOfBound",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "CrazyDeviation",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "DivUnderflow",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "MulOverflow",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "TradeImrUnsafe",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "TradeMmrUnsafe",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "TradeOutOfLiquidity",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "TradeSlippage",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint16",
+        name: "stabilityFeeRatio",
+        type: "uint16",
+      },
+      {
+        internalType: "uint16",
+        name: "limitStabilityFeeRatio",
+        type: "uint16",
+      },
+    ],
+    name: "TradeStabilityFeeLimit",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "TradeTrivial",
     type: "error",
   },
   {

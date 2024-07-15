@@ -551,7 +551,7 @@ export interface VaultInterface extends utils.Interface {
     "SetVaultStatus(uint8)": EventFragment;
     "SwitchOperationMode(uint8)": EventFragment;
     "UpdatePending(address,tuple,uint256)": EventFragment;
-    "UpdateShareInfo(address,tuple,uint128)": EventFragment;
+    "UpdateShareInfo(address,tuple,uint128,uint256)": EventFragment;
     "UpdateTotalFee(uint128)": EventFragment;
     "AdminChanged(address,address)": EventFragment;
     "BeaconUpgraded(address)": EventFragment;
@@ -688,9 +688,10 @@ export interface UpdateShareInfoEventObject {
   user: string;
   info: ShareInfoStructOutput;
   totalShares: BigNumber;
+  quantity: BigNumber;
 }
 export type UpdateShareInfoEvent = TypedEvent<
-  [string, ShareInfoStructOutput, BigNumber],
+  [string, ShareInfoStructOutput, BigNumber, BigNumber],
   UpdateShareInfoEventObject
 >;
 
@@ -1498,15 +1499,17 @@ export interface Vault extends BaseContract {
       totalPendingShares?: null
     ): UpdatePendingEventFilter;
 
-    "UpdateShareInfo(address,tuple,uint128)"(
+    "UpdateShareInfo(address,tuple,uint128,uint256)"(
       user?: PromiseOrValue<string> | null,
       info?: null,
-      totalShares?: null
+      totalShares?: null,
+      quantity?: null
     ): UpdateShareInfoEventFilter;
     UpdateShareInfo(
       user?: PromiseOrValue<string> | null,
       info?: null,
-      totalShares?: null
+      totalShares?: null,
+      quantity?: null
     ): UpdateShareInfoEventFilter;
 
     "UpdateTotalFee(uint128)"(totalFee?: null): UpdateTotalFeeEventFilter;
