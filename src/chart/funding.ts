@@ -1,15 +1,22 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { GRAPH_PAGE_SIZE, SECS_PER_HOUR, now } from '@derivation-tech/web3-core';
+import { ChainContext, SECS_PER_HOUR, now } from '@derivation-tech/web3-core';
 import { SynFuturesV3 } from '../synfuturesV3Core';
 import { PairModel } from '../types/pair';
 import { BigNumber } from 'ethers';
 import { wdiv } from '../math';
 import { asInt128, concatId, hourIdFromTimestamp } from '../common/util';
+import retry from 'async-retry';
+import fetch, { RequestInit } from 'node-fetch';
 
 export enum FundingChartInterval {
     HOUR = '1h',
     EIGHT_HOUR = '8h',
 }
+
+export const BlockInterval = {
+    BLAST: 2,
+    BASE: 2,
+};
 
 export interface FundingIndexSnapshot {
     timestamp?: number;
@@ -42,7 +49,7 @@ export class FundingChartDataProvider {
     }
 
     // funding rate = (fundingIndex[t] - fundingIndex[t-1]) / markPrice[t]
-    async getLastHourFundingRate(pairModel: PairModel): Promise<FundingChartData> {
+    async getLastHourFundingRate(pairModel: PairModel, ctx: ChainContext): Promise<FundingChartData> {
         const latestFundingIndex = this.synfV3.getLastestFundingIndex(
             pairModel.amm,
             pairModel.markPrice,
@@ -50,15 +57,10 @@ export class FundingChartDataProvider {
         );
 
         const timestmapBefore = pairModel.state.blockInfo!.timestamp - 3600;
-        const fundingSnapshotBefore = await this.getFundingSnapshotBefore(
-            this.synfV3,
-            pairModel.rootInstrument.info.addr,
-            [timestmapBefore],
-        );
 
         const instrumentBefore = (
             await this.synfV3.contracts.observer.getInstrumentByAddressList([pairModel.rootInstrument.info.addr], {
-                blockTag: Number(fundingSnapshotBefore[0].blockNumber),
+                blockTag: await this.getBlockNumber(timestmapBefore, ctx),
             })
         )[0][0];
         const ammBefore = instrumentBefore.amms[0];
@@ -75,7 +77,11 @@ export class FundingChartDataProvider {
         return { timestamp: pairModel.state.blockInfo!.timestamp, longFundingRate, shortFundingRate };
     }
 
-    async getFundingRateData(interval: FundingChartInterval, pairModel: PairModel): Promise<FundingChartData[]> {
+    async getFundingRateData(
+        interval: FundingChartInterval,
+        pairModel: PairModel,
+        ctx: ChainContext,
+    ): Promise<FundingChartData[]> {
         const intervalSeconds = this.getIntervalSeconds(interval);
         const endTs = this.roundTimestamp(interval, now());
         const startTs = endTs - intervalSeconds * this.dataLength.get(interval)!;
@@ -125,13 +131,9 @@ export class FundingChartDataProvider {
             fundingRates.push({ timestamp: fundingSnapshotAtTs[i].timestamp!, longFundingRate, shortFundingRate });
         }
 
-        const fundingSnapshot = await this.getFundingSnapshotBefore(this.synfV3, pairModel.rootInstrument.info.addr, [
-            lastHourlyData.timestamp,
-        ]);
-
         const instrumentBefore = (
             await this.synfV3.contracts.observer.getInstrumentByAddressList([pairModel.rootInstrument.info.addr], {
-                blockTag: Number(fundingSnapshot[0].blockNumber),
+                blockTag: await this.getBlockNumber(lastHourlyData.timestamp, ctx),
             })
         )[0][0];
         const latestFundingIndex = this.synfV3.getLastestFundingIndex(
@@ -185,169 +187,6 @@ export class FundingChartDataProvider {
         }
     }
 
-    async getUpdateFundingIndexEvents(
-        synfV3: SynFuturesV3,
-        instrumentAddr: string,
-        startTs?: number,
-        endTs?: number,
-    ): Promise<{ timestamp: number; longFundingIndex: BigNumber; shortFundingIndex: BigNumber }[]> {
-        const fn = (str: string): string => `"${str}"`;
-        const graphQL = `
-        query($skip: Int, $first: Int, $lastID: String){
-            transactionEvents(skip: $skip, first: $first, where: {
-                name_in: ["UpdateFundingIndex"],
-                address_contains: ${fn(instrumentAddr)},timestamp_gte: ${startTs ?? 0},timestamp_lte: ${
-            endTs ?? now()
-        }, id_gt: $lastID}, ){
-                id
-                name
-                args
-                address
-                logIndex
-                blockNumber
-                timestamp
-                trader
-                amm {
-                    id
-                    symbol
-                }
-                instrument {
-                    id
-                    symbol
-                }
-                transaction {
-                    id
-                }
-            }
-        }`;
-        const events = await synfV3.subgraph.queryAll(graphQL, GRAPH_PAGE_SIZE, true);
-        return events.map((event: { args: string; timestamp: number }) => {
-            const fundingIndex = JSON.parse(event.args).fundingIndex;
-            const longFundingIndex = asInt128(BigNumber.from(fundingIndex).mask(128));
-            const shortFundingIndex = asInt128(BigNumber.from(fundingIndex).shr(128).mask(128));
-            return {
-                timestamp: event.timestamp,
-                longFundingIndex,
-                shortFundingIndex,
-            };
-        });
-    }
-
-    async getFirstFundingEvent(synfV3: SynFuturesV3, instrumentAddr: string): Promise<FundingIndexSnapshot> {
-        const fn = (str: string): string => `"${str}"`;
-        const graphQL = `
-        query($skip: Int, $first: Int, $lastID: String){
-            transactionEvents(skip: $skip, first: $first, where: {
-                name_in: ["UpdateFundingIndex"],
-                address_contains: ${fn(instrumentAddr)}, id_gt: $lastID},
-                orderBy: timestamp, orderDirection: asc
-                , ){
-                id
-                name
-                args
-                address
-                logIndex
-                blockNumber
-                timestamp
-                trader
-                amm {
-                    id
-                    symbol
-                }
-                instrument {
-                    id
-                    symbol
-                }
-                transaction {
-                    id
-                }
-            }
-        }`;
-        const event = (await synfV3.subgraph.query(graphQL, 0, 1)).transactionEvents[0];
-        if (event) {
-            const fundingIndex = JSON.parse(event.args).fundingIndex;
-            const longFundingIndex = asInt128(BigNumber.from(fundingIndex).mask(128));
-            const shortFundingIndex = asInt128(BigNumber.from(fundingIndex).shr(128).mask(128));
-            return {
-                timestamp: event.timestamp,
-                blockNumber: event.blockNumber,
-                longFundingIndex,
-                shortFundingIndex,
-            };
-        } else {
-            return {
-                timestamp: undefined,
-                blockNumber: undefined,
-                longFundingIndex: undefined,
-                shortFundingIndex: undefined,
-            };
-        }
-    }
-
-    async getFundingSnapshotBefore(
-        synfV3: SynFuturesV3,
-        instrumentAddr: string,
-        endTimes: number[],
-        BATCH_SIZE = 12,
-    ): Promise<FundingIndexSnapshot[]> {
-        const fn = (str: string): string => `"${str}"`;
-        const batchedEndTimes = [];
-        const result: FundingIndexSnapshot[] = [];
-
-        for (let i = 0; i < endTimes.length; i += BATCH_SIZE) {
-            batchedEndTimes.push(endTimes.slice(i, i + BATCH_SIZE));
-        }
-        const calls = [];
-        for (const batch of batchedEndTimes) {
-            let graphQL = `query($skip: Int, $first: Int, $lastID: String){`;
-            for (const endTime of batch) {
-                graphQL += `${'timestamp' + endTime}: updateFundingIndexEvents(first: 1, where: {
-                address: ${fn(instrumentAddr)},
-                transaction_: {timestamp_lte: ${endTime}}
-            }
-                orderBy: transaction__timestamp
-                orderDirection: desc
-            ) {
-                longFundingIndex
-                shortFundingIndex
-                transaction{
-                  timestamp
-                  blockNumber
-                }
-              }`;
-            }
-            graphQL += `}`;
-            calls.push(synfV3.subgraph.query(graphQL, 0, 1));
-        }
-        const eventsBatch: {
-            [key: string]: {
-                longFundingIndex: BigNumber;
-                shortFundingIndex: BigNumber;
-                transaction: { timestamp: number; blockNumber: number };
-            }[];
-        }[] = await Promise.all(calls);
-        for (const events of eventsBatch) {
-            for (const event of Object.values(events)) {
-                if (event) {
-                    result.push({
-                        timestamp: event[0].transaction.timestamp,
-                        blockNumber: event[0].transaction.blockNumber,
-                        longFundingIndex: BigNumber.from(event[0].longFundingIndex),
-                        shortFundingIndex: BigNumber.from(event[0].shortFundingIndex),
-                    });
-                } else {
-                    result.push({
-                        timestamp: undefined,
-                        blockNumber: undefined,
-                        longFundingIndex: undefined,
-                        shortFundingIndex: undefined,
-                    });
-                }
-            }
-        }
-        return result;
-    }
-
     async getHourlyDataList(
         instrumentAddr: string,
         expiry: number,
@@ -355,39 +194,75 @@ export class FundingChartDataProvider {
         numDays = 15,
     ): Promise<HourlyData[]> {
         const fn = (str: string): string => `"${str}"`;
-        const ammId = `${fn(concatId(instrumentAddr, expiry).toLowerCase())}`;
 
         const hourId = hourIdFromTimestamp(timestamp);
         const nDaysAgoHourId = hourId - numDays * 24 * SECS_PER_HOUR;
-
-        // console.info(timestamp, dayId, hourId, _7d, _24h);
-        const graphQL = `
-            query($skip: Int, $first: Int, $lastID: String){
-                hourlyAmmDatas(skip: $skip, first: $first, where: {
-                    amm_contains: ${ammId} timestamp_gt: ${nDaysAgoHourId}, timestamp_lte: ${hourId}
-                }, orderBy: timestamp, orderDirection: desc) {
-                    id
-                    timestamp
-                    firstFundingIndex
-                    lastFundingIndex
-                    firstMarkPrice
-                    lastMarkPrice
-                }
-            }`;
+        const PAYLOAD_SIZE = 20;
         const result: HourlyData[] = [];
-        const resp = await this.synfV3.subgraph.query(graphQL, 0, GRAPH_PAGE_SIZE);
 
-        for (let i = 0; i < resp.hourlyAmmDatas.length; i++) {
-            const hourlyData = resp.hourlyAmmDatas[i];
+        let temp = [];
+        for (let i = hourId; i >= nDaysAgoHourId; i -= PAYLOAD_SIZE * SECS_PER_HOUR) {
+            let graphQL = `{`;
+
+            for (let j = 0; j < PAYLOAD_SIZE && i - j * SECS_PER_HOUR >= nDaysAgoHourId; j++) {
+                const currentHourId = i - j * SECS_PER_HOUR;
+                const ammId = `${fn(concatId(concatId(instrumentAddr, expiry), currentHourId).toLowerCase())}`;
+                graphQL += `
+                    a${currentHourId}: hourlyAmmData(id: ${ammId}) {
+                        id
+                        timestamp
+                        firstFundingIndex
+                        lastFundingIndex
+                        firstMarkPrice
+                        lastMarkPrice
+                    }`;
+            }
+
+            graphQL += `}`;
+
+            const graphql = JSON.stringify({
+                query: `${graphQL}`,
+            });
+
+            // requestOptions
+            const opts: RequestInit = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: graphql,
+                redirect: 'follow',
+                timeout: 100000,
+            };
+
+            const resp = await retry(async () => {
+                const response = await fetch(this.synfV3.subgraph.endpoint, opts);
+                const json = await response.json();
+                if (!json.data || json.errors) {
+                    this.synfV3.subgraph.logger.error('subgraph query error:', json);
+                    throw new Error('subgraph query error' + JSON.stringify(json.errors));
+                }
+                return json.data;
+            }, this.synfV3.subgraph.retryOption);
+
+            // Process response and add to result
+            for (const key in resp) {
+                if (Object.prototype.hasOwnProperty.call(resp, key)) {
+                    temp.push(resp[key]);
+                }
+            }
+        }
+        temp = temp.filter((x) => x !== null);
+
+        for (let i = 0; i < temp.length; i++) {
+            const hourlyData = temp[i];
 
             let lastMarkPrice = BigNumber.from(hourlyData.lastMarkPrice);
             let offset = 1;
-            while (lastMarkPrice.eq(0) && (i + offset < resp.hourlyAmmDatas.length || i - offset >= 0)) {
-                if (i + offset < resp.hourlyAmmDatas.length) {
-                    lastMarkPrice = BigNumber.from(resp.hourlyAmmDatas[i + offset].lastMarkPrice);
+            while (lastMarkPrice.eq(0) && (i + offset < temp.length || i - offset >= 0)) {
+                if (i + offset < temp.length) {
+                    lastMarkPrice = BigNumber.from(temp[i + offset].lastMarkPrice);
                 }
                 if (lastMarkPrice.eq(0) && i - offset >= 0) {
-                    lastMarkPrice = BigNumber.from(resp.hourlyAmmDatas[i - offset].lastMarkPrice);
+                    lastMarkPrice = BigNumber.from(temp[i - offset].lastMarkPrice);
                 }
                 offset++;
             }
@@ -399,5 +274,13 @@ export class FundingChartDataProvider {
         }
 
         return result;
+    }
+
+    async getBlockNumber(timestamp: number, ctx: ChainContext): Promise<number> {
+        const blockNumber = await ctx.provider.getBlockNumber();
+        return (
+            blockNumber -
+            Math.ceil((now() - timestamp) / BlockInterval[ctx.chainName.toUpperCase() as keyof typeof BlockInterval])
+        );
     }
 }
