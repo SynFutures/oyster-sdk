@@ -1,8 +1,8 @@
 export enum VaultStatus {
-    UPCOMING = 0,
-    LIVE = 1,
-    SUSPENDED = 2,
-    INVALID = 3,
+    UPCOMING = 'UPCOMING',
+    LIVE = 'LIVE',
+    SUSPENDED = 'SUSPENDED',
+    INVALID = 'INVALID',
 }
 
 export enum PendingWithdrawStatus {

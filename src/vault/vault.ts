@@ -119,10 +119,6 @@ export class VaultClient {
         return await this.vault.getTotalValue();
     }
 
-    async getVaultStatus(): Promise<string> {
-        return VaultStatus[await this.vault.status()];
-    }
-
     async getUserDeposit(user: string): Promise<{
         shares: BigNumber;
         entryValue: BigNumber;
@@ -148,7 +144,7 @@ export class VaultClient {
         };
     }
 
-    async shouldRequestWithdraw(quoteAmount: BigNumber): Promise<boolean> {
+    async shouldRequestPendingWithdraw(quoteAmount: BigNumber): Promise<boolean> {
         if (!this.gate) this.gate = Gate__factory.connect(await this.vault.gate(), this.ctx.provider);
         const [fundFlow, threshold, pending, reserve] = await Promise.all([
             this.gate.fundFlowOf(this.quoteAddr, this.vault.address),
@@ -171,12 +167,15 @@ export class VaultClient {
 
     async deposit(
         signer: Signer,
-        vaultAddr: string,
         amount: BigNumber,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const allowance = await this.ctx.erc20.getAllowance(this.quoteAddr, await signer.getAddress(), vaultAddr);
+        const allowance = await this.ctx.erc20.getAllowance(
+            this.quoteAddr,
+            await signer.getAddress(),
+            this.vault.address,
+        );
         if (allowance.lt(amount)) {
-            await this.ctx.erc20.approveIfNeeded(signer, this.quoteAddr, vaultAddr, amount);
+            await this.ctx.erc20.approveIfNeeded(signer, this.quoteAddr, this.vault.address, amount);
         }
         const tx = await this.vault.populateTransaction.deposit(amount);
         return await this.ctx.sendTx(signer, tx);

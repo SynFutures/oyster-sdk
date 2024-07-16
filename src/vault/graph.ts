@@ -1,6 +1,8 @@
-import { GRAPH_PAGE_SIZE, Graph, now } from '@derivation-tech/web3-core';
+import { ChainContext, GRAPH_PAGE_SIZE, Graph, TokenInfo, ZERO, now } from '@derivation-tech/web3-core';
 import { BigNumber } from 'ethers';
 import { orderBy as _orderBy } from 'lodash';
+import { VaultStatus } from './types';
+import { Vault__factory } from '../types';
 
 export type QueryHistoryParam = QueryEventParam;
 
@@ -37,8 +39,10 @@ export interface VaultInfo {
     vaultAddr: string;
     vaultName: string;
     managerAddr: string;
-    quoteAddr: string;
-    status: string;
+    quoteToken: TokenInfo;
+    status: VaultStatus;
+    totalValue: BigNumber;
+    liveThreshold: BigNumber;
 }
 
 export interface DepositInfo {
@@ -46,6 +50,8 @@ export interface DepositInfo {
     vault: string;
     shares: BigNumber;
     entryValue: BigNumber;
+    holdingValue: BigNumber;
+    allTimeEerned: BigNumber;
 }
 
 export interface DepositWithdraw {
@@ -58,6 +64,13 @@ export interface DepositWithdraw {
 }
 
 export class VaultGraph extends Graph {
+    ctx: ChainContext;
+
+    constructor(ctx: ChainContext, endpoint: string, retryOption?: any) {
+        super(endpoint, retryOption);
+        this.ctx = ctx;
+    }
+
     buildQueryEventCondition(param: QueryEventParam): string {
         const fn = (str: string): string => `"${str}"`;
 
@@ -79,14 +92,6 @@ export class VaultGraph extends Graph {
         return `where: {${condition} id_gt: $lastID}, `;
     }
 
-    buildQueryCurrentPendingUnstakeCondition(account: string): string {
-        const fn = (str: string): string => `"${str}"`;
-        const accountCondition = `staker_:{id:${fn(account.toLowerCase())}},`;
-        const statusCondition = `status:PENDING,`;
-        const condition = `${statusCondition}${accountCondition}`;
-        return `where: {${condition} id_gt: $lastID}, `;
-    }
-
     async getAllVaultInfo(): Promise<VaultInfo[]> {
         const graphQL = `query{
             vaults{
@@ -95,17 +100,25 @@ export class VaultGraph extends Graph {
                 manager
                 quote
                 status
+                liveThreshold
             }
         }`;
-        const vaults = await this.query(graphQL, 0, GRAPH_PAGE_SIZE);
+        const vaults = (await this.query(graphQL, 0, GRAPH_PAGE_SIZE)).vaults;
         const result: VaultInfo[] = [];
-        for (const vault of vaults.vaults) {
+        const quoteAddrs: Set<string> = new Set(vaults.map((v: any) => v.quote.toLowerCase()));
+        const tokenInfos = await Promise.all(Array.from(quoteAddrs).map((addr) => this.ctx.getTokenInfo(addr)));
+        const totalValues = await Promise.all(
+            vaults.map((v: any) => Vault__factory.connect(v.id, this.ctx.provider).getTotalValue()),
+        );
+        for (const vault of vaults) {
             result.push({
                 vaultAddr: vault.id,
                 vaultName: vault.name,
                 managerAddr: vault.manager,
-                quoteAddr: vault.quote,
-                status: vault.status,
+                quoteToken: tokenInfos.find((t) => t.address.toLowerCase() === vault.quote.toLowerCase())!,
+                status: vault.status as VaultStatus,
+                totalValue: totalValues.find((_, idx) => vaults[idx].id === vault.id)!,
+                liveThreshold: vault.liveThreshold,
             });
         }
         return result;
@@ -117,6 +130,7 @@ export class VaultGraph extends Graph {
                 address
                 vault {
                     id
+                    totalShares
                 }
                 shares
                 entryValue
@@ -124,12 +138,33 @@ export class VaultGraph extends Graph {
         }`;
         const deposits = await this.query(graphQL, 0, GRAPH_PAGE_SIZE);
         const result: DepositInfo[] = [];
+        const vaultAddrs: string[] = Array.from(new Set(deposits.users.map((d: any) => d.vault.id)));
+        const totalValues = await Promise.all(
+            vaultAddrs.map((addr) => Vault__factory.connect(addr, this.ctx.provider).getTotalValue()),
+        );
+        const depositWithdraws = await this.getUserDepositWithdrawHistory(account);
         for (const deposit of deposits.users) {
+            const shares = BigNumber.from(deposit.shares);
+            const totalShares = BigNumber.from(deposit.vault.totalShares);
+            const entryValue = BigNumber.from(deposit.entryValue);
+            const holdingValue = totalShares.eq(ZERO)
+                ? ZERO
+                : totalValues
+                      .find((_, idx) => vaultAddrs[idx] === deposit.vault.id)!
+                      .mul(deposit.shares)
+                      .div(totalShares);
+            const allTimeEerned = depositWithdraws
+                .filter((d) => d.vaultAddr === deposit.vault.id)
+                .reduce((acc, d) => (d.type === 'DEPOSIT' ? acc.add(d.quoteAmount) : acc.sub(d.quoteAmount)), ZERO)
+                .add(holdingValue)
+                .sub(entryValue);
             result.push({
                 user: deposit.address,
                 vault: deposit.vault.id,
-                shares: BigNumber.from(deposit.shares),
-                entryValue: BigNumber.from(deposit.entryValue),
+                shares,
+                entryValue,
+                holdingValue,
+                allTimeEerned,
             });
         }
         return result;
