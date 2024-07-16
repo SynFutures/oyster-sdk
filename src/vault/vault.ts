@@ -1,5 +1,5 @@
-import { ChainContext, ContractParser, formatUnits, TokenInfo } from '@derivation-tech/web3-core';
-import { VaultFactory } from '../types/typechain/';
+import { ChainContext, ContractParser, formatUnits, TokenInfo, ZERO } from '@derivation-tech/web3-core';
+import { Gate, Gate__factory, VaultFactory } from '../types/typechain/';
 import { VAULT_FACTORY_ADDRESSES } from './constants';
 import {
     AddParam,
@@ -26,7 +26,7 @@ import {
     encodeTradeParam,
 } from '../common';
 import { encodeBatchCancelTicks, encodeInstrumentExpiry, encodeLiquidateParam } from './util';
-import { VaultStatus } from './types';
+import { PendingWithdrawStatus, VaultStatus } from './types';
 
 export class VaultFactoryClient {
     ctx: ChainContext;
@@ -96,6 +96,7 @@ export class VaultClient {
 
     quoteAddr = '';
     quoteToken?: TokenInfo;
+    gate?: Gate;
 
     constructor(ctx: ChainContext, vaultAddr: string, quoteToken?: TokenInfo) {
         this.ctx = ctx;
@@ -111,6 +112,7 @@ export class VaultClient {
     async _init(): Promise<void> {
         this.quoteAddr = await this.vault.quote();
         this.quoteToken = await this.ctx.getTokenInfo(this.quoteAddr);
+        this.gate = Gate__factory.connect(await this.vault.gate(), this.ctx.provider);
     }
 
     async getTotalValue(): Promise<BigNumber> {
@@ -126,6 +128,41 @@ export class VaultClient {
         entryValue: BigNumber;
     }> {
         return await this.vault.sharesInfoOf(user);
+    }
+
+    async getUserPendingWithdraw(user: string): Promise<{
+        canClaim: boolean;
+        status: string;
+        quantity: BigNumber;
+    }> {
+        const [pendingWithdraw, totalValue, totalShares] = await Promise.all([
+            this.vault.pendingsOf(user),
+            this.vault.getTotalValue(),
+            this.vault.totalShares(),
+        ]);
+        const canClaim = pendingWithdraw.status === PendingWithdrawStatus.READY;
+        return {
+            canClaim,
+            status: PendingWithdrawStatus[pendingWithdraw.status],
+            quantity: totalShares.eq(ZERO) ? ZERO : pendingWithdraw.quantity.mul(totalValue).div(totalShares),
+        };
+    }
+
+    async shouldRequestWithdraw(quoteAmount: BigNumber): Promise<boolean> {
+        if (!this.gate) this.gate = Gate__factory.connect(await this.vault.gate(), this.ctx.provider);
+        const [fundFlow, threshold, pending, reserve] = await Promise.all([
+            this.gate.fundFlowOf(this.quoteAddr, this.vault.address),
+            this.gate.thresholdOf(this.quoteAddr),
+            this.gate.pendingOf(this.quoteAddr, this.vault.address),
+            this.gate.reserveOf(this.quoteAddr, this.vault.address),
+        ]);
+
+        const maxWithdrawable = threshold
+            .add(pending.exemption)
+            .sub(fundFlow.totalOut)
+            .add(fundFlow.totalIn)
+            .sub(pending.amount);
+        return quoteAmount.gt(maxWithdrawable) || quoteAmount.gt(reserve);
     }
 
     async getLiveThreshold(): Promise<number> {
@@ -149,6 +186,16 @@ export class VaultClient {
         signer: Signer,
         shares: BigNumber,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
+        const tx = await this.vault.populateTransaction.withdraw(shares);
+        return await this.ctx.sendTx(signer, tx);
+    }
+
+    async withdrawQuote(
+        signer: Signer,
+        quoteAmount: BigNumber,
+    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
+        const [totalValue, totalShares] = await Promise.all([this.vault.getTotalValue(), this.vault.totalShares()]);
+        const shares = quoteAmount.mul(totalShares).div(totalValue);
         const tx = await this.vault.populateTransaction.withdraw(shares);
         return await this.ctx.sendTx(signer, tx);
     }
