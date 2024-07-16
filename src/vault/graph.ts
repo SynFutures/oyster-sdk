@@ -3,22 +3,16 @@ import { BigNumber } from 'ethers';
 import { orderBy as _orderBy } from 'lodash';
 import { VaultStatus } from './types';
 import { Vault__factory } from '../types';
+import { Pagination } from '../subgraph';
 
-export type QueryHistoryParam = QueryEventParam;
-
-export interface QueryEventParam extends Pagination {
+export interface QueryHistoryParam extends Pagination {
     eventNames?: string[];
     accounts?: string[];
     startTs?: number;
     endTs?: number;
 }
 
-export interface Pagination {
-    page?: number;
-    size?: number;
-}
-
-export interface TransactionEvent {
+export interface GraphTransactionEvent {
     id: string;
     txHash: string;
     account: string;
@@ -71,7 +65,7 @@ export class VaultGraph extends Graph {
         this.ctx = ctx;
     }
 
-    buildQueryEventCondition(param: QueryEventParam): string {
+    buildQueryEventCondition(param: QueryHistoryParam): string {
         const fn = (str: string): string => `"${str}"`;
 
         let accountCondition = '';
@@ -205,7 +199,7 @@ export class VaultGraph extends Graph {
     }
 
     // query general-purposed transaction events
-    async getHistoryEvents(param: QueryHistoryParam): Promise<TransactionEvent[]> {
+    async getHistoryEvents(param: QueryHistoryParam): Promise<GraphTransactionEvent[]> {
         const queryAll = param.size === undefined && param.page === undefined;
         const first = param.size || 1000;
         const skip = (param.page || 0) * first;
@@ -236,7 +230,7 @@ export class VaultGraph extends Graph {
             const resp = await this.query(graphQL, skip, first);
             transactionEvents = resp.transactionEvents;
         }
-        let result: TransactionEvent[] = [];
+        let result: GraphTransactionEvent[] = [];
         for (const txEvent of transactionEvents) {
             result.push({
                 id: txEvent.id,
