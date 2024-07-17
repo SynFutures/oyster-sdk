@@ -1,6 +1,7 @@
 import { hexZeroPad } from 'ethers/lib/utils';
 import { BigNumber } from 'ethers';
 import { asInt128, asInt24, asUint128, asUint24 } from '../common';
+import { ONE, ZERO } from '@derivation-tech/web3-core';
 
 export function encodeInstrumentExpiry(instrument: string, expiry: number): string {
     return hexZeroPad(BigNumber.from(instrument).shl(32).add(BigNumber.from(expiry)).toHexString(), 32);
@@ -78,4 +79,21 @@ export function decodeBatchCancelTicks(encodedTicks: [string, string, string]): 
         }
     }
     return ticks;
+}
+
+export function encodeNativeAmount(isNative: boolean, amount: BigNumber): string {
+    return hexZeroPad(
+        amount
+            .shl(8)
+            .add(isNative ? ONE : ZERO)
+            .toHexString(),
+        32,
+    );
+}
+
+export function decodeNativeAmount(arg: string): [boolean, BigNumber] {
+    const uArg = BigNumber.from(arg);
+    const isNative = uArg.mask(8).toNumber() === 1;
+    const amount = uArg.shr(8);
+    return [isNative, amount];
 }

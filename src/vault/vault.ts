@@ -25,7 +25,7 @@ import {
     encodeRemoveParam,
     encodeTradeParam,
 } from '../common';
-import { encodeBatchCancelTicks, encodeInstrumentExpiry, encodeLiquidateParam } from './util';
+import { encodeBatchCancelTicks, encodeInstrumentExpiry, encodeLiquidateParam, encodeNativeAmount } from './util';
 import { PendingWithdrawStatus, VaultStatus } from './types';
 
 export class VaultFactoryClient {
@@ -128,7 +128,7 @@ export class VaultClient {
 
     async getUserPendingWithdraw(user: string): Promise<{
         canClaim: boolean;
-        status: string;
+        status: PendingWithdrawStatus;
         quantity: BigNumber;
     }> {
         const [pendingWithdraw, totalValue, totalShares] = await Promise.all([
@@ -139,8 +139,12 @@ export class VaultClient {
         const canClaim = pendingWithdraw.status === PendingWithdrawStatus.READY;
         return {
             canClaim,
-            status: PendingWithdrawStatus[pendingWithdraw.status],
-            quantity: totalShares.eq(ZERO) ? ZERO : pendingWithdraw.quantity.mul(totalValue).div(totalShares),
+            status: pendingWithdraw.status,
+            quantity: totalShares.eq(ZERO)
+                ? ZERO
+                : pendingWithdraw.status === PendingWithdrawStatus.PENDING
+                ? pendingWithdraw.quantity.mul(totalValue).div(totalShares)
+                : pendingWithdraw.quantity,
         };
     }
 
@@ -167,35 +171,43 @@ export class VaultClient {
 
     async deposit(
         signer: Signer,
+        isNative: boolean,
         amount: BigNumber,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const allowance = await this.ctx.erc20.getAllowance(
-            this.quoteAddr,
-            await signer.getAddress(),
-            this.vault.address,
-        );
-        if (allowance.lt(amount)) {
-            await this.ctx.erc20.approveIfNeeded(signer, this.quoteAddr, this.vault.address, amount);
+        if (isNative) {
+            const tx = await this.vault.populateTransaction.deposit(amount, { value: amount });
+            return await this.ctx.sendTx(signer, tx);
+        } else {
+            const allowance = await this.ctx.erc20.getAllowance(
+                this.quoteAddr,
+                await signer.getAddress(),
+                this.vault.address,
+            );
+            if (allowance.lt(amount)) {
+                await this.ctx.erc20.approveIfNeeded(signer, this.quoteAddr, this.vault.address, amount);
+            }
+            const tx = await this.vault.populateTransaction.deposit(amount);
+            return await this.ctx.sendTx(signer, tx);
         }
-        const tx = await this.vault.populateTransaction.deposit(amount);
-        return await this.ctx.sendTx(signer, tx);
     }
 
     async withdraw(
         signer: Signer,
+        isNative: boolean,
         shares: BigNumber,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const tx = await this.vault.populateTransaction.withdraw(shares);
+        const tx = await this.vault.populateTransaction.withdraw(encodeNativeAmount(isNative, shares));
         return await this.ctx.sendTx(signer, tx);
     }
 
     async withdrawQuote(
         signer: Signer,
+        isNative: boolean,
         quoteAmount: BigNumber,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
         const [totalValue, totalShares] = await Promise.all([this.vault.getTotalValue(), this.vault.totalShares()]);
         const shares = quoteAmount.mul(totalShares).div(totalValue);
-        const tx = await this.vault.populateTransaction.withdraw(shares);
+        const tx = await this.vault.populateTransaction.withdraw(encodeNativeAmount(isNative, shares));
         return await this.ctx.sendTx(signer, tx);
     }
 
@@ -417,9 +429,10 @@ export class VaultClient {
 
     async claimFee(
         manager: Signer,
+        isNative: boolean,
         amount: BigNumber,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const ptx = await this.vault.populateTransaction.claimFee(amount);
+        const ptx = await this.vault.populateTransaction.claimFee(encodeNativeAmount(isNative, amount));
         return await this.ctx.sendTx(manager, ptx);
     }
 
