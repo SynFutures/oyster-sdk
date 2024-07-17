@@ -116,7 +116,7 @@ export class VaultGraph extends Graph {
                 quoteToken: tokenInfos.find((t) => t.address.toLowerCase() === vault.quote.toLowerCase())!,
                 status: vault.status as VaultStatus,
                 totalValue: totalValues.find((_, idx) => vaults[idx].id === vault.id)!,
-                liveThreshold: vault.liveThreshold,
+                liveThreshold: BigNumber.from(vault.liveThreshold),
             });
         }
         return result;
