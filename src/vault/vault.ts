@@ -405,7 +405,22 @@ export class VaultClient {
         manager: Signer,
         status: VaultStatus,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const ptx = await this.vault.populateTransaction.setVaultStatus(status);
+        let statusNum;
+        switch (status) {
+            case VaultStatus.UPCOMING:
+                statusNum = 0;
+                break;
+            case VaultStatus.LIVE:
+                statusNum = 1;
+                break;
+            case VaultStatus.SUSPENDED:
+                statusNum = 2;
+                break;
+            case VaultStatus.INVALID:
+                statusNum = 3;
+                break;
+        }
+        const ptx = await this.vault.populateTransaction.setVaultStatus(statusNum);
         return await this.ctx.sendTx(manager, ptx);
     }
 
