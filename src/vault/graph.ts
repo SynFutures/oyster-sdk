@@ -234,6 +234,22 @@ export class VaultGraph extends Graph {
         return result;
     }
 
+    async getUserPendingWithdraw(account: string, vault: string): Promise<PendingWithdraw> {
+        const pendingWithdraws = await this.getUserPendingWithdraws(account);
+        // filter by vault address and find out the latest one with newest createdTimestamp
+        return pendingWithdraws
+            .filter((p) => p.vaultAddr === vault)
+            .reduce((prev, curr) => (prev.createdTimestamp > curr.createdTimestamp ? prev : curr), {
+                userAddr: account,
+                vaultAddr: vault,
+                createdTimestamp: 0,
+                releasedTimestamp: 0,
+                status: PendingWithdrawStatusGraph.NONE,
+                isNative: false,
+                quantity: ZERO,
+            });
+    }
+
     // query general-purposed transaction events
     async getHistoryEvents(param: QueryHistoryParam): Promise<GraphTransactionEvent[]> {
         const queryAll = param.size === undefined && param.page === undefined;
