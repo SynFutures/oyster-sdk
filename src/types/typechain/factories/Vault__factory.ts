@@ -51,12 +51,12 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "InvalidPairConfig",
+    name: "InvalidNativeFlag",
     type: "error",
   },
   {
     inputs: [],
-    name: "InvalidProfitFeeChange",
+    name: "InvalidPairConfig",
     type: "error",
   },
   {
@@ -96,12 +96,12 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "NotManager",
+    name: "NotAuthorized",
     type: "error",
   },
   {
     inputs: [],
-    name: "NotOperator",
+    name: "NotManager",
     type: "error",
   },
   {
@@ -117,6 +117,11 @@ const _abi = [
   {
     inputs: [],
     name: "SetLiveThresholdNotAllowed",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "StillPendingInGate",
     type: "error",
   },
   {
@@ -309,9 +314,14 @@ const _abi = [
             type: "uint8",
           },
           {
-            internalType: "uint248",
+            internalType: "bool",
+            name: "native",
+            type: "bool",
+          },
+          {
+            internalType: "uint240",
             name: "quantity",
-            type: "uint248",
+            type: "uint240",
           },
         ],
         indexed: false,
@@ -364,9 +374,9 @@ const _abi = [
       },
       {
         indexed: false,
-        internalType: "uint256",
+        internalType: "int256",
         name: "quantity",
-        type: "uint256",
+        type: "int256",
       },
     ],
     name: "UpdateShareInfo",
@@ -549,9 +559,9 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
+        internalType: "bytes32",
+        name: "arg",
+        type: "bytes32",
       },
     ],
     name: "claimFee",
@@ -907,9 +917,14 @@ const _abi = [
         type: "uint8",
       },
       {
-        internalType: "uint248",
+        internalType: "bool",
+        name: "native",
+        type: "bool",
+      },
+      {
+        internalType: "uint240",
         name: "quantity",
-        type: "uint248",
+        type: "uint240",
       },
     ],
     stateMutability: "view",
@@ -1060,7 +1075,7 @@ const _abi = [
     inputs: [
       {
         internalType: "enum VaultStatus",
-        name: "_status",
+        name: "newStatus",
         type: "uint8",
       },
     ],
@@ -1235,9 +1250,9 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "uint256",
-        name: "shares",
-        type: "uint256",
+        internalType: "bytes32",
+        name: "arg",
+        type: "bytes32",
       },
     ],
     name: "withdraw",

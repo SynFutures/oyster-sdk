@@ -30,11 +30,13 @@ import type {
 
 export type PendingWithdrawStruct = {
   status: PromiseOrValue<BigNumberish>;
+  native: PromiseOrValue<boolean>;
   quantity: PromiseOrValue<BigNumberish>;
 };
 
-export type PendingWithdrawStructOutput = [number, BigNumber] & {
+export type PendingWithdrawStructOutput = [number, boolean, BigNumber] & {
   status: number;
+  native: boolean;
   quantity: BigNumber;
 };
 
@@ -103,7 +105,7 @@ export interface VaultInterface extends utils.Interface {
     "batchCancel(bytes32,uint240[3])": FunctionFragment;
     "batchPlace(address,bytes32[3])": FunctionFragment;
     "cancelPendingWithdraw()": FunctionFragment;
-    "claimFee(uint256)": FunctionFragment;
+    "claimFee(bytes32)": FunctionFragment;
     "claimPendingWithdraw()": FunctionFragment;
     "decimals()": FunctionFragment;
     "deposit(uint256)": FunctionFragment;
@@ -143,7 +145,7 @@ export interface VaultInterface extends utils.Interface {
     "trade(address,bytes32[2])": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
     "weth()": FunctionFragment;
-    "withdraw(uint256)": FunctionFragment;
+    "withdraw(bytes32)": FunctionFragment;
     "withdrawFromGateAndRelease(address[])": FunctionFragment;
   };
 
@@ -244,7 +246,7 @@ export interface VaultInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "claimFee",
-    values: [PromiseOrValue<BigNumberish>]
+    values: [PromiseOrValue<BytesLike>]
   ): string;
   encodeFunctionData(
     functionFragment: "claimPendingWithdraw",
@@ -417,7 +419,7 @@ export interface VaultInterface extends utils.Interface {
   encodeFunctionData(functionFragment: "weth", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "withdraw",
-    values: [PromiseOrValue<BigNumberish>]
+    values: [PromiseOrValue<BytesLike>]
   ): string;
   encodeFunctionData(
     functionFragment: "withdrawFromGateAndRelease",
@@ -551,7 +553,7 @@ export interface VaultInterface extends utils.Interface {
     "SetVaultStatus(uint8)": EventFragment;
     "SwitchOperationMode(uint8)": EventFragment;
     "UpdatePending(address,tuple,uint256)": EventFragment;
-    "UpdateShareInfo(address,tuple,uint128,uint256)": EventFragment;
+    "UpdateShareInfo(address,tuple,uint128,int256)": EventFragment;
     "UpdateTotalFee(uint128)": EventFragment;
     "AdminChanged(address,address)": EventFragment;
     "BeaconUpgraded(address)": EventFragment;
@@ -799,7 +801,7 @@ export interface Vault extends BaseContract {
     ): Promise<ContractTransaction>;
 
     claimFee(
-      amount: PromiseOrValue<BigNumberish>,
+      arg: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -884,7 +886,13 @@ export interface Vault extends BaseContract {
     pendingsOf(
       user: PromiseOrValue<string>,
       overrides?: CallOverrides
-    ): Promise<[number, BigNumber] & { status: number; quantity: BigNumber }>;
+    ): Promise<
+      [number, boolean, BigNumber] & {
+        status: number;
+        native: boolean;
+        quantity: BigNumber;
+      }
+    >;
 
     place(
       instrument: PromiseOrValue<string>,
@@ -924,7 +932,7 @@ export interface Vault extends BaseContract {
     ): Promise<ContractTransaction>;
 
     setVaultStatus(
-      _status: PromiseOrValue<BigNumberish>,
+      newStatus: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -973,7 +981,7 @@ export interface Vault extends BaseContract {
     weth(overrides?: CallOverrides): Promise<[string]>;
 
     withdraw(
-      shares: PromiseOrValue<BigNumberish>,
+      arg: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -1020,7 +1028,7 @@ export interface Vault extends BaseContract {
   ): Promise<ContractTransaction>;
 
   claimFee(
-    amount: PromiseOrValue<BigNumberish>,
+    arg: PromiseOrValue<BytesLike>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -1105,7 +1113,13 @@ export interface Vault extends BaseContract {
   pendingsOf(
     user: PromiseOrValue<string>,
     overrides?: CallOverrides
-  ): Promise<[number, BigNumber] & { status: number; quantity: BigNumber }>;
+  ): Promise<
+    [number, boolean, BigNumber] & {
+      status: number;
+      native: boolean;
+      quantity: BigNumber;
+    }
+  >;
 
   place(
     instrument: PromiseOrValue<string>,
@@ -1145,7 +1159,7 @@ export interface Vault extends BaseContract {
   ): Promise<ContractTransaction>;
 
   setVaultStatus(
-    _status: PromiseOrValue<BigNumberish>,
+    newStatus: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -1194,7 +1208,7 @@ export interface Vault extends BaseContract {
   weth(overrides?: CallOverrides): Promise<string>;
 
   withdraw(
-    shares: PromiseOrValue<BigNumberish>,
+    arg: PromiseOrValue<BytesLike>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -1245,7 +1259,7 @@ export interface Vault extends BaseContract {
     cancelPendingWithdraw(overrides?: CallOverrides): Promise<void>;
 
     claimFee(
-      amount: PromiseOrValue<BigNumberish>,
+      arg: PromiseOrValue<BytesLike>,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1333,7 +1347,13 @@ export interface Vault extends BaseContract {
     pendingsOf(
       user: PromiseOrValue<string>,
       overrides?: CallOverrides
-    ): Promise<[number, BigNumber] & { status: number; quantity: BigNumber }>;
+    ): Promise<
+      [number, boolean, BigNumber] & {
+        status: number;
+        native: boolean;
+        quantity: BigNumber;
+      }
+    >;
 
     place(
       instrument: PromiseOrValue<string>,
@@ -1373,7 +1393,7 @@ export interface Vault extends BaseContract {
     ): Promise<void>;
 
     setVaultStatus(
-      _status: PromiseOrValue<BigNumberish>,
+      newStatus: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1420,7 +1440,7 @@ export interface Vault extends BaseContract {
     weth(overrides?: CallOverrides): Promise<string>;
 
     withdraw(
-      shares: PromiseOrValue<BigNumberish>,
+      arg: PromiseOrValue<BytesLike>,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1499,7 +1519,7 @@ export interface Vault extends BaseContract {
       totalPendingShares?: null
     ): UpdatePendingEventFilter;
 
-    "UpdateShareInfo(address,tuple,uint128,uint256)"(
+    "UpdateShareInfo(address,tuple,uint128,int256)"(
       user?: PromiseOrValue<string> | null,
       info?: null,
       totalShares?: null,
@@ -1577,7 +1597,7 @@ export interface Vault extends BaseContract {
     ): Promise<BigNumber>;
 
     claimFee(
-      amount: PromiseOrValue<BigNumberish>,
+      arg: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -1698,7 +1718,7 @@ export interface Vault extends BaseContract {
     ): Promise<BigNumber>;
 
     setVaultStatus(
-      _status: PromiseOrValue<BigNumberish>,
+      newStatus: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -1745,7 +1765,7 @@ export interface Vault extends BaseContract {
     weth(overrides?: CallOverrides): Promise<BigNumber>;
 
     withdraw(
-      shares: PromiseOrValue<BigNumberish>,
+      arg: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -1793,7 +1813,7 @@ export interface Vault extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     claimFee(
-      amount: PromiseOrValue<BigNumberish>,
+      arg: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -1914,7 +1934,7 @@ export interface Vault extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     setVaultStatus(
-      _status: PromiseOrValue<BigNumberish>,
+      newStatus: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -1963,7 +1983,7 @@ export interface Vault extends BaseContract {
     weth(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     withdraw(
-      shares: PromiseOrValue<BigNumberish>,
+      arg: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
