@@ -11,3 +11,12 @@ export enum PendingWithdrawStatus {
     WAITING = 2,
     READY = 3,
 }
+
+export enum PendingWithdrawStatusGraph {
+    NONE = 'NONE',
+    PENDING = 'PENDING',
+    WAITING = 'WAITING',
+    READY = 'READY',
+    CANCELED = 'CANCELED',
+    DONE = 'DONE',
+}

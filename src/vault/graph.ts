@@ -1,7 +1,7 @@
 import { ChainContext, GRAPH_PAGE_SIZE, Graph, TokenInfo, ZERO, now } from '@derivation-tech/web3-core';
 import { BigNumber } from 'ethers';
 import { orderBy as _orderBy } from 'lodash';
-import { VaultStatus } from './types';
+import { PendingWithdrawStatusGraph, VaultStatus } from './types';
 import { Vault__factory } from '../types';
 import { Pagination } from '../subgraph';
 
@@ -21,12 +21,6 @@ export interface GraphTransactionEvent {
     logIndex: number;
     name: string;
     args: { [key: string]: any };
-}
-
-export interface PendingUnstakeWithTx {
-    pendingIndex: number;
-    txHash: string;
-    amount: BigNumber;
 }
 
 export interface VaultInfo {
@@ -55,6 +49,16 @@ export interface DepositWithdraw {
     timestamp: number;
     shares: BigNumber;
     quoteAmount: BigNumber;
+}
+
+export interface PendingWithdraw {
+    userAddr: string;
+    vaultAddr: string;
+    createdTimestamp: number;
+    releasedTimestamp: number;
+    status: PendingWithdrawStatusGraph;
+    isNative: boolean;
+    quantity: BigNumber;
 }
 
 export class VaultGraph extends Graph {
@@ -194,6 +198,38 @@ export class VaultGraph extends Graph {
                     quoteAmount: BigNumber.from(d.quantity),
                 });
             }
+        }
+        return result;
+    }
+
+    async getUserPendingWithdraws(account: string): Promise<PendingWithdraw[]> {
+        const graphQL = `query($skip: Int, $first: Int, $lastID: String){
+            pendingWithdraws(skip: $skip, first: $first, where:{
+                user:"${account.toLowerCase()}"
+            }){
+                user {
+                    id
+                }
+                vault
+                createdTimestamp
+                releasedTimestamp
+                status
+                isNative
+                quantity
+            }
+        }`;
+        const pendingWithdraws = await this.queryAll(graphQL, GRAPH_PAGE_SIZE, true);
+        const result: PendingWithdraw[] = [];
+        for (const pendingWithdraw of pendingWithdraws) {
+            result.push({
+                userAddr: pendingWithdraw.user,
+                vaultAddr: pendingWithdraw.vault,
+                createdTimestamp: Number(pendingWithdraw.createdTimestamp),
+                releasedTimestamp: Number(pendingWithdraw.releasedTimestamp),
+                status: pendingWithdraw.status as PendingWithdrawStatusGraph,
+                isNative: pendingWithdraw.isNative,
+                quantity: BigNumber.from(pendingWithdraw.quantity),
+            });
         }
         return result;
     }
