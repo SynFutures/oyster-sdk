@@ -44,6 +44,7 @@ export interface DepositInfo {
 
 export interface DepositWithdraw {
     type: string; // DEPOSIT or WITHDRAW
+    txHash: string;
     vaultAddr: string;
     userAddr: string;
     timestamp: number;
@@ -175,6 +176,7 @@ export class VaultGraph extends Graph {
             }) {
                 depositWithdraw{
                 type
+                txHash
                 vault
                 user{
                     address
@@ -191,6 +193,7 @@ export class VaultGraph extends Graph {
             for (const d of depositWithdraw.depositWithdraw) {
                 result.push({
                     type: d.type,
+                    txHash: d.txHash,
                     vaultAddr: d.vault,
                     userAddr: d.user.address,
                     timestamp: Number(d.timestamp),
