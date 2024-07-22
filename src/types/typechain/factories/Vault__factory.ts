@@ -14,59 +14,49 @@ const _abi = [
         name: "_gate",
         type: "address",
       },
+      {
+        internalType: "address",
+        name: "_weth",
+        type: "address",
+      },
     ],
     stateMutability: "nonpayable",
     type: "constructor",
   },
   {
     inputs: [],
-    name: "AlreadyPending",
+    name: "ArrearExists",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InsufficientDeposit",
     type: "error",
   },
   {
     inputs: [
       {
-        internalType: "enum VaultStatus",
-        name: "status",
-        type: "uint8",
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "requested",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "available",
+        type: "uint256",
       },
     ],
-    name: "BadVaultStatus",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "CrazyFeeRatio",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "InsufficientShares",
+    name: "InsufficientShare",
     type: "error",
   },
   {
     inputs: [],
     name: "InvalidMsgValue",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "InvalidNativeFlag",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "InvalidPairConfig",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "InvalidVaultStatus",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "LiveThresholdNotReached",
     type: "error",
   },
   {
@@ -85,28 +75,41 @@ const _abi = [
     type: "error",
   },
   {
-    inputs: [],
+    inputs: [
+      {
+        internalType: "address",
+        name: "evil",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "value",
+        type: "uint256",
+      },
+    ],
     name: "NoDirectTransfer",
     type: "error",
   },
   {
-    inputs: [],
-    name: "NotAdmin",
+    inputs: [
+      {
+        internalType: "address",
+        name: "evil",
+        type: "address",
+      },
+    ],
+    name: "NotFactory",
     type: "error",
   },
   {
-    inputs: [],
-    name: "NotAuthorized",
-    type: "error",
-  },
-  {
-    inputs: [],
+    inputs: [
+      {
+        internalType: "address",
+        name: "evil",
+        type: "address",
+      },
+    ],
     name: "NotManager",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "NotPending",
     type: "error",
   },
   {
@@ -115,8 +118,24 @@ const _abi = [
     type: "error",
   },
   {
+    inputs: [
+      {
+        internalType: "address",
+        name: "fakeInstrument",
+        type: "address",
+      },
+    ],
+    name: "NotSynFuturesInstrument",
+    type: "error",
+  },
+  {
     inputs: [],
-    name: "SetLiveThresholdNotAllowed",
+    name: "NotTradeable",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "NotWETHQuote",
     type: "error",
   },
   {
@@ -138,16 +157,6 @@ const _abi = [
       },
     ],
     name: "UnsafeToken",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "UnsupportedQuote",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "VaultBankrupt",
     type: "error",
   },
   {
@@ -173,6 +182,31 @@ const _abi = [
     anonymous: false,
     inputs: [
       {
+        indexed: true,
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "bool",
+        name: "native",
+        type: "bool",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "quantity",
+        type: "uint256",
+      },
+    ],
+    name: "Deposit",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
         indexed: false,
         internalType: "uint8",
         name: "version",
@@ -180,25 +214,6 @@ const _abi = [
       },
     ],
     name: "Initialized",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "previousOwner",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "newOwner",
-        type: "address",
-      },
-    ],
-    name: "OwnershipTransferred",
     type: "event",
   },
   {
@@ -224,77 +239,79 @@ const _abi = [
     anonymous: false,
     inputs: [
       {
+        components: [
+          {
+            internalType: "enum Stage",
+            name: "stage",
+            type: "uint8",
+          },
+          {
+            internalType: "address",
+            name: "quote",
+            type: "address",
+          },
+          {
+            internalType: "uint8",
+            name: "decimals",
+            type: "uint8",
+          },
+          {
+            internalType: "uint8",
+            name: "maxPair",
+            type: "uint8",
+          },
+          {
+            internalType: "uint8",
+            name: "maxRange",
+            type: "uint8",
+          },
+          {
+            internalType: "uint8",
+            name: "maxOrder",
+            type: "uint8",
+          },
+          {
+            internalType: "uint16",
+            name: "commissionRatio",
+            type: "uint16",
+          },
+          {
+            internalType: "uint128",
+            name: "minQuoteAmount",
+            type: "uint128",
+          },
+          {
+            internalType: "uint128",
+            name: "liveThreshold",
+            type: "uint128",
+          },
+        ],
         indexed: false,
-        internalType: "uint256",
-        name: "quoteAmount",
-        type: "uint256",
+        internalType: "struct Configuration",
+        name: "config",
+        type: "tuple",
       },
     ],
-    name: "SetLiveThreshold",
+    name: "SetConfiguration",
     type: "event",
   },
   {
     anonymous: false,
     inputs: [
       {
-        indexed: false,
-        internalType: "uint8",
-        name: "maxRangeNumber",
-        type: "uint8",
+        indexed: true,
+        internalType: "address",
+        name: "newManager",
+        type: "address",
       },
       {
         indexed: false,
-        internalType: "uint8",
-        name: "maxOrderNumber",
-        type: "uint8",
-      },
-      {
-        indexed: false,
-        internalType: "uint8",
-        name: "maxPairNumber",
-        type: "uint8",
+        internalType: "address",
+        name: "oldManager",
+        type: "address",
       },
     ],
-    name: "SetPairConfig",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "uint32",
-        name: "newProfitFeeRatio",
-        type: "uint32",
-      },
-    ],
-    name: "SetProfitFeeRatio",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "enum VaultStatus",
-        name: "status",
-        type: "uint8",
-      },
-    ],
-    name: "SetVaultStatus",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "enum OperationMode",
-        name: "mode",
-        type: "uint8",
-      },
-    ],
-    name: "SwitchOperationMode",
+    name: "SetManager",
     type: "event",
   },
   {
@@ -309,8 +326,8 @@ const _abi = [
       {
         components: [
           {
-            internalType: "enum PendingWithdrawStatus",
-            name: "status",
+            internalType: "enum Phase",
+            name: "phase",
             type: "uint8",
           },
           {
@@ -319,24 +336,31 @@ const _abi = [
             type: "bool",
           },
           {
-            internalType: "uint240",
+            internalType: "uint128",
             name: "quantity",
-            type: "uint240",
+            type: "uint128",
           },
         ],
         indexed: false,
-        internalType: "struct PendingWithdraw",
-        name: "pending",
+        internalType: "struct Arrear",
+        name: "arrear",
         type: "tuple",
       },
+    ],
+    name: "UpdateArrear",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
       {
         indexed: false,
-        internalType: "uint256",
-        name: "totalPendingShares",
-        type: "uint256",
+        internalType: "uint128",
+        name: "commission",
+        type: "uint128",
       },
     ],
-    name: "UpdatePending",
+    name: "UpdateCommision",
     type: "event",
   },
   {
@@ -352,7 +376,7 @@ const _abi = [
         components: [
           {
             internalType: "uint128",
-            name: "shares",
+            name: "share",
             type: "uint128",
           },
           {
@@ -362,51 +386,44 @@ const _abi = [
           },
         ],
         indexed: false,
-        internalType: "struct ShareInfo",
-        name: "info",
+        internalType: "struct Stake",
+        name: "stake",
         type: "tuple",
       },
       {
         indexed: false,
-        internalType: "uint128",
-        name: "totalShares",
-        type: "uint128",
-      },
-      {
-        indexed: false,
-        internalType: "int256",
-        name: "quantity",
-        type: "int256",
+        internalType: "uint256",
+        name: "totalShare",
+        type: "uint256",
       },
     ],
-    name: "UpdateShareInfo",
+    name: "UpdateStake",
     type: "event",
   },
   {
     anonymous: false,
     inputs: [
       {
-        indexed: false,
-        internalType: "uint128",
-        name: "totalFee",
-        type: "uint128",
+        indexed: true,
+        internalType: "address",
+        name: "user",
+        type: "address",
       },
-    ],
-    name: "UpdateTotalFee",
-    type: "event",
-  },
-  {
-    inputs: [],
-    name: "EMERGENCY_RATIO",
-    outputs: [
       {
-        internalType: "uint16",
-        name: "",
-        type: "uint16",
+        indexed: false,
+        internalType: "bool",
+        name: "native",
+        type: "bool",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "quantity",
+        type: "uint256",
       },
     ],
-    stateMutability: "view",
-    type: "function",
+    name: "Withdraw",
+    type: "event",
   },
   {
     inputs: [],
@@ -478,24 +495,16 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [],
-    name: "admin",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
     inputs: [
       {
-        internalType: "bytes32",
-        name: "arg",
-        type: "bytes32",
+        internalType: "address",
+        name: "instrument",
+        type: "address",
+      },
+      {
+        internalType: "uint32",
+        name: "expiry",
+        type: "uint32",
       },
       {
         internalType: "uint240[3]",
@@ -551,7 +560,7 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "cancelPendingWithdraw",
+    name: "claimArrear",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -559,31 +568,29 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "bytes32",
-        name: "arg",
-        type: "bytes32",
+        internalType: "bool",
+        name: "native",
+        type: "bool",
+      },
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
       },
     ],
-    name: "claimFee",
+    name: "claimCommission",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },
   {
     inputs: [],
-    name: "claimPendingWithdraw",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "decimals",
+    name: "commission",
     outputs: [
       {
-        internalType: "uint8",
+        internalType: "uint96",
         name: "",
-        type: "uint8",
+        type: "uint96",
       },
     ],
     stateMutability: "view",
@@ -600,6 +607,32 @@ const _abi = [
     name: "deposit",
     outputs: [],
     stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "quantity",
+        type: "uint256",
+      },
+    ],
+    name: "donate",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "factory",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
     type: "function",
   },
   {
@@ -672,6 +705,102 @@ const _abi = [
     type: "function",
   },
   {
+    inputs: [
+      {
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+    ],
+    name: "getArrear",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "enum Phase",
+            name: "phase",
+            type: "uint8",
+          },
+          {
+            internalType: "bool",
+            name: "native",
+            type: "bool",
+          },
+          {
+            internalType: "uint128",
+            name: "quantity",
+            type: "uint128",
+          },
+        ],
+        internalType: "struct Arrear",
+        name: "",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getConfiguration",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "enum Stage",
+            name: "stage",
+            type: "uint8",
+          },
+          {
+            internalType: "address",
+            name: "quote",
+            type: "address",
+          },
+          {
+            internalType: "uint8",
+            name: "decimals",
+            type: "uint8",
+          },
+          {
+            internalType: "uint8",
+            name: "maxPair",
+            type: "uint8",
+          },
+          {
+            internalType: "uint8",
+            name: "maxRange",
+            type: "uint8",
+          },
+          {
+            internalType: "uint8",
+            name: "maxOrder",
+            type: "uint8",
+          },
+          {
+            internalType: "uint16",
+            name: "commissionRatio",
+            type: "uint16",
+          },
+          {
+            internalType: "uint128",
+            name: "minQuoteAmount",
+            type: "uint128",
+          },
+          {
+            internalType: "uint128",
+            name: "liveThreshold",
+            type: "uint128",
+          },
+        ],
+        internalType: "struct Configuration",
+        name: "",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [],
     name: "getInvolvedPairs",
     outputs: [
@@ -691,7 +820,7 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "getTotalValue",
+    name: "getPortfolioValue",
     outputs: [
       {
         internalType: "uint256",
@@ -706,38 +835,101 @@ const _abi = [
     inputs: [
       {
         internalType: "address",
-        name: "_quote",
+        name: "user",
         type: "address",
+      },
+    ],
+    name: "getStake",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "uint128",
+            name: "share",
+            type: "uint128",
+          },
+          {
+            internalType: "uint128",
+            name: "entryValue",
+            type: "uint128",
+          },
+        ],
+        internalType: "struct Stake",
+        name: "",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_factory",
+        type: "address",
+      },
+      {
+        internalType: "string",
+        name: "_name",
+        type: "string",
       },
       {
         internalType: "address",
-        name: "_admin",
+        name: "_manager",
         type: "address",
       },
       {
-        internalType: "address",
-        name: "manager",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "_liveThreshold",
-        type: "uint256",
-      },
-      {
-        internalType: "uint8",
-        name: "_maxRangeNumber",
-        type: "uint8",
-      },
-      {
-        internalType: "uint8",
-        name: "_maxOrderNumber",
-        type: "uint8",
-      },
-      {
-        internalType: "uint8",
-        name: "_maxPairNumber",
-        type: "uint8",
+        components: [
+          {
+            internalType: "enum Stage",
+            name: "stage",
+            type: "uint8",
+          },
+          {
+            internalType: "address",
+            name: "quote",
+            type: "address",
+          },
+          {
+            internalType: "uint8",
+            name: "decimals",
+            type: "uint8",
+          },
+          {
+            internalType: "uint8",
+            name: "maxPair",
+            type: "uint8",
+          },
+          {
+            internalType: "uint8",
+            name: "maxRange",
+            type: "uint8",
+          },
+          {
+            internalType: "uint8",
+            name: "maxOrder",
+            type: "uint8",
+          },
+          {
+            internalType: "uint16",
+            name: "commissionRatio",
+            type: "uint16",
+          },
+          {
+            internalType: "uint128",
+            name: "minQuoteAmount",
+            type: "uint128",
+          },
+          {
+            internalType: "uint128",
+            name: "liveThreshold",
+            type: "uint128",
+          },
+        ],
+        internalType: "struct Configuration",
+        name: "_configuration",
+        type: "tuple",
       },
     ],
     name: "initialize",
@@ -749,9 +941,33 @@ const _abi = [
     inputs: [
       {
         internalType: "address",
-        name: "_quote",
+        name: "user",
         type: "address",
       },
+      {
+        internalType: "uint256",
+        name: "share",
+        type: "uint256",
+      },
+    ],
+    name: "inquireWithdrawal",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "value",
+        type: "uint256",
+      },
+      {
+        internalType: "enum Phase",
+        name: "phase",
+        type: "uint8",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
       {
         internalType: "string",
         name: "mtype",
@@ -781,9 +997,29 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "bytes32[3]",
-        name: "args",
-        type: "bytes32[3]",
+        internalType: "address",
+        name: "instrument",
+        type: "address",
+      },
+      {
+        internalType: "uint32",
+        name: "expiry",
+        type: "uint32",
+      },
+      {
+        internalType: "address",
+        name: "target",
+        type: "address",
+      },
+      {
+        internalType: "int256",
+        name: "size",
+        type: "int256",
+      },
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
       },
     ],
     name: "liquidate",
@@ -793,12 +1029,12 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "liveThreshold",
+    name: "manager",
     outputs: [
       {
-        internalType: "uint256",
+        internalType: "address",
         name: "",
-        type: "uint256",
+        type: "address",
       },
     ],
     stateMutability: "view",
@@ -819,112 +1055,12 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "maxOrderNumber",
+    name: "name",
     outputs: [
       {
-        internalType: "uint8",
+        internalType: "string",
         name: "",
-        type: "uint8",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "maxPairNumber",
-    outputs: [
-      {
-        internalType: "uint8",
-        name: "",
-        type: "uint8",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "maxRangeNumber",
-    outputs: [
-      {
-        internalType: "uint8",
-        name: "",
-        type: "uint8",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "mode",
-    outputs: [
-      {
-        internalType: "enum OperationMode",
-        name: "",
-        type: "uint8",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "bytes[]",
-        name: "data",
-        type: "bytes[]",
-      },
-    ],
-    name: "multicall",
-    outputs: [
-      {
-        internalType: "bytes[]",
-        name: "results",
-        type: "bytes[]",
-      },
-    ],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "owner",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "user",
-        type: "address",
-      },
-    ],
-    name: "pendingsOf",
-    outputs: [
-      {
-        internalType: "enum PendingWithdrawStatus",
-        name: "status",
-        type: "uint8",
-      },
-      {
-        internalType: "bool",
-        name: "native",
-        type: "bool",
-      },
-      {
-        internalType: "uint240",
-        name: "quantity",
-        type: "uint240",
+        type: "string",
       },
     ],
     stateMutability: "view",
@@ -972,32 +1108,6 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [],
-    name: "profitFeeRatio",
-    outputs: [
-      {
-        internalType: "uint32",
-        name: "",
-        type: "uint32",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "quote",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
     inputs: [
       {
         internalType: "address",
@@ -1016,8 +1126,14 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [],
-    name: "renounceOwnership",
+    inputs: [
+      {
+        internalType: "uint16",
+        name: "newCommissionRatio",
+        type: "uint16",
+      },
+    ],
+    name: "setCommissionRatio",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -1025,9 +1141,9 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "uint256",
-        name: "quoteAmount",
-        type: "uint256",
+        internalType: "uint128",
+        name: "newLiveThreshold",
+        type: "uint128",
       },
     ],
     name: "setLiveThreshold",
@@ -1038,58 +1154,76 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "uint8",
-        name: "newMaxRangeNumber",
-        type: "uint8",
-      },
-      {
-        internalType: "uint8",
-        name: "newMaxOrderNumber",
-        type: "uint8",
-      },
-      {
-        internalType: "uint8",
-        name: "newMaxPairNumber",
-        type: "uint8",
+        internalType: "address",
+        name: "newManager",
+        type: "address",
       },
     ],
-    name: "setPairConfig",
+    name: "setManager",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },
   {
     inputs: [
+      {
+        internalType: "uint128",
+        name: "newMinQuoteAmount",
+        type: "uint128",
+      },
+    ],
+    name: "setMinQuoteAmount",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint8",
+        name: "newMaxPair",
+        type: "uint8",
+      },
+      {
+        internalType: "uint8",
+        name: "newMaxRange",
+        type: "uint8",
+      },
+      {
+        internalType: "uint8",
+        name: "newMaxOrder",
+        type: "uint8",
+      },
+    ],
+    name: "setPortfolioLimit",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "enum Stage",
+        name: "newStage",
+        type: "uint8",
+      },
+    ],
+    name: "setStage",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "instrument",
+        type: "address",
+      },
       {
         internalType: "uint32",
-        name: "newProfitFeeRatio",
+        name: "expiry",
         type: "uint32",
-      },
-    ],
-    name: "setProfitFeeRatio",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "enum VaultStatus",
-        name: "newStatus",
-        type: "uint8",
-      },
-    ],
-    name: "setVaultStatus",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "bytes32",
-        name: "arg",
-        type: "bytes32",
       },
     ],
     name: "settle",
@@ -1098,106 +1232,13 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "user",
-        type: "address",
-      },
-    ],
-    name: "sharesInfoOf",
-    outputs: [
-      {
-        internalType: "uint128",
-        name: "shares",
-        type: "uint128",
-      },
-      {
-        internalType: "uint128",
-        name: "entryValue",
-        type: "uint128",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
     inputs: [],
-    name: "status",
+    name: "totalShare",
     outputs: [
       {
-        internalType: "enum VaultStatus",
+        internalType: "uint256",
         name: "",
-        type: "uint8",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "bytes32",
-        name: "arg",
-        type: "bytes32",
-      },
-      {
-        internalType: "address",
-        name: "target",
-        type: "address",
-      },
-      {
-        internalType: "int256",
-        name: "size",
-        type: "int256",
-      },
-    ],
-    name: "sweep",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "switchOperationMode",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "totalFee",
-    outputs: [
-      {
-        internalType: "uint128",
-        name: "",
-        type: "uint128",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "totalPendingShares",
-    outputs: [
-      {
-        internalType: "uint96",
-        name: "",
-        type: "uint96",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "totalShares",
-    outputs: [
-      {
-        internalType: "uint128",
-        name: "",
-        type: "uint128",
+        type: "uint256",
       },
     ],
     stateMutability: "view",
@@ -1222,19 +1263,6 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "newOwner",
-        type: "address",
-      },
-    ],
-    name: "transferOwnership",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
     inputs: [],
     name: "weth",
     outputs: [
@@ -1250,9 +1278,14 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "bytes32",
-        name: "arg",
-        type: "bytes32",
+        internalType: "bool",
+        name: "native",
+        type: "bool",
+      },
+      {
+        internalType: "uint256",
+        name: "share",
+        type: "uint256",
       },
     ],
     name: "withdraw",

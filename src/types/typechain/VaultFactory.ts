@@ -27,51 +27,93 @@ import type {
   PromiseOrValue,
 } from "./common";
 
+export type ConfigurationStruct = {
+  stage: PromiseOrValue<BigNumberish>;
+  quote: PromiseOrValue<string>;
+  decimals: PromiseOrValue<BigNumberish>;
+  maxPair: PromiseOrValue<BigNumberish>;
+  maxRange: PromiseOrValue<BigNumberish>;
+  maxOrder: PromiseOrValue<BigNumberish>;
+  commissionRatio: PromiseOrValue<BigNumberish>;
+  minQuoteAmount: PromiseOrValue<BigNumberish>;
+  liveThreshold: PromiseOrValue<BigNumberish>;
+};
+
+export type ConfigurationStructOutput = [
+  number,
+  string,
+  number,
+  number,
+  number,
+  number,
+  number,
+  BigNumber,
+  BigNumber
+] & {
+  stage: number;
+  quote: string;
+  decimals: number;
+  maxPair: number;
+  maxRange: number;
+  maxOrder: number;
+  commissionRatio: number;
+  minQuoteAmount: BigNumber;
+  liveThreshold: BigNumber;
+};
+
 export interface VaultFactoryInterface extends utils.Interface {
   functions: {
-    "createVault(address,address,string,uint256,uint8,uint8,uint8)": FunctionFragment;
-    "gate()": FunctionFragment;
+    "config()": FunctionFragment;
+    "createVault(address,string,(uint8,address,uint8,uint8,uint8,uint8,uint16,uint128,uint128))": FunctionFragment;
     "getAllVaults()": FunctionFragment;
     "indexToVault(bytes32)": FunctionFragment;
     "initialize(address)": FunctionFragment;
-    "multicall(bytes[])": FunctionFragment;
     "owner()": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
+    "setVaultCommissionRatio(address,uint16)": FunctionFragment;
+    "setVaultLiveThreshold(address,uint128)": FunctionFragment;
+    "setVaultManager(address,address)": FunctionFragment;
+    "setVaultMinQuoteAmount(address,uint128)": FunctionFragment;
+    "setVaultPortfolioLimit(address,uint8,uint8,uint8)": FunctionFragment;
+    "setVaultStage(address,uint8)": FunctionFragment;
     "totalVaults()": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
     "vaultBeacon()": FunctionFragment;
+    "vaultToIndex(address)": FunctionFragment;
     "vaults(uint256)": FunctionFragment;
   };
 
   getFunction(
     nameOrSignatureOrTopic:
+      | "config"
       | "createVault"
-      | "gate"
       | "getAllVaults"
       | "indexToVault"
       | "initialize"
-      | "multicall"
       | "owner"
       | "renounceOwnership"
+      | "setVaultCommissionRatio"
+      | "setVaultLiveThreshold"
+      | "setVaultManager"
+      | "setVaultMinQuoteAmount"
+      | "setVaultPortfolioLimit"
+      | "setVaultStage"
       | "totalVaults"
       | "transferOwnership"
       | "vaultBeacon"
+      | "vaultToIndex"
       | "vaults"
   ): FunctionFragment;
 
+  encodeFunctionData(functionFragment: "config", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "createVault",
     values: [
       PromiseOrValue<string>,
       PromiseOrValue<string>,
-      PromiseOrValue<string>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>
+      ConfigurationStruct
     ]
   ): string;
-  encodeFunctionData(functionFragment: "gate", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "getAllVaults",
     values?: undefined
@@ -84,14 +126,39 @@ export interface VaultFactoryInterface extends utils.Interface {
     functionFragment: "initialize",
     values: [PromiseOrValue<string>]
   ): string;
-  encodeFunctionData(
-    functionFragment: "multicall",
-    values: [PromiseOrValue<BytesLike>[]]
-  ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
     values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setVaultCommissionRatio",
+    values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setVaultLiveThreshold",
+    values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setVaultManager",
+    values: [PromiseOrValue<string>, PromiseOrValue<string>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setVaultMinQuoteAmount",
+    values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setVaultPortfolioLimit",
+    values: [
+      PromiseOrValue<string>,
+      PromiseOrValue<BigNumberish>,
+      PromiseOrValue<BigNumberish>,
+      PromiseOrValue<BigNumberish>
+    ]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setVaultStage",
+    values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
     functionFragment: "totalVaults",
@@ -106,15 +173,19 @@ export interface VaultFactoryInterface extends utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "vaultToIndex",
+    values: [PromiseOrValue<string>]
+  ): string;
+  encodeFunctionData(
     functionFragment: "vaults",
     values: [PromiseOrValue<BigNumberish>]
   ): string;
 
+  decodeFunctionResult(functionFragment: "config", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "createVault",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "gate", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getAllVaults",
     data: BytesLike
@@ -124,10 +195,33 @@ export interface VaultFactoryInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "multicall", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "renounceOwnership",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setVaultCommissionRatio",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setVaultLiveThreshold",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setVaultManager",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setVaultMinQuoteAmount",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setVaultPortfolioLimit",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setVaultStage",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -142,10 +236,14 @@ export interface VaultFactoryInterface extends utils.Interface {
     functionFragment: "vaultBeacon",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "vaultToIndex",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "vaults", data: BytesLike): Result;
 
   events: {
-    "CreateVault(address,address,address,string)": EventFragment;
+    "CreateVault(address,address,string,tuple,uint256)": EventFragment;
     "Initialized(uint8)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
   };
@@ -156,13 +254,14 @@ export interface VaultFactoryInterface extends utils.Interface {
 }
 
 export interface CreateVaultEventObject {
-  quote: string;
   vault: string;
   manager: string;
   name: string;
+  configuration: ConfigurationStructOutput;
+  index: BigNumber;
 }
 export type CreateVaultEvent = TypedEvent<
-  [string, string, string, string],
+  [string, string, string, ConfigurationStructOutput, BigNumber],
   CreateVaultEventObject
 >;
 
@@ -214,18 +313,14 @@ export interface VaultFactory extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
+    config(overrides?: CallOverrides): Promise<[string]>;
+
     createVault(
-      quote: PromiseOrValue<string>,
       manager: PromiseOrValue<string>,
       name: PromiseOrValue<string>,
-      liveThreshold: PromiseOrValue<BigNumberish>,
-      maxRangeNumber: PromiseOrValue<BigNumberish>,
-      maxOrderNumber: PromiseOrValue<BigNumberish>,
-      maxPairNumber: PromiseOrValue<BigNumberish>,
+      configuration: ConfigurationStruct,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
-
-    gate(overrides?: CallOverrides): Promise<[string]>;
 
     getAllVaults(overrides?: CallOverrides): Promise<[string[]]>;
 
@@ -239,14 +334,47 @@ export interface VaultFactory extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    multicall(
-      data: PromiseOrValue<BytesLike>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
     owner(overrides?: CallOverrides): Promise<[string]>;
 
     renounceOwnership(
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
+    setVaultCommissionRatio(
+      vault: PromiseOrValue<string>,
+      commissionRatio: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
+    setVaultLiveThreshold(
+      vault: PromiseOrValue<string>,
+      liveThreshold: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
+    setVaultManager(
+      vault: PromiseOrValue<string>,
+      newManager: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
+    setVaultMinQuoteAmount(
+      vault: PromiseOrValue<string>,
+      minQuoteAmount: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
+    setVaultPortfolioLimit(
+      vault: PromiseOrValue<string>,
+      newMaxPair: PromiseOrValue<BigNumberish>,
+      newMaxRange: PromiseOrValue<BigNumberish>,
+      newMaxOrder: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
+    setVaultStage(
+      vault: PromiseOrValue<string>,
+      newStage: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -259,24 +387,25 @@ export interface VaultFactory extends BaseContract {
 
     vaultBeacon(overrides?: CallOverrides): Promise<[string]>;
 
+    vaultToIndex(
+      vault: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<[string] & { index: string }>;
+
     vaults(
       arg0: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<[string]>;
   };
 
+  config(overrides?: CallOverrides): Promise<string>;
+
   createVault(
-    quote: PromiseOrValue<string>,
     manager: PromiseOrValue<string>,
     name: PromiseOrValue<string>,
-    liveThreshold: PromiseOrValue<BigNumberish>,
-    maxRangeNumber: PromiseOrValue<BigNumberish>,
-    maxOrderNumber: PromiseOrValue<BigNumberish>,
-    maxPairNumber: PromiseOrValue<BigNumberish>,
+    configuration: ConfigurationStruct,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
-
-  gate(overrides?: CallOverrides): Promise<string>;
 
   getAllVaults(overrides?: CallOverrides): Promise<string[]>;
 
@@ -290,14 +419,47 @@ export interface VaultFactory extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  multicall(
-    data: PromiseOrValue<BytesLike>[],
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
   owner(overrides?: CallOverrides): Promise<string>;
 
   renounceOwnership(
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  setVaultCommissionRatio(
+    vault: PromiseOrValue<string>,
+    commissionRatio: PromiseOrValue<BigNumberish>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  setVaultLiveThreshold(
+    vault: PromiseOrValue<string>,
+    liveThreshold: PromiseOrValue<BigNumberish>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  setVaultManager(
+    vault: PromiseOrValue<string>,
+    newManager: PromiseOrValue<string>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  setVaultMinQuoteAmount(
+    vault: PromiseOrValue<string>,
+    minQuoteAmount: PromiseOrValue<BigNumberish>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  setVaultPortfolioLimit(
+    vault: PromiseOrValue<string>,
+    newMaxPair: PromiseOrValue<BigNumberish>,
+    newMaxRange: PromiseOrValue<BigNumberish>,
+    newMaxOrder: PromiseOrValue<BigNumberish>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  setVaultStage(
+    vault: PromiseOrValue<string>,
+    newStage: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -310,24 +472,25 @@ export interface VaultFactory extends BaseContract {
 
   vaultBeacon(overrides?: CallOverrides): Promise<string>;
 
+  vaultToIndex(
+    vault: PromiseOrValue<string>,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
   vaults(
     arg0: PromiseOrValue<BigNumberish>,
     overrides?: CallOverrides
   ): Promise<string>;
 
   callStatic: {
+    config(overrides?: CallOverrides): Promise<string>;
+
     createVault(
-      quote: PromiseOrValue<string>,
       manager: PromiseOrValue<string>,
       name: PromiseOrValue<string>,
-      liveThreshold: PromiseOrValue<BigNumberish>,
-      maxRangeNumber: PromiseOrValue<BigNumberish>,
-      maxOrderNumber: PromiseOrValue<BigNumberish>,
-      maxPairNumber: PromiseOrValue<BigNumberish>,
+      configuration: ConfigurationStruct,
       overrides?: CallOverrides
     ): Promise<string>;
-
-    gate(overrides?: CallOverrides): Promise<string>;
 
     getAllVaults(overrides?: CallOverrides): Promise<string[]>;
 
@@ -341,14 +504,47 @@ export interface VaultFactory extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    multicall(
-      data: PromiseOrValue<BytesLike>[],
-      overrides?: CallOverrides
-    ): Promise<string[]>;
-
     owner(overrides?: CallOverrides): Promise<string>;
 
     renounceOwnership(overrides?: CallOverrides): Promise<void>;
+
+    setVaultCommissionRatio(
+      vault: PromiseOrValue<string>,
+      commissionRatio: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setVaultLiveThreshold(
+      vault: PromiseOrValue<string>,
+      liveThreshold: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setVaultManager(
+      vault: PromiseOrValue<string>,
+      newManager: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setVaultMinQuoteAmount(
+      vault: PromiseOrValue<string>,
+      minQuoteAmount: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setVaultPortfolioLimit(
+      vault: PromiseOrValue<string>,
+      newMaxPair: PromiseOrValue<BigNumberish>,
+      newMaxRange: PromiseOrValue<BigNumberish>,
+      newMaxOrder: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setVaultStage(
+      vault: PromiseOrValue<string>,
+      newStage: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     totalVaults(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -359,6 +555,11 @@ export interface VaultFactory extends BaseContract {
 
     vaultBeacon(overrides?: CallOverrides): Promise<string>;
 
+    vaultToIndex(
+      vault: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<string>;
+
     vaults(
       arg0: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
@@ -366,17 +567,19 @@ export interface VaultFactory extends BaseContract {
   };
 
   filters: {
-    "CreateVault(address,address,address,string)"(
-      quote?: null,
+    "CreateVault(address,address,string,tuple,uint256)"(
       vault?: null,
       manager?: null,
-      name?: null
+      name?: null,
+      configuration?: null,
+      index?: null
     ): CreateVaultEventFilter;
     CreateVault(
-      quote?: null,
       vault?: null,
       manager?: null,
-      name?: null
+      name?: null,
+      configuration?: null,
+      index?: null
     ): CreateVaultEventFilter;
 
     "Initialized(uint8)"(version?: null): InitializedEventFilter;
@@ -393,18 +596,14 @@ export interface VaultFactory extends BaseContract {
   };
 
   estimateGas: {
+    config(overrides?: CallOverrides): Promise<BigNumber>;
+
     createVault(
-      quote: PromiseOrValue<string>,
       manager: PromiseOrValue<string>,
       name: PromiseOrValue<string>,
-      liveThreshold: PromiseOrValue<BigNumberish>,
-      maxRangeNumber: PromiseOrValue<BigNumberish>,
-      maxOrderNumber: PromiseOrValue<BigNumberish>,
-      maxPairNumber: PromiseOrValue<BigNumberish>,
+      configuration: ConfigurationStruct,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
-
-    gate(overrides?: CallOverrides): Promise<BigNumber>;
 
     getAllVaults(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -418,14 +617,47 @@ export interface VaultFactory extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    multicall(
-      data: PromiseOrValue<BytesLike>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
     owner(overrides?: CallOverrides): Promise<BigNumber>;
 
     renounceOwnership(
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
+    setVaultCommissionRatio(
+      vault: PromiseOrValue<string>,
+      commissionRatio: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
+    setVaultLiveThreshold(
+      vault: PromiseOrValue<string>,
+      liveThreshold: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
+    setVaultManager(
+      vault: PromiseOrValue<string>,
+      newManager: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
+    setVaultMinQuoteAmount(
+      vault: PromiseOrValue<string>,
+      minQuoteAmount: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
+    setVaultPortfolioLimit(
+      vault: PromiseOrValue<string>,
+      newMaxPair: PromiseOrValue<BigNumberish>,
+      newMaxRange: PromiseOrValue<BigNumberish>,
+      newMaxOrder: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
+    setVaultStage(
+      vault: PromiseOrValue<string>,
+      newStage: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -438,6 +670,11 @@ export interface VaultFactory extends BaseContract {
 
     vaultBeacon(overrides?: CallOverrides): Promise<BigNumber>;
 
+    vaultToIndex(
+      vault: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     vaults(
       arg0: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
@@ -445,18 +682,14 @@ export interface VaultFactory extends BaseContract {
   };
 
   populateTransaction: {
+    config(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     createVault(
-      quote: PromiseOrValue<string>,
       manager: PromiseOrValue<string>,
       name: PromiseOrValue<string>,
-      liveThreshold: PromiseOrValue<BigNumberish>,
-      maxRangeNumber: PromiseOrValue<BigNumberish>,
-      maxOrderNumber: PromiseOrValue<BigNumberish>,
-      maxPairNumber: PromiseOrValue<BigNumberish>,
+      configuration: ConfigurationStruct,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
-
-    gate(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     getAllVaults(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
@@ -470,14 +703,47 @@ export interface VaultFactory extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    multicall(
-      data: PromiseOrValue<BytesLike>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     renounceOwnership(
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setVaultCommissionRatio(
+      vault: PromiseOrValue<string>,
+      commissionRatio: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setVaultLiveThreshold(
+      vault: PromiseOrValue<string>,
+      liveThreshold: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setVaultManager(
+      vault: PromiseOrValue<string>,
+      newManager: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setVaultMinQuoteAmount(
+      vault: PromiseOrValue<string>,
+      minQuoteAmount: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setVaultPortfolioLimit(
+      vault: PromiseOrValue<string>,
+      newMaxPair: PromiseOrValue<BigNumberish>,
+      newMaxRange: PromiseOrValue<BigNumberish>,
+      newMaxOrder: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setVaultStage(
+      vault: PromiseOrValue<string>,
+      newStage: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -489,6 +755,11 @@ export interface VaultFactory extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     vaultBeacon(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    vaultToIndex(
+      vault: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
 
     vaults(
       arg0: PromiseOrValue<BigNumberish>,

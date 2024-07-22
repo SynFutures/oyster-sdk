@@ -11,12 +11,17 @@ const _abi = [
     inputs: [
       {
         internalType: "address",
-        name: "_vaultBeacon",
+        name: "gate",
         type: "address",
       },
       {
         internalType: "address",
-        name: "_gate",
+        name: "_config",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "weth",
         type: "address",
       },
     ],
@@ -25,18 +30,12 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "VaultExists",
+    name: "VaultAlreadyExists",
     type: "error",
   },
   {
     anonymous: false,
     inputs: [
-      {
-        indexed: false,
-        internalType: "address",
-        name: "quote",
-        type: "address",
-      },
       {
         indexed: false,
         internalType: "address",
@@ -54,6 +53,65 @@ const _abi = [
         internalType: "string",
         name: "name",
         type: "string",
+      },
+      {
+        components: [
+          {
+            internalType: "enum Stage",
+            name: "stage",
+            type: "uint8",
+          },
+          {
+            internalType: "address",
+            name: "quote",
+            type: "address",
+          },
+          {
+            internalType: "uint8",
+            name: "decimals",
+            type: "uint8",
+          },
+          {
+            internalType: "uint8",
+            name: "maxPair",
+            type: "uint8",
+          },
+          {
+            internalType: "uint8",
+            name: "maxRange",
+            type: "uint8",
+          },
+          {
+            internalType: "uint8",
+            name: "maxOrder",
+            type: "uint8",
+          },
+          {
+            internalType: "uint16",
+            name: "commissionRatio",
+            type: "uint16",
+          },
+          {
+            internalType: "uint128",
+            name: "minQuoteAmount",
+            type: "uint128",
+          },
+          {
+            internalType: "uint128",
+            name: "liveThreshold",
+            type: "uint128",
+          },
+        ],
+        indexed: false,
+        internalType: "struct Configuration",
+        name: "configuration",
+        type: "tuple",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "index",
+        type: "uint256",
       },
     ],
     name: "CreateVault",
@@ -92,12 +150,20 @@ const _abi = [
     type: "event",
   },
   {
-    inputs: [
+    inputs: [],
+    name: "config",
+    outputs: [
       {
         internalType: "address",
-        name: "quote",
+        name: "",
         type: "address",
       },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
       {
         internalType: "address",
         name: "manager",
@@ -109,48 +175,67 @@ const _abi = [
         type: "string",
       },
       {
-        internalType: "uint256",
-        name: "liveThreshold",
-        type: "uint256",
-      },
-      {
-        internalType: "uint8",
-        name: "maxRangeNumber",
-        type: "uint8",
-      },
-      {
-        internalType: "uint8",
-        name: "maxOrderNumber",
-        type: "uint8",
-      },
-      {
-        internalType: "uint8",
-        name: "maxPairNumber",
-        type: "uint8",
+        components: [
+          {
+            internalType: "enum Stage",
+            name: "stage",
+            type: "uint8",
+          },
+          {
+            internalType: "address",
+            name: "quote",
+            type: "address",
+          },
+          {
+            internalType: "uint8",
+            name: "decimals",
+            type: "uint8",
+          },
+          {
+            internalType: "uint8",
+            name: "maxPair",
+            type: "uint8",
+          },
+          {
+            internalType: "uint8",
+            name: "maxRange",
+            type: "uint8",
+          },
+          {
+            internalType: "uint8",
+            name: "maxOrder",
+            type: "uint8",
+          },
+          {
+            internalType: "uint16",
+            name: "commissionRatio",
+            type: "uint16",
+          },
+          {
+            internalType: "uint128",
+            name: "minQuoteAmount",
+            type: "uint128",
+          },
+          {
+            internalType: "uint128",
+            name: "liveThreshold",
+            type: "uint128",
+          },
+        ],
+        internalType: "struct Configuration",
+        name: "configuration",
+        type: "tuple",
       },
     ],
     name: "createVault",
     outputs: [
       {
         internalType: "address",
-        name: "",
+        name: "vault",
         type: "address",
       },
     ],
     stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "gate",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
     type: "function",
   },
   {
@@ -199,25 +284,6 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "bytes[]",
-        name: "data",
-        type: "bytes[]",
-      },
-    ],
-    name: "multicall",
-    outputs: [
-      {
-        internalType: "bytes[]",
-        name: "results",
-        type: "bytes[]",
-      },
-    ],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
     inputs: [],
     name: "owner",
     outputs: [
@@ -233,6 +299,124 @@ const _abi = [
   {
     inputs: [],
     name: "renounceOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "vault",
+        type: "address",
+      },
+      {
+        internalType: "uint16",
+        name: "commissionRatio",
+        type: "uint16",
+      },
+    ],
+    name: "setVaultCommissionRatio",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "vault",
+        type: "address",
+      },
+      {
+        internalType: "uint128",
+        name: "liveThreshold",
+        type: "uint128",
+      },
+    ],
+    name: "setVaultLiveThreshold",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "vault",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "newManager",
+        type: "address",
+      },
+    ],
+    name: "setVaultManager",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "vault",
+        type: "address",
+      },
+      {
+        internalType: "uint128",
+        name: "minQuoteAmount",
+        type: "uint128",
+      },
+    ],
+    name: "setVaultMinQuoteAmount",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "vault",
+        type: "address",
+      },
+      {
+        internalType: "uint8",
+        name: "newMaxPair",
+        type: "uint8",
+      },
+      {
+        internalType: "uint8",
+        name: "newMaxRange",
+        type: "uint8",
+      },
+      {
+        internalType: "uint8",
+        name: "newMaxOrder",
+        type: "uint8",
+      },
+    ],
+    name: "setVaultPortfolioLimit",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "vault",
+        type: "address",
+      },
+      {
+        internalType: "enum Stage",
+        name: "newStage",
+        type: "uint8",
+      },
+    ],
+    name: "setVaultStage",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -271,6 +455,25 @@ const _abi = [
         internalType: "address",
         name: "",
         type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "vault",
+        type: "address",
+      },
+    ],
+    name: "vaultToIndex",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "index",
+        type: "bytes32",
       },
     ],
     stateMutability: "view",

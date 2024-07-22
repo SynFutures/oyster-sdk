@@ -28,25 +28,59 @@ import type {
   PromiseOrValue,
 } from "./common";
 
-export type PendingWithdrawStruct = {
-  status: PromiseOrValue<BigNumberish>;
+export type ConfigurationStruct = {
+  stage: PromiseOrValue<BigNumberish>;
+  quote: PromiseOrValue<string>;
+  decimals: PromiseOrValue<BigNumberish>;
+  maxPair: PromiseOrValue<BigNumberish>;
+  maxRange: PromiseOrValue<BigNumberish>;
+  maxOrder: PromiseOrValue<BigNumberish>;
+  commissionRatio: PromiseOrValue<BigNumberish>;
+  minQuoteAmount: PromiseOrValue<BigNumberish>;
+  liveThreshold: PromiseOrValue<BigNumberish>;
+};
+
+export type ConfigurationStructOutput = [
+  number,
+  string,
+  number,
+  number,
+  number,
+  number,
+  number,
+  BigNumber,
+  BigNumber
+] & {
+  stage: number;
+  quote: string;
+  decimals: number;
+  maxPair: number;
+  maxRange: number;
+  maxOrder: number;
+  commissionRatio: number;
+  minQuoteAmount: BigNumber;
+  liveThreshold: BigNumber;
+};
+
+export type ArrearStruct = {
+  phase: PromiseOrValue<BigNumberish>;
   native: PromiseOrValue<boolean>;
   quantity: PromiseOrValue<BigNumberish>;
 };
 
-export type PendingWithdrawStructOutput = [number, boolean, BigNumber] & {
-  status: number;
+export type ArrearStructOutput = [number, boolean, BigNumber] & {
+  phase: number;
   native: boolean;
   quantity: BigNumber;
 };
 
-export type ShareInfoStruct = {
-  shares: PromiseOrValue<BigNumberish>;
+export type StakeStruct = {
+  share: PromiseOrValue<BigNumberish>;
   entryValue: PromiseOrValue<BigNumberish>;
 };
 
-export type ShareInfoStructOutput = [BigNumber, BigNumber] & {
-  shares: BigNumber;
+export type StakeStructOutput = [BigNumber, BigNumber] & {
+  share: BigNumber;
   entryValue: BigNumber;
 };
 
@@ -98,114 +132,88 @@ export type PositionCacheStructOutput = [
 
 export interface VaultInterface extends utils.Interface {
   functions: {
-    "EMERGENCY_RATIO()": FunctionFragment;
     "RATIO_BASE()": FunctionFragment;
     "add(address,bytes32[2])": FunctionFragment;
-    "admin()": FunctionFragment;
-    "batchCancel(bytes32,uint240[3])": FunctionFragment;
+    "batchCancel(address,uint32,uint240[3])": FunctionFragment;
     "batchPlace(address,bytes32[3])": FunctionFragment;
-    "cancelPendingWithdraw()": FunctionFragment;
-    "claimFee(bytes32)": FunctionFragment;
-    "claimPendingWithdraw()": FunctionFragment;
-    "decimals()": FunctionFragment;
+    "claimArrear()": FunctionFragment;
+    "claimCommission(bool,uint256)": FunctionFragment;
+    "commission()": FunctionFragment;
     "deposit(uint256)": FunctionFragment;
+    "donate(uint256)": FunctionFragment;
+    "factory()": FunctionFragment;
     "fill(address,bytes32)": FunctionFragment;
     "gate()": FunctionFragment;
+    "getArrear(address)": FunctionFragment;
+    "getConfiguration()": FunctionFragment;
     "getInvolvedPairs()": FunctionFragment;
-    "getTotalValue()": FunctionFragment;
-    "initialize(address,address,address,uint256,uint8,uint8,uint8)": FunctionFragment;
-    "launch(address,string,address,bytes,bytes32[2])": FunctionFragment;
-    "liquidate(bytes32[3])": FunctionFragment;
-    "liveThreshold()": FunctionFragment;
+    "getPortfolioValue()": FunctionFragment;
+    "getStake(address)": FunctionFragment;
+    "initialize(address,string,address,(uint8,address,uint8,uint8,uint8,uint8,uint16,uint128,uint128))": FunctionFragment;
+    "inquireWithdrawal(address,uint256)": FunctionFragment;
+    "launch(string,address,bytes,bytes32[2])": FunctionFragment;
+    "liquidate(address,uint32,address,int256,uint256)": FunctionFragment;
+    "manager()": FunctionFragment;
     "markReady(address[])": FunctionFragment;
-    "maxOrderNumber()": FunctionFragment;
-    "maxPairNumber()": FunctionFragment;
-    "maxRangeNumber()": FunctionFragment;
-    "mode()": FunctionFragment;
-    "multicall(bytes[])": FunctionFragment;
-    "owner()": FunctionFragment;
-    "pendingsOf(address)": FunctionFragment;
+    "name()": FunctionFragment;
     "place(address,bytes32[2])": FunctionFragment;
-    "profitFeeRatio()": FunctionFragment;
-    "quote()": FunctionFragment;
     "remove(address,bytes32[2])": FunctionFragment;
-    "renounceOwnership()": FunctionFragment;
-    "setLiveThreshold(uint256)": FunctionFragment;
-    "setPairConfig(uint8,uint8,uint8)": FunctionFragment;
-    "setProfitFeeRatio(uint32)": FunctionFragment;
-    "setVaultStatus(uint8)": FunctionFragment;
-    "settle(bytes32)": FunctionFragment;
-    "sharesInfoOf(address)": FunctionFragment;
-    "status()": FunctionFragment;
-    "sweep(bytes32,address,int256)": FunctionFragment;
-    "switchOperationMode()": FunctionFragment;
-    "totalFee()": FunctionFragment;
-    "totalPendingShares()": FunctionFragment;
-    "totalShares()": FunctionFragment;
+    "setCommissionRatio(uint16)": FunctionFragment;
+    "setLiveThreshold(uint128)": FunctionFragment;
+    "setManager(address)": FunctionFragment;
+    "setMinQuoteAmount(uint128)": FunctionFragment;
+    "setPortfolioLimit(uint8,uint8,uint8)": FunctionFragment;
+    "setStage(uint8)": FunctionFragment;
+    "settle(address,uint32)": FunctionFragment;
+    "totalShare()": FunctionFragment;
     "trade(address,bytes32[2])": FunctionFragment;
-    "transferOwnership(address)": FunctionFragment;
     "weth()": FunctionFragment;
-    "withdraw(bytes32)": FunctionFragment;
+    "withdraw(bool,uint256)": FunctionFragment;
     "withdrawFromGateAndRelease(address[])": FunctionFragment;
   };
 
   getFunction(
     nameOrSignatureOrTopic:
-      | "EMERGENCY_RATIO"
       | "RATIO_BASE"
       | "add"
-      | "admin"
       | "batchCancel"
       | "batchPlace"
-      | "cancelPendingWithdraw"
-      | "claimFee"
-      | "claimPendingWithdraw"
-      | "decimals"
+      | "claimArrear"
+      | "claimCommission"
+      | "commission"
       | "deposit"
+      | "donate"
+      | "factory"
       | "fill"
       | "gate"
+      | "getArrear"
+      | "getConfiguration"
       | "getInvolvedPairs"
-      | "getTotalValue"
+      | "getPortfolioValue"
+      | "getStake"
       | "initialize"
+      | "inquireWithdrawal"
       | "launch"
       | "liquidate"
-      | "liveThreshold"
+      | "manager"
       | "markReady"
-      | "maxOrderNumber"
-      | "maxPairNumber"
-      | "maxRangeNumber"
-      | "mode"
-      | "multicall"
-      | "owner"
-      | "pendingsOf"
+      | "name"
       | "place"
-      | "profitFeeRatio"
-      | "quote"
       | "remove"
-      | "renounceOwnership"
+      | "setCommissionRatio"
       | "setLiveThreshold"
-      | "setPairConfig"
-      | "setProfitFeeRatio"
-      | "setVaultStatus"
+      | "setManager"
+      | "setMinQuoteAmount"
+      | "setPortfolioLimit"
+      | "setStage"
       | "settle"
-      | "sharesInfoOf"
-      | "status"
-      | "sweep"
-      | "switchOperationMode"
-      | "totalFee"
-      | "totalPendingShares"
-      | "totalShares"
+      | "totalShare"
       | "trade"
-      | "transferOwnership"
       | "weth"
       | "withdraw"
       | "withdrawFromGateAndRelease"
   ): FunctionFragment;
 
-  encodeFunctionData(
-    functionFragment: "EMERGENCY_RATIO",
-    values?: undefined
-  ): string;
   encodeFunctionData(
     functionFragment: "RATIO_BASE",
     values?: undefined
@@ -217,11 +225,11 @@ export interface VaultInterface extends utils.Interface {
       [PromiseOrValue<BytesLike>, PromiseOrValue<BytesLike>]
     ]
   ): string;
-  encodeFunctionData(functionFragment: "admin", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "batchCancel",
     values: [
-      PromiseOrValue<BytesLike>,
+      PromiseOrValue<string>,
+      PromiseOrValue<BigNumberish>,
       [
         PromiseOrValue<BigNumberish>,
         PromiseOrValue<BigNumberish>,
@@ -241,34 +249,50 @@ export interface VaultInterface extends utils.Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "cancelPendingWithdraw",
+    functionFragment: "claimArrear",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "claimFee",
-    values: [PromiseOrValue<BytesLike>]
+    functionFragment: "claimCommission",
+    values: [PromiseOrValue<boolean>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
-    functionFragment: "claimPendingWithdraw",
+    functionFragment: "commission",
     values?: undefined
   ): string;
-  encodeFunctionData(functionFragment: "decimals", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "deposit",
     values: [PromiseOrValue<BigNumberish>]
   ): string;
+  encodeFunctionData(
+    functionFragment: "donate",
+    values: [PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(functionFragment: "factory", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "fill",
     values: [PromiseOrValue<string>, PromiseOrValue<BytesLike>]
   ): string;
   encodeFunctionData(functionFragment: "gate", values?: undefined): string;
   encodeFunctionData(
+    functionFragment: "getArrear",
+    values: [PromiseOrValue<string>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getConfiguration",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "getInvolvedPairs",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "getTotalValue",
+    functionFragment: "getPortfolioValue",
     values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getStake",
+    values: [PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
     functionFragment: "initialize",
@@ -276,16 +300,16 @@ export interface VaultInterface extends utils.Interface {
       PromiseOrValue<string>,
       PromiseOrValue<string>,
       PromiseOrValue<string>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>
+      ConfigurationStruct
     ]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "inquireWithdrawal",
+    values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
     functionFragment: "launch",
     values: [
-      PromiseOrValue<string>,
       PromiseOrValue<string>,
       PromiseOrValue<string>,
       PromiseOrValue<BytesLike>,
@@ -295,43 +319,19 @@ export interface VaultInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "liquidate",
     values: [
-      [
-        PromiseOrValue<BytesLike>,
-        PromiseOrValue<BytesLike>,
-        PromiseOrValue<BytesLike>
-      ]
+      PromiseOrValue<string>,
+      PromiseOrValue<BigNumberish>,
+      PromiseOrValue<string>,
+      PromiseOrValue<BigNumberish>,
+      PromiseOrValue<BigNumberish>
     ]
   ): string;
-  encodeFunctionData(
-    functionFragment: "liveThreshold",
-    values?: undefined
-  ): string;
+  encodeFunctionData(functionFragment: "manager", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "markReady",
     values: [PromiseOrValue<string>[]]
   ): string;
-  encodeFunctionData(
-    functionFragment: "maxOrderNumber",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "maxPairNumber",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "maxRangeNumber",
-    values?: undefined
-  ): string;
-  encodeFunctionData(functionFragment: "mode", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "multicall",
-    values: [PromiseOrValue<BytesLike>[]]
-  ): string;
-  encodeFunctionData(functionFragment: "owner", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "pendingsOf",
-    values: [PromiseOrValue<string>]
-  ): string;
+  encodeFunctionData(functionFragment: "name", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "place",
     values: [
@@ -340,11 +340,6 @@ export interface VaultInterface extends utils.Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "profitFeeRatio",
-    values?: undefined
-  ): string;
-  encodeFunctionData(functionFragment: "quote", values?: undefined): string;
-  encodeFunctionData(
     functionFragment: "remove",
     values: [
       PromiseOrValue<string>,
@@ -352,15 +347,23 @@ export interface VaultInterface extends utils.Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "renounceOwnership",
-    values?: undefined
+    functionFragment: "setCommissionRatio",
+    values: [PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
     functionFragment: "setLiveThreshold",
     values: [PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
-    functionFragment: "setPairConfig",
+    functionFragment: "setManager",
+    values: [PromiseOrValue<string>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setMinQuoteAmount",
+    values: [PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setPortfolioLimit",
     values: [
       PromiseOrValue<BigNumberish>,
       PromiseOrValue<BigNumberish>,
@@ -368,41 +371,15 @@ export interface VaultInterface extends utils.Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "setProfitFeeRatio",
-    values: [PromiseOrValue<BigNumberish>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "setVaultStatus",
+    functionFragment: "setStage",
     values: [PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
     functionFragment: "settle",
-    values: [PromiseOrValue<BytesLike>]
+    values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
-    functionFragment: "sharesInfoOf",
-    values: [PromiseOrValue<string>]
-  ): string;
-  encodeFunctionData(functionFragment: "status", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "sweep",
-    values: [
-      PromiseOrValue<BytesLike>,
-      PromiseOrValue<string>,
-      PromiseOrValue<BigNumberish>
-    ]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "switchOperationMode",
-    values?: undefined
-  ): string;
-  encodeFunctionData(functionFragment: "totalFee", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "totalPendingShares",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "totalShares",
+    functionFragment: "totalShare",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -412,129 +389,84 @@ export interface VaultInterface extends utils.Interface {
       [PromiseOrValue<BytesLike>, PromiseOrValue<BytesLike>]
     ]
   ): string;
-  encodeFunctionData(
-    functionFragment: "transferOwnership",
-    values: [PromiseOrValue<string>]
-  ): string;
   encodeFunctionData(functionFragment: "weth", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "withdraw",
-    values: [PromiseOrValue<BytesLike>]
+    values: [PromiseOrValue<boolean>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
     functionFragment: "withdrawFromGateAndRelease",
     values: [PromiseOrValue<string>[]]
   ): string;
 
-  decodeFunctionResult(
-    functionFragment: "EMERGENCY_RATIO",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "RATIO_BASE", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "add", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "admin", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "batchCancel",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "batchPlace", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "cancelPendingWithdraw",
+    functionFragment: "claimArrear",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "claimFee", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "claimPendingWithdraw",
+    functionFragment: "claimCommission",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "decimals", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "commission", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "donate", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "factory", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "fill", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "gate", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "getArrear", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getConfiguration",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "getInvolvedPairs",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "getTotalValue",
+    functionFragment: "getPortfolioValue",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "getStake", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "inquireWithdrawal",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "launch", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "liquidate", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "liveThreshold",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: "manager", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "markReady", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "maxOrderNumber",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "maxPairNumber",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "maxRangeNumber",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "mode", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "multicall", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "pendingsOf", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "place", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "profitFeeRatio",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "quote", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "remove", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "renounceOwnership",
+    functionFragment: "setCommissionRatio",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "setLiveThreshold",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "setManager", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "setPairConfig",
+    functionFragment: "setMinQuoteAmount",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "setProfitFeeRatio",
+    functionFragment: "setPortfolioLimit",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(
-    functionFragment: "setVaultStatus",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: "setStage", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "settle", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "sharesInfoOf",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "status", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "sweep", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "switchOperationMode",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "totalFee", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "totalPendingShares",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "totalShares",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: "totalShare", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "trade", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "transferOwnership",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "weth", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
   decodeFunctionResult(
@@ -544,34 +476,30 @@ export interface VaultInterface extends utils.Interface {
 
   events: {
     "AddInvolvedPair(address,uint32)": EventFragment;
+    "Deposit(address,bool,uint256)": EventFragment;
     "Initialized(uint8)": EventFragment;
-    "OwnershipTransferred(address,address)": EventFragment;
     "RemoveInvolvedPair(address,uint32)": EventFragment;
-    "SetLiveThreshold(uint256)": EventFragment;
-    "SetPairConfig(uint8,uint8,uint8)": EventFragment;
-    "SetProfitFeeRatio(uint32)": EventFragment;
-    "SetVaultStatus(uint8)": EventFragment;
-    "SwitchOperationMode(uint8)": EventFragment;
-    "UpdatePending(address,tuple,uint256)": EventFragment;
-    "UpdateShareInfo(address,tuple,uint128,int256)": EventFragment;
-    "UpdateTotalFee(uint128)": EventFragment;
+    "SetConfiguration(tuple)": EventFragment;
+    "SetManager(address,address)": EventFragment;
+    "UpdateArrear(address,tuple)": EventFragment;
+    "UpdateCommision(uint128)": EventFragment;
+    "UpdateStake(address,tuple,uint256)": EventFragment;
+    "Withdraw(address,bool,uint256)": EventFragment;
     "AdminChanged(address,address)": EventFragment;
     "BeaconUpgraded(address)": EventFragment;
     "Upgraded(address)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "AddInvolvedPair"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Deposit"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Initialized"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RemoveInvolvedPair"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SetLiveThreshold"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SetPairConfig"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SetProfitFeeRatio"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SetVaultStatus"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SwitchOperationMode"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "UpdatePending"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "UpdateShareInfo"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "UpdateTotalFee"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "SetConfiguration"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "SetManager"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "UpdateArrear"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "UpdateCommision"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "UpdateStake"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Withdraw"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "AdminChanged"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "BeaconUpgraded"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Upgraded"): EventFragment;
@@ -588,24 +516,24 @@ export type AddInvolvedPairEvent = TypedEvent<
 
 export type AddInvolvedPairEventFilter = TypedEventFilter<AddInvolvedPairEvent>;
 
+export interface DepositEventObject {
+  user: string;
+  native: boolean;
+  quantity: BigNumber;
+}
+export type DepositEvent = TypedEvent<
+  [string, boolean, BigNumber],
+  DepositEventObject
+>;
+
+export type DepositEventFilter = TypedEventFilter<DepositEvent>;
+
 export interface InitializedEventObject {
   version: number;
 }
 export type InitializedEvent = TypedEvent<[number], InitializedEventObject>;
 
 export type InitializedEventFilter = TypedEventFilter<InitializedEvent>;
-
-export interface OwnershipTransferredEventObject {
-  previousOwner: string;
-  newOwner: string;
-}
-export type OwnershipTransferredEvent = TypedEvent<
-  [string, string],
-  OwnershipTransferredEventObject
->;
-
-export type OwnershipTransferredEventFilter =
-  TypedEventFilter<OwnershipTransferredEvent>;
 
 export interface RemoveInvolvedPairEventObject {
   instrument: string;
@@ -619,95 +547,72 @@ export type RemoveInvolvedPairEvent = TypedEvent<
 export type RemoveInvolvedPairEventFilter =
   TypedEventFilter<RemoveInvolvedPairEvent>;
 
-export interface SetLiveThresholdEventObject {
-  quoteAmount: BigNumber;
+export interface SetConfigurationEventObject {
+  config: ConfigurationStructOutput;
 }
-export type SetLiveThresholdEvent = TypedEvent<
+export type SetConfigurationEvent = TypedEvent<
+  [ConfigurationStructOutput],
+  SetConfigurationEventObject
+>;
+
+export type SetConfigurationEventFilter =
+  TypedEventFilter<SetConfigurationEvent>;
+
+export interface SetManagerEventObject {
+  newManager: string;
+  oldManager: string;
+}
+export type SetManagerEvent = TypedEvent<
+  [string, string],
+  SetManagerEventObject
+>;
+
+export type SetManagerEventFilter = TypedEventFilter<SetManagerEvent>;
+
+export interface UpdateArrearEventObject {
+  user: string;
+  arrear: ArrearStructOutput;
+}
+export type UpdateArrearEvent = TypedEvent<
+  [string, ArrearStructOutput],
+  UpdateArrearEventObject
+>;
+
+export type UpdateArrearEventFilter = TypedEventFilter<UpdateArrearEvent>;
+
+export interface UpdateCommisionEventObject {
+  commission: BigNumber;
+}
+export type UpdateCommisionEvent = TypedEvent<
   [BigNumber],
-  SetLiveThresholdEventObject
+  UpdateCommisionEventObject
 >;
 
-export type SetLiveThresholdEventFilter =
-  TypedEventFilter<SetLiveThresholdEvent>;
+export type UpdateCommisionEventFilter = TypedEventFilter<UpdateCommisionEvent>;
 
-export interface SetPairConfigEventObject {
-  maxRangeNumber: number;
-  maxOrderNumber: number;
-  maxPairNumber: number;
-}
-export type SetPairConfigEvent = TypedEvent<
-  [number, number, number],
-  SetPairConfigEventObject
->;
-
-export type SetPairConfigEventFilter = TypedEventFilter<SetPairConfigEvent>;
-
-export interface SetProfitFeeRatioEventObject {
-  newProfitFeeRatio: number;
-}
-export type SetProfitFeeRatioEvent = TypedEvent<
-  [number],
-  SetProfitFeeRatioEventObject
->;
-
-export type SetProfitFeeRatioEventFilter =
-  TypedEventFilter<SetProfitFeeRatioEvent>;
-
-export interface SetVaultStatusEventObject {
-  status: number;
-}
-export type SetVaultStatusEvent = TypedEvent<
-  [number],
-  SetVaultStatusEventObject
->;
-
-export type SetVaultStatusEventFilter = TypedEventFilter<SetVaultStatusEvent>;
-
-export interface SwitchOperationModeEventObject {
-  mode: number;
-}
-export type SwitchOperationModeEvent = TypedEvent<
-  [number],
-  SwitchOperationModeEventObject
->;
-
-export type SwitchOperationModeEventFilter =
-  TypedEventFilter<SwitchOperationModeEvent>;
-
-export interface UpdatePendingEventObject {
+export interface UpdateStakeEventObject {
   user: string;
-  pending: PendingWithdrawStructOutput;
-  totalPendingShares: BigNumber;
+  stake: StakeStructOutput;
+  totalShare: BigNumber;
 }
-export type UpdatePendingEvent = TypedEvent<
-  [string, PendingWithdrawStructOutput, BigNumber],
-  UpdatePendingEventObject
+export type UpdateStakeEvent = TypedEvent<
+  [string, StakeStructOutput, BigNumber],
+  UpdateStakeEventObject
 >;
 
-export type UpdatePendingEventFilter = TypedEventFilter<UpdatePendingEvent>;
+export type UpdateStakeEventFilter = TypedEventFilter<UpdateStakeEvent>;
 
-export interface UpdateShareInfoEventObject {
+export interface WithdrawEventObject {
   user: string;
-  info: ShareInfoStructOutput;
-  totalShares: BigNumber;
+  native: boolean;
   quantity: BigNumber;
 }
-export type UpdateShareInfoEvent = TypedEvent<
-  [string, ShareInfoStructOutput, BigNumber, BigNumber],
-  UpdateShareInfoEventObject
+export type WithdrawEvent = TypedEvent<
+  [string, boolean, BigNumber],
+  WithdrawEventObject
 >;
 
-export type UpdateShareInfoEventFilter = TypedEventFilter<UpdateShareInfoEvent>;
-
-export interface UpdateTotalFeeEventObject {
-  totalFee: BigNumber;
-}
-export type UpdateTotalFeeEvent = TypedEvent<
-  [BigNumber],
-  UpdateTotalFeeEventObject
->;
-
-export type UpdateTotalFeeEventFilter = TypedEventFilter<UpdateTotalFeeEvent>;
+export type WithdrawEventFilter = TypedEventFilter<WithdrawEvent>;
 
 export interface AdminChangedEventObject {
   previousAdmin: string;
@@ -764,8 +669,6 @@ export interface Vault extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
-    EMERGENCY_RATIO(overrides?: CallOverrides): Promise<[number]>;
-
     RATIO_BASE(overrides?: CallOverrides): Promise<[number]>;
 
     add(
@@ -774,10 +677,9 @@ export interface Vault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    admin(overrides?: CallOverrides): Promise<[string]>;
-
     batchCancel(
-      arg: PromiseOrValue<BytesLike>,
+      instrument: PromiseOrValue<string>,
+      expiry: PromiseOrValue<BigNumberish>,
       encodedTicks: [
         PromiseOrValue<BigNumberish>,
         PromiseOrValue<BigNumberish>,
@@ -796,25 +698,29 @@ export interface Vault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    cancelPendingWithdraw(
+    claimArrear(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    claimFee(
-      arg: PromiseOrValue<BytesLike>,
+    claimCommission(
+      native: PromiseOrValue<boolean>,
+      amount: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    claimPendingWithdraw(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    decimals(overrides?: CallOverrides): Promise<[number]>;
+    commission(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     deposit(
       quantity: PromiseOrValue<BigNumberish>,
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
+
+    donate(
+      quantity: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
+    factory(overrides?: CallOverrides): Promise<[string]>;
 
     fill(
       instrument: PromiseOrValue<string>,
@@ -824,27 +730,43 @@ export interface Vault extends BaseContract {
 
     gate(overrides?: CallOverrides): Promise<[string]>;
 
+    getArrear(
+      user: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<[ArrearStructOutput]>;
+
+    getConfiguration(
+      overrides?: CallOverrides
+    ): Promise<[ConfigurationStructOutput]>;
+
     getInvolvedPairs(
       overrides?: CallOverrides
     ): Promise<
       [string[], number[]] & { instruments: string[]; expiries: number[] }
     >;
 
-    getTotalValue(overrides?: CallOverrides): Promise<[BigNumber]>;
+    getPortfolioValue(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    getStake(
+      user: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<[StakeStructOutput]>;
 
     initialize(
-      _quote: PromiseOrValue<string>,
-      _admin: PromiseOrValue<string>,
-      manager: PromiseOrValue<string>,
-      _liveThreshold: PromiseOrValue<BigNumberish>,
-      _maxRangeNumber: PromiseOrValue<BigNumberish>,
-      _maxOrderNumber: PromiseOrValue<BigNumberish>,
-      _maxPairNumber: PromiseOrValue<BigNumberish>,
+      _factory: PromiseOrValue<string>,
+      _name: PromiseOrValue<string>,
+      _manager: PromiseOrValue<string>,
+      _configuration: ConfigurationStruct,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
+    inquireWithdrawal(
+      user: PromiseOrValue<string>,
+      share: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber, number] & { value: BigNumber; phase: number }>;
+
     launch(
-      _quote: PromiseOrValue<string>,
       mtype: PromiseOrValue<string>,
       instrument: PromiseOrValue<string>,
       data: PromiseOrValue<BytesLike>,
@@ -853,46 +775,22 @@ export interface Vault extends BaseContract {
     ): Promise<ContractTransaction>;
 
     liquidate(
-      args: [
-        PromiseOrValue<BytesLike>,
-        PromiseOrValue<BytesLike>,
-        PromiseOrValue<BytesLike>
-      ],
+      instrument: PromiseOrValue<string>,
+      expiry: PromiseOrValue<BigNumberish>,
+      target: PromiseOrValue<string>,
+      size: PromiseOrValue<BigNumberish>,
+      amount: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    liveThreshold(overrides?: CallOverrides): Promise<[BigNumber]>;
+    manager(overrides?: CallOverrides): Promise<[string]>;
 
     markReady(
       users: PromiseOrValue<string>[],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    maxOrderNumber(overrides?: CallOverrides): Promise<[number]>;
-
-    maxPairNumber(overrides?: CallOverrides): Promise<[number]>;
-
-    maxRangeNumber(overrides?: CallOverrides): Promise<[number]>;
-
-    mode(overrides?: CallOverrides): Promise<[number]>;
-
-    multicall(
-      data: PromiseOrValue<BytesLike>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    owner(overrides?: CallOverrides): Promise<[string]>;
-
-    pendingsOf(
-      user: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<
-      [number, boolean, BigNumber] & {
-        status: number;
-        native: boolean;
-        quantity: BigNumber;
-      }
-    >;
+    name(overrides?: CallOverrides): Promise<[string]>;
 
     place(
       instrument: PromiseOrValue<string>,
@@ -900,72 +798,51 @@ export interface Vault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    profitFeeRatio(overrides?: CallOverrides): Promise<[number]>;
-
-    quote(overrides?: CallOverrides): Promise<[string]>;
-
     remove(
       instrument: PromiseOrValue<string>,
       args: [PromiseOrValue<BytesLike>, PromiseOrValue<BytesLike>],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    renounceOwnership(
+    setCommissionRatio(
+      newCommissionRatio: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
     setLiveThreshold(
-      quoteAmount: PromiseOrValue<BigNumberish>,
+      newLiveThreshold: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    setPairConfig(
-      newMaxRangeNumber: PromiseOrValue<BigNumberish>,
-      newMaxOrderNumber: PromiseOrValue<BigNumberish>,
-      newMaxPairNumber: PromiseOrValue<BigNumberish>,
+    setManager(
+      newManager: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    setProfitFeeRatio(
-      newProfitFeeRatio: PromiseOrValue<BigNumberish>,
+    setMinQuoteAmount(
+      newMinQuoteAmount: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    setVaultStatus(
-      newStatus: PromiseOrValue<BigNumberish>,
+    setPortfolioLimit(
+      newMaxPair: PromiseOrValue<BigNumberish>,
+      newMaxRange: PromiseOrValue<BigNumberish>,
+      newMaxOrder: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
+    setStage(
+      newStage: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
     settle(
-      arg: PromiseOrValue<BytesLike>,
+      instrument: PromiseOrValue<string>,
+      expiry: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    sharesInfoOf(
-      user: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<
-      [BigNumber, BigNumber] & { shares: BigNumber; entryValue: BigNumber }
-    >;
-
-    status(overrides?: CallOverrides): Promise<[number]>;
-
-    sweep(
-      arg: PromiseOrValue<BytesLike>,
-      target: PromiseOrValue<string>,
-      size: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    switchOperationMode(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    totalFee(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    totalPendingShares(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    totalShares(overrides?: CallOverrides): Promise<[BigNumber]>;
+    totalShare(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     trade(
       instrument: PromiseOrValue<string>,
@@ -973,15 +850,11 @@ export interface Vault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    transferOwnership(
-      newOwner: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
     weth(overrides?: CallOverrides): Promise<[string]>;
 
     withdraw(
-      arg: PromiseOrValue<BytesLike>,
+      native: PromiseOrValue<boolean>,
+      share: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -991,8 +864,6 @@ export interface Vault extends BaseContract {
     ): Promise<ContractTransaction>;
   };
 
-  EMERGENCY_RATIO(overrides?: CallOverrides): Promise<number>;
-
   RATIO_BASE(overrides?: CallOverrides): Promise<number>;
 
   add(
@@ -1001,10 +872,9 @@ export interface Vault extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  admin(overrides?: CallOverrides): Promise<string>;
-
   batchCancel(
-    arg: PromiseOrValue<BytesLike>,
+    instrument: PromiseOrValue<string>,
+    expiry: PromiseOrValue<BigNumberish>,
     encodedTicks: [
       PromiseOrValue<BigNumberish>,
       PromiseOrValue<BigNumberish>,
@@ -1023,25 +893,29 @@ export interface Vault extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  cancelPendingWithdraw(
+  claimArrear(
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  claimFee(
-    arg: PromiseOrValue<BytesLike>,
+  claimCommission(
+    native: PromiseOrValue<boolean>,
+    amount: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  claimPendingWithdraw(
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  decimals(overrides?: CallOverrides): Promise<number>;
+  commission(overrides?: CallOverrides): Promise<BigNumber>;
 
   deposit(
     quantity: PromiseOrValue<BigNumberish>,
     overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
+
+  donate(
+    quantity: PromiseOrValue<BigNumberish>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  factory(overrides?: CallOverrides): Promise<string>;
 
   fill(
     instrument: PromiseOrValue<string>,
@@ -1051,27 +925,43 @@ export interface Vault extends BaseContract {
 
   gate(overrides?: CallOverrides): Promise<string>;
 
+  getArrear(
+    user: PromiseOrValue<string>,
+    overrides?: CallOverrides
+  ): Promise<ArrearStructOutput>;
+
+  getConfiguration(
+    overrides?: CallOverrides
+  ): Promise<ConfigurationStructOutput>;
+
   getInvolvedPairs(
     overrides?: CallOverrides
   ): Promise<
     [string[], number[]] & { instruments: string[]; expiries: number[] }
   >;
 
-  getTotalValue(overrides?: CallOverrides): Promise<BigNumber>;
+  getPortfolioValue(overrides?: CallOverrides): Promise<BigNumber>;
+
+  getStake(
+    user: PromiseOrValue<string>,
+    overrides?: CallOverrides
+  ): Promise<StakeStructOutput>;
 
   initialize(
-    _quote: PromiseOrValue<string>,
-    _admin: PromiseOrValue<string>,
-    manager: PromiseOrValue<string>,
-    _liveThreshold: PromiseOrValue<BigNumberish>,
-    _maxRangeNumber: PromiseOrValue<BigNumberish>,
-    _maxOrderNumber: PromiseOrValue<BigNumberish>,
-    _maxPairNumber: PromiseOrValue<BigNumberish>,
+    _factory: PromiseOrValue<string>,
+    _name: PromiseOrValue<string>,
+    _manager: PromiseOrValue<string>,
+    _configuration: ConfigurationStruct,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
+  inquireWithdrawal(
+    user: PromiseOrValue<string>,
+    share: PromiseOrValue<BigNumberish>,
+    overrides?: CallOverrides
+  ): Promise<[BigNumber, number] & { value: BigNumber; phase: number }>;
+
   launch(
-    _quote: PromiseOrValue<string>,
     mtype: PromiseOrValue<string>,
     instrument: PromiseOrValue<string>,
     data: PromiseOrValue<BytesLike>,
@@ -1080,46 +970,22 @@ export interface Vault extends BaseContract {
   ): Promise<ContractTransaction>;
 
   liquidate(
-    args: [
-      PromiseOrValue<BytesLike>,
-      PromiseOrValue<BytesLike>,
-      PromiseOrValue<BytesLike>
-    ],
+    instrument: PromiseOrValue<string>,
+    expiry: PromiseOrValue<BigNumberish>,
+    target: PromiseOrValue<string>,
+    size: PromiseOrValue<BigNumberish>,
+    amount: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  liveThreshold(overrides?: CallOverrides): Promise<BigNumber>;
+  manager(overrides?: CallOverrides): Promise<string>;
 
   markReady(
     users: PromiseOrValue<string>[],
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  maxOrderNumber(overrides?: CallOverrides): Promise<number>;
-
-  maxPairNumber(overrides?: CallOverrides): Promise<number>;
-
-  maxRangeNumber(overrides?: CallOverrides): Promise<number>;
-
-  mode(overrides?: CallOverrides): Promise<number>;
-
-  multicall(
-    data: PromiseOrValue<BytesLike>[],
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  owner(overrides?: CallOverrides): Promise<string>;
-
-  pendingsOf(
-    user: PromiseOrValue<string>,
-    overrides?: CallOverrides
-  ): Promise<
-    [number, boolean, BigNumber] & {
-      status: number;
-      native: boolean;
-      quantity: BigNumber;
-    }
-  >;
+  name(overrides?: CallOverrides): Promise<string>;
 
   place(
     instrument: PromiseOrValue<string>,
@@ -1127,72 +993,51 @@ export interface Vault extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  profitFeeRatio(overrides?: CallOverrides): Promise<number>;
-
-  quote(overrides?: CallOverrides): Promise<string>;
-
   remove(
     instrument: PromiseOrValue<string>,
     args: [PromiseOrValue<BytesLike>, PromiseOrValue<BytesLike>],
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  renounceOwnership(
+  setCommissionRatio(
+    newCommissionRatio: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
   setLiveThreshold(
-    quoteAmount: PromiseOrValue<BigNumberish>,
+    newLiveThreshold: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  setPairConfig(
-    newMaxRangeNumber: PromiseOrValue<BigNumberish>,
-    newMaxOrderNumber: PromiseOrValue<BigNumberish>,
-    newMaxPairNumber: PromiseOrValue<BigNumberish>,
+  setManager(
+    newManager: PromiseOrValue<string>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  setProfitFeeRatio(
-    newProfitFeeRatio: PromiseOrValue<BigNumberish>,
+  setMinQuoteAmount(
+    newMinQuoteAmount: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  setVaultStatus(
-    newStatus: PromiseOrValue<BigNumberish>,
+  setPortfolioLimit(
+    newMaxPair: PromiseOrValue<BigNumberish>,
+    newMaxRange: PromiseOrValue<BigNumberish>,
+    newMaxOrder: PromiseOrValue<BigNumberish>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  setStage(
+    newStage: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
   settle(
-    arg: PromiseOrValue<BytesLike>,
+    instrument: PromiseOrValue<string>,
+    expiry: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  sharesInfoOf(
-    user: PromiseOrValue<string>,
-    overrides?: CallOverrides
-  ): Promise<
-    [BigNumber, BigNumber] & { shares: BigNumber; entryValue: BigNumber }
-  >;
-
-  status(overrides?: CallOverrides): Promise<number>;
-
-  sweep(
-    arg: PromiseOrValue<BytesLike>,
-    target: PromiseOrValue<string>,
-    size: PromiseOrValue<BigNumberish>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  switchOperationMode(
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  totalFee(overrides?: CallOverrides): Promise<BigNumber>;
-
-  totalPendingShares(overrides?: CallOverrides): Promise<BigNumber>;
-
-  totalShares(overrides?: CallOverrides): Promise<BigNumber>;
+  totalShare(overrides?: CallOverrides): Promise<BigNumber>;
 
   trade(
     instrument: PromiseOrValue<string>,
@@ -1200,15 +1045,11 @@ export interface Vault extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  transferOwnership(
-    newOwner: PromiseOrValue<string>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
   weth(overrides?: CallOverrides): Promise<string>;
 
   withdraw(
-    arg: PromiseOrValue<BytesLike>,
+    native: PromiseOrValue<boolean>,
+    share: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -1218,8 +1059,6 @@ export interface Vault extends BaseContract {
   ): Promise<ContractTransaction>;
 
   callStatic: {
-    EMERGENCY_RATIO(overrides?: CallOverrides): Promise<number>;
-
     RATIO_BASE(overrides?: CallOverrides): Promise<number>;
 
     add(
@@ -1234,10 +1073,9 @@ export interface Vault extends BaseContract {
       }
     >;
 
-    admin(overrides?: CallOverrides): Promise<string>;
-
     batchCancel(
-      arg: PromiseOrValue<BytesLike>,
+      instrument: PromiseOrValue<string>,
+      expiry: PromiseOrValue<BigNumberish>,
       encodedTicks: [
         PromiseOrValue<BigNumberish>,
         PromiseOrValue<BigNumberish>,
@@ -1256,21 +1094,27 @@ export interface Vault extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[number[], OrderStructOutput[]]>;
 
-    cancelPendingWithdraw(overrides?: CallOverrides): Promise<void>;
+    claimArrear(overrides?: CallOverrides): Promise<void>;
 
-    claimFee(
-      arg: PromiseOrValue<BytesLike>,
+    claimCommission(
+      native: PromiseOrValue<boolean>,
+      amount: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    claimPendingWithdraw(overrides?: CallOverrides): Promise<void>;
-
-    decimals(overrides?: CallOverrides): Promise<number>;
+    commission(overrides?: CallOverrides): Promise<BigNumber>;
 
     deposit(
       quantity: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
+
+    donate(
+      quantity: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    factory(overrides?: CallOverrides): Promise<string>;
 
     fill(
       instrument: PromiseOrValue<string>,
@@ -1285,27 +1129,43 @@ export interface Vault extends BaseContract {
 
     gate(overrides?: CallOverrides): Promise<string>;
 
+    getArrear(
+      user: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<ArrearStructOutput>;
+
+    getConfiguration(
+      overrides?: CallOverrides
+    ): Promise<ConfigurationStructOutput>;
+
     getInvolvedPairs(
       overrides?: CallOverrides
     ): Promise<
       [string[], number[]] & { instruments: string[]; expiries: number[] }
     >;
 
-    getTotalValue(overrides?: CallOverrides): Promise<BigNumber>;
+    getPortfolioValue(overrides?: CallOverrides): Promise<BigNumber>;
+
+    getStake(
+      user: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<StakeStructOutput>;
 
     initialize(
-      _quote: PromiseOrValue<string>,
-      _admin: PromiseOrValue<string>,
-      manager: PromiseOrValue<string>,
-      _liveThreshold: PromiseOrValue<BigNumberish>,
-      _maxRangeNumber: PromiseOrValue<BigNumberish>,
-      _maxOrderNumber: PromiseOrValue<BigNumberish>,
-      _maxPairNumber: PromiseOrValue<BigNumberish>,
+      _factory: PromiseOrValue<string>,
+      _name: PromiseOrValue<string>,
+      _manager: PromiseOrValue<string>,
+      _configuration: ConfigurationStruct,
       overrides?: CallOverrides
     ): Promise<void>;
 
+    inquireWithdrawal(
+      user: PromiseOrValue<string>,
+      share: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber, number] & { value: BigNumber; phase: number }>;
+
     launch(
-      _quote: PromiseOrValue<string>,
       mtype: PromiseOrValue<string>,
       instrument: PromiseOrValue<string>,
       data: PromiseOrValue<BytesLike>,
@@ -1314,46 +1174,22 @@ export interface Vault extends BaseContract {
     ): Promise<void>;
 
     liquidate(
-      args: [
-        PromiseOrValue<BytesLike>,
-        PromiseOrValue<BytesLike>,
-        PromiseOrValue<BytesLike>
-      ],
+      instrument: PromiseOrValue<string>,
+      expiry: PromiseOrValue<BigNumberish>,
+      target: PromiseOrValue<string>,
+      size: PromiseOrValue<BigNumberish>,
+      amount: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    liveThreshold(overrides?: CallOverrides): Promise<BigNumber>;
+    manager(overrides?: CallOverrides): Promise<string>;
 
     markReady(
       users: PromiseOrValue<string>[],
       overrides?: CallOverrides
     ): Promise<void>;
 
-    maxOrderNumber(overrides?: CallOverrides): Promise<number>;
-
-    maxPairNumber(overrides?: CallOverrides): Promise<number>;
-
-    maxRangeNumber(overrides?: CallOverrides): Promise<number>;
-
-    mode(overrides?: CallOverrides): Promise<number>;
-
-    multicall(
-      data: PromiseOrValue<BytesLike>[],
-      overrides?: CallOverrides
-    ): Promise<string[]>;
-
-    owner(overrides?: CallOverrides): Promise<string>;
-
-    pendingsOf(
-      user: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<
-      [number, boolean, BigNumber] & {
-        status: number;
-        native: boolean;
-        quantity: BigNumber;
-      }
-    >;
+    name(overrides?: CallOverrides): Promise<string>;
 
     place(
       instrument: PromiseOrValue<string>,
@@ -1363,68 +1199,51 @@ export interface Vault extends BaseContract {
       [number, OrderStructOutput] & { nonce: number; order: OrderStructOutput }
     >;
 
-    profitFeeRatio(overrides?: CallOverrides): Promise<number>;
-
-    quote(overrides?: CallOverrides): Promise<string>;
-
     remove(
       instrument: PromiseOrValue<string>,
       args: [PromiseOrValue<BytesLike>, PromiseOrValue<BytesLike>],
       overrides?: CallOverrides
     ): Promise<void>;
 
-    renounceOwnership(overrides?: CallOverrides): Promise<void>;
+    setCommissionRatio(
+      newCommissionRatio: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     setLiveThreshold(
-      quoteAmount: PromiseOrValue<BigNumberish>,
+      newLiveThreshold: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    setPairConfig(
-      newMaxRangeNumber: PromiseOrValue<BigNumberish>,
-      newMaxOrderNumber: PromiseOrValue<BigNumberish>,
-      newMaxPairNumber: PromiseOrValue<BigNumberish>,
+    setManager(
+      newManager: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    setProfitFeeRatio(
-      newProfitFeeRatio: PromiseOrValue<BigNumberish>,
+    setMinQuoteAmount(
+      newMinQuoteAmount: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    setVaultStatus(
-      newStatus: PromiseOrValue<BigNumberish>,
+    setPortfolioLimit(
+      newMaxPair: PromiseOrValue<BigNumberish>,
+      newMaxRange: PromiseOrValue<BigNumberish>,
+      newMaxOrder: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setStage(
+      newStage: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
 
     settle(
-      arg: PromiseOrValue<BytesLike>,
+      instrument: PromiseOrValue<string>,
+      expiry: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    sharesInfoOf(
-      user: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<
-      [BigNumber, BigNumber] & { shares: BigNumber; entryValue: BigNumber }
-    >;
-
-    status(overrides?: CallOverrides): Promise<number>;
-
-    sweep(
-      arg: PromiseOrValue<BytesLike>,
-      target: PromiseOrValue<string>,
-      size: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    switchOperationMode(overrides?: CallOverrides): Promise<void>;
-
-    totalFee(overrides?: CallOverrides): Promise<BigNumber>;
-
-    totalPendingShares(overrides?: CallOverrides): Promise<BigNumber>;
-
-    totalShares(overrides?: CallOverrides): Promise<BigNumber>;
+    totalShare(overrides?: CallOverrides): Promise<BigNumber>;
 
     trade(
       instrument: PromiseOrValue<string>,
@@ -1432,15 +1251,11 @@ export interface Vault extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    transferOwnership(
-      newOwner: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     weth(overrides?: CallOverrides): Promise<string>;
 
     withdraw(
-      arg: PromiseOrValue<BytesLike>,
+      native: PromiseOrValue<boolean>,
+      share: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1460,17 +1275,19 @@ export interface Vault extends BaseContract {
       expiry?: null
     ): AddInvolvedPairEventFilter;
 
+    "Deposit(address,bool,uint256)"(
+      user?: PromiseOrValue<string> | null,
+      native?: null,
+      quantity?: null
+    ): DepositEventFilter;
+    Deposit(
+      user?: PromiseOrValue<string> | null,
+      native?: null,
+      quantity?: null
+    ): DepositEventFilter;
+
     "Initialized(uint8)"(version?: null): InitializedEventFilter;
     Initialized(version?: null): InitializedEventFilter;
-
-    "OwnershipTransferred(address,address)"(
-      previousOwner?: PromiseOrValue<string> | null,
-      newOwner?: PromiseOrValue<string> | null
-    ): OwnershipTransferredEventFilter;
-    OwnershipTransferred(
-      previousOwner?: PromiseOrValue<string> | null,
-      newOwner?: PromiseOrValue<string> | null
-    ): OwnershipTransferredEventFilter;
 
     "RemoveInvolvedPair(address,uint32)"(
       instrument?: null,
@@ -1481,59 +1298,51 @@ export interface Vault extends BaseContract {
       expiry?: null
     ): RemoveInvolvedPairEventFilter;
 
-    "SetLiveThreshold(uint256)"(
-      quoteAmount?: null
-    ): SetLiveThresholdEventFilter;
-    SetLiveThreshold(quoteAmount?: null): SetLiveThresholdEventFilter;
+    "SetConfiguration(tuple)"(config?: null): SetConfigurationEventFilter;
+    SetConfiguration(config?: null): SetConfigurationEventFilter;
 
-    "SetPairConfig(uint8,uint8,uint8)"(
-      maxRangeNumber?: null,
-      maxOrderNumber?: null,
-      maxPairNumber?: null
-    ): SetPairConfigEventFilter;
-    SetPairConfig(
-      maxRangeNumber?: null,
-      maxOrderNumber?: null,
-      maxPairNumber?: null
-    ): SetPairConfigEventFilter;
+    "SetManager(address,address)"(
+      newManager?: PromiseOrValue<string> | null,
+      oldManager?: null
+    ): SetManagerEventFilter;
+    SetManager(
+      newManager?: PromiseOrValue<string> | null,
+      oldManager?: null
+    ): SetManagerEventFilter;
 
-    "SetProfitFeeRatio(uint32)"(
-      newProfitFeeRatio?: null
-    ): SetProfitFeeRatioEventFilter;
-    SetProfitFeeRatio(newProfitFeeRatio?: null): SetProfitFeeRatioEventFilter;
-
-    "SetVaultStatus(uint8)"(status?: null): SetVaultStatusEventFilter;
-    SetVaultStatus(status?: null): SetVaultStatusEventFilter;
-
-    "SwitchOperationMode(uint8)"(mode?: null): SwitchOperationModeEventFilter;
-    SwitchOperationMode(mode?: null): SwitchOperationModeEventFilter;
-
-    "UpdatePending(address,tuple,uint256)"(
+    "UpdateArrear(address,tuple)"(
       user?: PromiseOrValue<string> | null,
-      pending?: null,
-      totalPendingShares?: null
-    ): UpdatePendingEventFilter;
-    UpdatePending(
+      arrear?: null
+    ): UpdateArrearEventFilter;
+    UpdateArrear(
       user?: PromiseOrValue<string> | null,
-      pending?: null,
-      totalPendingShares?: null
-    ): UpdatePendingEventFilter;
+      arrear?: null
+    ): UpdateArrearEventFilter;
 
-    "UpdateShareInfo(address,tuple,uint128,int256)"(
+    "UpdateCommision(uint128)"(commission?: null): UpdateCommisionEventFilter;
+    UpdateCommision(commission?: null): UpdateCommisionEventFilter;
+
+    "UpdateStake(address,tuple,uint256)"(
       user?: PromiseOrValue<string> | null,
-      info?: null,
-      totalShares?: null,
+      stake?: null,
+      totalShare?: null
+    ): UpdateStakeEventFilter;
+    UpdateStake(
+      user?: PromiseOrValue<string> | null,
+      stake?: null,
+      totalShare?: null
+    ): UpdateStakeEventFilter;
+
+    "Withdraw(address,bool,uint256)"(
+      user?: PromiseOrValue<string> | null,
+      native?: null,
       quantity?: null
-    ): UpdateShareInfoEventFilter;
-    UpdateShareInfo(
+    ): WithdrawEventFilter;
+    Withdraw(
       user?: PromiseOrValue<string> | null,
-      info?: null,
-      totalShares?: null,
+      native?: null,
       quantity?: null
-    ): UpdateShareInfoEventFilter;
-
-    "UpdateTotalFee(uint128)"(totalFee?: null): UpdateTotalFeeEventFilter;
-    UpdateTotalFee(totalFee?: null): UpdateTotalFeeEventFilter;
+    ): WithdrawEventFilter;
 
     "AdminChanged(address,address)"(
       previousAdmin?: null,
@@ -1560,8 +1369,6 @@ export interface Vault extends BaseContract {
   };
 
   estimateGas: {
-    EMERGENCY_RATIO(overrides?: CallOverrides): Promise<BigNumber>;
-
     RATIO_BASE(overrides?: CallOverrides): Promise<BigNumber>;
 
     add(
@@ -1570,10 +1377,9 @@ export interface Vault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    admin(overrides?: CallOverrides): Promise<BigNumber>;
-
     batchCancel(
-      arg: PromiseOrValue<BytesLike>,
+      instrument: PromiseOrValue<string>,
+      expiry: PromiseOrValue<BigNumberish>,
       encodedTicks: [
         PromiseOrValue<BigNumberish>,
         PromiseOrValue<BigNumberish>,
@@ -1592,25 +1398,29 @@ export interface Vault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    cancelPendingWithdraw(
+    claimArrear(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    claimFee(
-      arg: PromiseOrValue<BytesLike>,
+    claimCommission(
+      native: PromiseOrValue<boolean>,
+      amount: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    claimPendingWithdraw(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    decimals(overrides?: CallOverrides): Promise<BigNumber>;
+    commission(overrides?: CallOverrides): Promise<BigNumber>;
 
     deposit(
       quantity: PromiseOrValue<BigNumberish>,
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
+
+    donate(
+      quantity: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
+    factory(overrides?: CallOverrides): Promise<BigNumber>;
 
     fill(
       instrument: PromiseOrValue<string>,
@@ -1620,23 +1430,37 @@ export interface Vault extends BaseContract {
 
     gate(overrides?: CallOverrides): Promise<BigNumber>;
 
+    getArrear(
+      user: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    getConfiguration(overrides?: CallOverrides): Promise<BigNumber>;
+
     getInvolvedPairs(overrides?: CallOverrides): Promise<BigNumber>;
 
-    getTotalValue(overrides?: CallOverrides): Promise<BigNumber>;
+    getPortfolioValue(overrides?: CallOverrides): Promise<BigNumber>;
+
+    getStake(
+      user: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
 
     initialize(
-      _quote: PromiseOrValue<string>,
-      _admin: PromiseOrValue<string>,
-      manager: PromiseOrValue<string>,
-      _liveThreshold: PromiseOrValue<BigNumberish>,
-      _maxRangeNumber: PromiseOrValue<BigNumberish>,
-      _maxOrderNumber: PromiseOrValue<BigNumberish>,
-      _maxPairNumber: PromiseOrValue<BigNumberish>,
+      _factory: PromiseOrValue<string>,
+      _name: PromiseOrValue<string>,
+      _manager: PromiseOrValue<string>,
+      _configuration: ConfigurationStruct,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
+    inquireWithdrawal(
+      user: PromiseOrValue<string>,
+      share: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     launch(
-      _quote: PromiseOrValue<string>,
       mtype: PromiseOrValue<string>,
       instrument: PromiseOrValue<string>,
       data: PromiseOrValue<BytesLike>,
@@ -1645,40 +1469,22 @@ export interface Vault extends BaseContract {
     ): Promise<BigNumber>;
 
     liquidate(
-      args: [
-        PromiseOrValue<BytesLike>,
-        PromiseOrValue<BytesLike>,
-        PromiseOrValue<BytesLike>
-      ],
+      instrument: PromiseOrValue<string>,
+      expiry: PromiseOrValue<BigNumberish>,
+      target: PromiseOrValue<string>,
+      size: PromiseOrValue<BigNumberish>,
+      amount: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    liveThreshold(overrides?: CallOverrides): Promise<BigNumber>;
+    manager(overrides?: CallOverrides): Promise<BigNumber>;
 
     markReady(
       users: PromiseOrValue<string>[],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    maxOrderNumber(overrides?: CallOverrides): Promise<BigNumber>;
-
-    maxPairNumber(overrides?: CallOverrides): Promise<BigNumber>;
-
-    maxRangeNumber(overrides?: CallOverrides): Promise<BigNumber>;
-
-    mode(overrides?: CallOverrides): Promise<BigNumber>;
-
-    multicall(
-      data: PromiseOrValue<BytesLike>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    owner(overrides?: CallOverrides): Promise<BigNumber>;
-
-    pendingsOf(
-      user: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    name(overrides?: CallOverrides): Promise<BigNumber>;
 
     place(
       instrument: PromiseOrValue<string>,
@@ -1686,70 +1492,51 @@ export interface Vault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    profitFeeRatio(overrides?: CallOverrides): Promise<BigNumber>;
-
-    quote(overrides?: CallOverrides): Promise<BigNumber>;
-
     remove(
       instrument: PromiseOrValue<string>,
       args: [PromiseOrValue<BytesLike>, PromiseOrValue<BytesLike>],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    renounceOwnership(
+    setCommissionRatio(
+      newCommissionRatio: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
     setLiveThreshold(
-      quoteAmount: PromiseOrValue<BigNumberish>,
+      newLiveThreshold: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    setPairConfig(
-      newMaxRangeNumber: PromiseOrValue<BigNumberish>,
-      newMaxOrderNumber: PromiseOrValue<BigNumberish>,
-      newMaxPairNumber: PromiseOrValue<BigNumberish>,
+    setManager(
+      newManager: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    setProfitFeeRatio(
-      newProfitFeeRatio: PromiseOrValue<BigNumberish>,
+    setMinQuoteAmount(
+      newMinQuoteAmount: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    setVaultStatus(
-      newStatus: PromiseOrValue<BigNumberish>,
+    setPortfolioLimit(
+      newMaxPair: PromiseOrValue<BigNumberish>,
+      newMaxRange: PromiseOrValue<BigNumberish>,
+      newMaxOrder: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
+    setStage(
+      newStage: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
     settle(
-      arg: PromiseOrValue<BytesLike>,
+      instrument: PromiseOrValue<string>,
+      expiry: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    sharesInfoOf(
-      user: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    status(overrides?: CallOverrides): Promise<BigNumber>;
-
-    sweep(
-      arg: PromiseOrValue<BytesLike>,
-      target: PromiseOrValue<string>,
-      size: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    switchOperationMode(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    totalFee(overrides?: CallOverrides): Promise<BigNumber>;
-
-    totalPendingShares(overrides?: CallOverrides): Promise<BigNumber>;
-
-    totalShares(overrides?: CallOverrides): Promise<BigNumber>;
+    totalShare(overrides?: CallOverrides): Promise<BigNumber>;
 
     trade(
       instrument: PromiseOrValue<string>,
@@ -1757,15 +1544,11 @@ export interface Vault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    transferOwnership(
-      newOwner: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
     weth(overrides?: CallOverrides): Promise<BigNumber>;
 
     withdraw(
-      arg: PromiseOrValue<BytesLike>,
+      native: PromiseOrValue<boolean>,
+      share: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -1776,8 +1559,6 @@ export interface Vault extends BaseContract {
   };
 
   populateTransaction: {
-    EMERGENCY_RATIO(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     RATIO_BASE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     add(
@@ -1786,10 +1567,9 @@ export interface Vault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    admin(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     batchCancel(
-      arg: PromiseOrValue<BytesLike>,
+      instrument: PromiseOrValue<string>,
+      expiry: PromiseOrValue<BigNumberish>,
       encodedTicks: [
         PromiseOrValue<BigNumberish>,
         PromiseOrValue<BigNumberish>,
@@ -1808,25 +1588,29 @@ export interface Vault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    cancelPendingWithdraw(
+    claimArrear(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    claimFee(
-      arg: PromiseOrValue<BytesLike>,
+    claimCommission(
+      native: PromiseOrValue<boolean>,
+      amount: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    claimPendingWithdraw(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    decimals(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    commission(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     deposit(
       quantity: PromiseOrValue<BigNumberish>,
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
+
+    donate(
+      quantity: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    factory(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     fill(
       instrument: PromiseOrValue<string>,
@@ -1836,23 +1620,37 @@ export interface Vault extends BaseContract {
 
     gate(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    getArrear(
+      user: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getConfiguration(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     getInvolvedPairs(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    getTotalValue(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    getPortfolioValue(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    getStake(
+      user: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
 
     initialize(
-      _quote: PromiseOrValue<string>,
-      _admin: PromiseOrValue<string>,
-      manager: PromiseOrValue<string>,
-      _liveThreshold: PromiseOrValue<BigNumberish>,
-      _maxRangeNumber: PromiseOrValue<BigNumberish>,
-      _maxOrderNumber: PromiseOrValue<BigNumberish>,
-      _maxPairNumber: PromiseOrValue<BigNumberish>,
+      _factory: PromiseOrValue<string>,
+      _name: PromiseOrValue<string>,
+      _manager: PromiseOrValue<string>,
+      _configuration: ConfigurationStruct,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
+    inquireWithdrawal(
+      user: PromiseOrValue<string>,
+      share: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     launch(
-      _quote: PromiseOrValue<string>,
       mtype: PromiseOrValue<string>,
       instrument: PromiseOrValue<string>,
       data: PromiseOrValue<BytesLike>,
@@ -1861,40 +1659,22 @@ export interface Vault extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     liquidate(
-      args: [
-        PromiseOrValue<BytesLike>,
-        PromiseOrValue<BytesLike>,
-        PromiseOrValue<BytesLike>
-      ],
+      instrument: PromiseOrValue<string>,
+      expiry: PromiseOrValue<BigNumberish>,
+      target: PromiseOrValue<string>,
+      size: PromiseOrValue<BigNumberish>,
+      amount: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    liveThreshold(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    manager(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     markReady(
       users: PromiseOrValue<string>[],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    maxOrderNumber(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    maxPairNumber(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    maxRangeNumber(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    mode(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    multicall(
-      data: PromiseOrValue<BytesLike>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    pendingsOf(
-      user: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    name(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     place(
       instrument: PromiseOrValue<string>,
@@ -1902,72 +1682,51 @@ export interface Vault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    profitFeeRatio(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    quote(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     remove(
       instrument: PromiseOrValue<string>,
       args: [PromiseOrValue<BytesLike>, PromiseOrValue<BytesLike>],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    renounceOwnership(
+    setCommissionRatio(
+      newCommissionRatio: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
     setLiveThreshold(
-      quoteAmount: PromiseOrValue<BigNumberish>,
+      newLiveThreshold: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    setPairConfig(
-      newMaxRangeNumber: PromiseOrValue<BigNumberish>,
-      newMaxOrderNumber: PromiseOrValue<BigNumberish>,
-      newMaxPairNumber: PromiseOrValue<BigNumberish>,
+    setManager(
+      newManager: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    setProfitFeeRatio(
-      newProfitFeeRatio: PromiseOrValue<BigNumberish>,
+    setMinQuoteAmount(
+      newMinQuoteAmount: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    setVaultStatus(
-      newStatus: PromiseOrValue<BigNumberish>,
+    setPortfolioLimit(
+      newMaxPair: PromiseOrValue<BigNumberish>,
+      newMaxRange: PromiseOrValue<BigNumberish>,
+      newMaxOrder: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setStage(
+      newStage: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
     settle(
-      arg: PromiseOrValue<BytesLike>,
+      instrument: PromiseOrValue<string>,
+      expiry: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    sharesInfoOf(
-      user: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    status(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    sweep(
-      arg: PromiseOrValue<BytesLike>,
-      target: PromiseOrValue<string>,
-      size: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    switchOperationMode(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    totalFee(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    totalPendingShares(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    totalShares(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    totalShare(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     trade(
       instrument: PromiseOrValue<string>,
@@ -1975,15 +1734,11 @@ export interface Vault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    transferOwnership(
-      newOwner: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
     weth(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     withdraw(
-      arg: PromiseOrValue<BytesLike>,
+      native: PromiseOrValue<boolean>,
+      share: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
