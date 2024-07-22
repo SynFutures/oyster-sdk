@@ -36,7 +36,7 @@ export interface VaultInfo {
 export interface DepositInfo {
     user: string;
     vault: string;
-    shares: BigNumber;
+    share: BigNumber;
     entryValue: BigNumber;
     holdingValue: BigNumber;
     allTimeEerned: BigNumber;
@@ -48,7 +48,7 @@ export interface DepositWithdraw {
     vaultAddr: string;
     userAddr: string;
     timestamp: number;
-    shares: BigNumber;
+    isNative: boolean;
     quoteAmount: BigNumber;
 }
 
@@ -129,9 +129,9 @@ export class VaultGraph extends Graph {
                 address
                 vault {
                     id
-                    totalShares
+                    totalShare
                 }
-                shares
+                share
                 entryValue
             }
         }`;
@@ -143,15 +143,15 @@ export class VaultGraph extends Graph {
         );
         const depositWithdraws = await this.getUserDepositWithdrawHistory(account);
         for (const deposit of deposits.users) {
-            const shares = BigNumber.from(deposit.shares);
-            const totalShares = BigNumber.from(deposit.vault.totalShares);
+            const share = BigNumber.from(deposit.share);
+            const totalShare = BigNumber.from(deposit.vault.totalShare);
             const entryValue = BigNumber.from(deposit.entryValue);
-            const holdingValue = totalShares.eq(ZERO)
+            const holdingValue = totalShare.eq(ZERO)
                 ? ZERO
                 : portfolioValues
                       .find((_, idx) => vaultAddrs[idx] === deposit.vault.id)!
-                      .mul(deposit.shares)
-                      .div(totalShares);
+                      .mul(deposit.share)
+                      .div(totalShare);
             const allTimeEerned = depositWithdraws
                 .filter((d) => d.vaultAddr === deposit.vault.id)
                 .reduce((acc, d) => (d.type === 'DEPOSIT' ? acc.add(d.quoteAmount) : acc.sub(d.quoteAmount)), ZERO)
@@ -160,7 +160,7 @@ export class VaultGraph extends Graph {
             result.push({
                 user: deposit.address,
                 vault: deposit.vault.id,
-                shares,
+                share,
                 entryValue,
                 holdingValue,
                 allTimeEerned,
@@ -182,7 +182,7 @@ export class VaultGraph extends Graph {
                     address
                 }
                 timestamp
-                shares
+                isNative
                 quantity
                 }
             }
@@ -197,7 +197,7 @@ export class VaultGraph extends Graph {
                     vaultAddr: d.vault,
                     userAddr: d.user.address,
                     timestamp: Number(d.timestamp),
-                    shares: BigNumber.from(d.shares),
+                    isNative: d.isNative,
                     quoteAmount: BigNumber.from(d.quantity),
                 });
             }
