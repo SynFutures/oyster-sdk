@@ -84,4 +84,3 @@ export async function getTradeRecords(network: Network) {
 getTradeRecords('base')
     .catch(console.error)
     .finally(() => process.exit(0));
-

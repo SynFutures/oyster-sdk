@@ -50,4 +50,3 @@ export async function getPairMap(network: Network) {
 // getPairMap('base')
 //     .catch(console.error)
 //     .finally(() => process.exit(0));
-

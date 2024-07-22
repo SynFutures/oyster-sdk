@@ -43,4 +43,3 @@ export async function getFundingRecords(network: Network, signer: string) {
         fs.appendFileSync(outputFile, line);
     });
 }
-

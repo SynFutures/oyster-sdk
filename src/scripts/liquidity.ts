@@ -93,4 +93,3 @@ export async function getLiquidityRecords(network: Network, signer: string) {
         fs.appendFileSync(outputFile, line);
     });
 }
-
