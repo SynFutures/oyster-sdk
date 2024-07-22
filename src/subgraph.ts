@@ -811,7 +811,7 @@ export class Subgraph extends Graph {
         const queryAll = param.size === undefined && param.page === undefined;
         const first = param.size || 1000;
         const skip = (param.page || 0) * first;
-        let condition = this.buildQueryEventCondition(param);
+        let condition = this.buildQueryEventCondition(param, false);
         condition = queryAll ? condition : condition + 'orderBy: blockNumber, orderDirection: desc';
 
         const graphQL = `query($skip: Int, $first: Int, $lastID: String){
@@ -844,6 +844,8 @@ export class Subgraph extends Graph {
                 referralCode
             }
         }`;
+
+        console.info(graphQL);
 
         let virtualTrades;
         if (queryAll) {

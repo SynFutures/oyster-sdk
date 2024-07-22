@@ -6,10 +6,14 @@ import { Network } from './util';
 
 void getFundingRecords;
 void getTradeRecords;
+void getLiquidityRecords;
 
 async function main() {
     console.log('Start to get  records');
-    let fundingList: { network: Network; signer: string }[] = [{ network: 'blast', signer: '0x00000000000000007' }];
+    let fundingList: { network: Network; signer: string }[] = [
+        { network: 'blast', signer: '0xb756C60a573470854ad8ea7C35982102c8177C3c' },
+        { network: 'base', signer: '0xb756C60a573470854ad8ea7C35982102c8177C3c' },
+    ];
 
     fundingList = fundingList.map((funding) => {
         funding.signer = funding.signer.toLowerCase();
@@ -17,7 +21,7 @@ async function main() {
     });
 
     for (const funding of fundingList) {
-        await getLiquidityRecords(funding.network, funding.signer);
+        await getFundingRecords(funding.network, funding.signer);
     }
 
     console.log('end to get  records');

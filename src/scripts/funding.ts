@@ -30,7 +30,12 @@ export async function getFundingRecords(network: Network, signer: string) {
         };
     });
 
-    const outputFile = path.join(__dirname, `${network}_${signer}_funding.csv`);
+    //make dir data if not exist
+    if (!fs.existsSync(path.join(__dirname, 'data'))) {
+        fs.mkdirSync(path.join(__dirname, 'data'));
+    }
+
+    const outputFile = path.join(__dirname, 'data', `${network}_${signer}_liquidity.csv`);
     const header = 'timestamp,trader,instrumentAddr,action,amount\n';
     fs.writeFileSync(outputFile, header);
     outputs.forEach((data) => {
