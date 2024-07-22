@@ -334,6 +334,14 @@ export class SynFuturesV3 {
         base: string | TokenInfo,
         quote: string | TokenInfo,
     ): Promise<string> {
+        const cached = this.getInstrumentAddrFromCache({
+            marketType: mType as MarketType,
+            baseSymbol: base,
+            quoteSymbol: quote,
+        });
+        if (cached) {
+            return cached;
+        }
         const gateAddress = this.config.contractAddress.gate;
         const marketType = mType as MarketType;
         const beaconAddress = this.config.contractAddress.market[marketType]!.beacon;
@@ -373,6 +381,18 @@ export class SynFuturesV3 {
                 ),
             ),
         );
+    }
+
+    private getInstrumentAddrFromCache(instrumentIdentifier: InstrumentIdentifier): string | undefined {
+        const { baseSymbol, quoteSymbol } = this.getTokenSymbol(
+            instrumentIdentifier.baseSymbol,
+            instrumentIdentifier.quoteSymbol,
+        );
+        const instrumentSymbol = `${baseSymbol}-${quoteSymbol}-${instrumentIdentifier.marketType}`;
+        const instrument = [...this.instrumentMap.values()].find(
+            (i) => i.info.symbol.toUpperCase() === instrumentSymbol.toUpperCase(),
+        );
+        return instrument ? instrument.info.addr : undefined;
     }
 
     async init(): Promise<void> {
