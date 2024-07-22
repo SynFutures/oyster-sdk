@@ -228,7 +228,7 @@ export class VaultClient {
             status: arrear.phase,
             quantity: totalShare.eq(ZERO)
                 ? ZERO
-                : arrear.phase === Phase.PENDING
+                : arrear.phase === Phase.WAIT_ADJUST
                 ? arrear.quantity.mul(portfolioValue).div(totalShare)
                 : arrear.quantity,
         };
@@ -248,7 +248,7 @@ export class VaultClient {
 
     async willTriggerArrear(user: string, quoteAmount: BigNumber): Promise<boolean> {
         const result = await this.inquireWithdrawal(user, quoteAmount);
-        return result.phase === Phase.NONE;
+        return result.phase === Phase.WAIT_ADJUST || result.phase === Phase.WAIT_RELEASE;
     }
 
     async getLiveThreshold(): Promise<number> {
@@ -297,9 +297,7 @@ export class VaultClient {
         return await this.ctx.sendTx(signer, tx);
     }
 
-    async claimPendingWithdraw(
-        signer: Signer,
-    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
+    async claimArrear(signer: Signer): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
         const tx = await this.vault.populateTransaction.claimArrear();
         return await this.ctx.sendTx(signer, tx);
     }

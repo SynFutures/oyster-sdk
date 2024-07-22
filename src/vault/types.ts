@@ -7,8 +7,8 @@ export enum Stage {
 
 export enum Phase {
     NONE = 0,
-    PENDING = 1,
-    WAITING = 2,
+    WAIT_ADJUST = 1,
+    WAIT_RELEASE = 2,
     READY = 3,
 }
 
