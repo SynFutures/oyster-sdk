@@ -8,7 +8,6 @@ import {
     LiquidateParam,
     PlaceParam,
     RemoveParam,
-    SweepParam,
     TradeParam,
     Vault,
     VaultFactory__factory,
@@ -25,8 +24,8 @@ import {
     encodeRemoveParam,
     encodeTradeParam,
 } from '../common';
-import { encodeBatchCancelTicks, encodeInstrumentExpiry, encodeLiquidateParam, encodeNativeAmount } from './util';
-import { PendingWithdrawStatus, VaultStatus } from './types';
+import { encodeBatchCancelTicks } from './util';
+import { Phase, Stage } from './types';
 
 export class VaultFactoryClient {
     ctx: ChainContext;
@@ -50,21 +49,24 @@ export class VaultFactoryClient {
         quoteAddr: string,
         managerAddr: string,
         name: string,
+        maxRange: number,
+        maxOrder: number,
+        maxPair: number,
+        commissionRatio: number,
         liveThreshold: number,
-        maxRangeNumber: number,
-        maxOrderNumber: number,
-        maxPairNumber: number,
     ): Promise<string> {
         const tokenInfo = await this.ctx.getTokenInfo(quoteAddr);
-        const tx = await this.vaultFactory.populateTransaction.createVault(
-            quoteAddr,
-            managerAddr,
-            name,
-            parseUnits(liveThreshold.toString(), tokenInfo.decimals),
-            maxRangeNumber,
-            maxOrderNumber,
-            maxPairNumber,
-        );
+        const tx = await this.vaultFactory.populateTransaction.createVault(managerAddr, name, {
+            stage: 0,
+            quote: quoteAddr,
+            decimals: tokenInfo.decimals,
+            maxPair,
+            maxRange,
+            maxOrder,
+            commissionRatio,
+            minQuoteAmount: 0,
+            liveThreshold: parseUnits(liveThreshold.toString(), tokenInfo.decimals),
+        });
         await this.ctx.sendTx(signer, tx);
 
         const vaultAddr = await this.getVaultAddr(quoteAddr, managerAddr, name);
@@ -72,6 +74,90 @@ export class VaultFactoryClient {
             throw new Error('Vault not found');
         }
         return vaultAddr;
+    }
+
+    async setVaultManager(
+        signer: Signer,
+        vaultAddr: string,
+        managerAddr: string,
+    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
+        const ptx = await this.vaultFactory.populateTransaction.setVaultManager(vaultAddr, managerAddr);
+        return await this.ctx.sendTx(signer, ptx);
+    }
+
+    async setVaultStage(
+        signer: Signer,
+        vaultAddr: string,
+        stage: Stage,
+    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
+        let stageNum;
+        switch (stage) {
+            case Stage.UPCOMING:
+                stageNum = 0;
+                break;
+            case Stage.LIVE:
+                stageNum = 1;
+                break;
+            case Stage.SUSPENDED:
+                stageNum = 2;
+                break;
+            case Stage.INVALID:
+                stageNum = 3;
+                break;
+        }
+        const ptx = await this.vaultFactory.populateTransaction.setVaultStage(vaultAddr, stageNum);
+        return await this.ctx.sendTx(signer, ptx);
+    }
+
+    async setVaultPortfolioLimit(
+        signer: Signer,
+        vaultAddr: string,
+        maxPair: number,
+        maxRange: number,
+        maxOrder: number,
+    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
+        const ptx = await this.vaultFactory.populateTransaction.setVaultPortfolioLimit(
+            vaultAddr,
+            maxPair,
+            maxRange,
+            maxOrder,
+        );
+        return await this.ctx.sendTx(signer, ptx);
+    }
+
+    async setVaultMinQuoteAmount(
+        signer: Signer,
+        vaultAddr: string,
+        minQuoteAmount: number,
+    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
+        const configuration = await this.getVaultContract(vaultAddr).getConfiguration();
+        const ptx = await this.vaultFactory.populateTransaction.setVaultMinQuoteAmount(
+            vaultAddr,
+            parseUnits(minQuoteAmount.toString(), configuration.decimals),
+        );
+        return await this.ctx.sendTx(signer, ptx);
+    }
+
+    async setVaultCommissionRatio(
+        signer: Signer,
+        vaultAddr: string,
+        ratio: BigNumber,
+    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
+        const ptx = await this.vaultFactory.populateTransaction.setVaultCommissionRatio(vaultAddr, ratio);
+        return await this.ctx.sendTx(signer, ptx);
+    }
+
+    async setVaultLiveThreshold(
+        signer: Signer,
+        vaultAddr: string,
+        liveThreshold: number,
+    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
+        const configuration = await this.getVaultContract(vaultAddr).getConfiguration();
+        const ptx = await this.vaultFactory.populateTransaction.setVaultLiveThreshold(
+            vaultAddr,
+            parseUnits(liveThreshold.toString(), configuration.decimals),
+        );
+        return await this.ctx.sendTx(signer, ptx);
     }
 
     async getVaultAddr(quoteAddr: string, managerAddr: string, name: string): Promise<string> {
@@ -110,63 +196,63 @@ export class VaultClient {
     }
 
     async _init(): Promise<void> {
-        this.quoteAddr = await this.vault.quote();
+        this.quoteAddr = (await this.vault.getConfiguration()).quote;
         this.quoteToken = await this.ctx.getTokenInfo(this.quoteAddr);
         this.gate = Gate__factory.connect(await this.vault.gate(), this.ctx.provider);
     }
 
-    async getTotalValue(): Promise<BigNumber> {
-        return await this.vault.getTotalValue();
+    async getPortfolioValue(): Promise<BigNumber> {
+        return await this.vault.getPortfolioValue();
     }
 
     async getUserDeposit(user: string): Promise<{
-        shares: BigNumber;
+        share: BigNumber;
         entryValue: BigNumber;
     }> {
-        return await this.vault.sharesInfoOf(user);
+        return await this.vault.getStake(user);
     }
 
     async getUserPendingWithdraw(user: string): Promise<{
         canClaim: boolean;
-        status: PendingWithdrawStatus;
+        status: Phase;
         quantity: BigNumber;
     }> {
-        const [pendingWithdraw, totalValue, totalShares] = await Promise.all([
-            this.vault.pendingsOf(user),
-            this.vault.getTotalValue(),
-            this.vault.totalShares(),
+        const [arrear, portfolioValue, totalShare] = await Promise.all([
+            this.vault.getArrear(user),
+            this.vault.getPortfolioValue(),
+            this.vault.totalShare(),
         ]);
-        const canClaim = pendingWithdraw.status === PendingWithdrawStatus.READY;
+        const canClaim = arrear.phase === Phase.READY;
         return {
             canClaim,
-            status: pendingWithdraw.status,
-            quantity: totalShares.eq(ZERO)
+            status: arrear.phase,
+            quantity: totalShare.eq(ZERO)
                 ? ZERO
-                : pendingWithdraw.status === PendingWithdrawStatus.PENDING
-                ? pendingWithdraw.quantity.mul(totalValue).div(totalShares)
-                : pendingWithdraw.quantity,
+                : arrear.phase === Phase.PENDING
+                ? arrear.quantity.mul(portfolioValue).div(totalShare)
+                : arrear.quantity,
         };
     }
 
-    async shouldRequestPendingWithdraw(quoteAmount: BigNumber): Promise<boolean> {
-        if (!this.gate) this.gate = Gate__factory.connect(await this.vault.gate(), this.ctx.provider);
-        const [fundFlow, threshold, pending, reserve] = await Promise.all([
-            this.gate.fundFlowOf(this.quoteAddr, this.vault.address),
-            this.gate.thresholdOf(this.quoteAddr),
-            this.gate.pendingOf(this.quoteAddr, this.vault.address),
-            this.gate.reserveOf(this.quoteAddr, this.vault.address),
-        ]);
+    async inquireWithdrawal(
+        user: string,
+        quoteAmount: BigNumber,
+    ): Promise<{
+        value: BigNumber;
+        phase: number;
+    }> {
+        const [totalValue, totalShares] = await Promise.all([this.vault.getPortfolioValue(), this.vault.totalShare()]);
+        const shares = quoteAmount.mul(totalShares).div(totalValue);
+        return await this.vault.inquireWithdrawal(user, shares);
+    }
 
-        const maxWithdrawable = threshold
-            .add(pending.exemption)
-            .sub(fundFlow.totalOut)
-            .add(fundFlow.totalIn)
-            .sub(pending.amount);
-        return quoteAmount.gt(maxWithdrawable) || quoteAmount.gt(reserve);
+    async willTriggerArrear(user: string, quoteAmount: BigNumber): Promise<boolean> {
+        const result = await this.inquireWithdrawal(user, quoteAmount);
+        return result.phase === Phase.NONE;
     }
 
     async getLiveThreshold(): Promise<number> {
-        return Number(formatUnits(await this.vault.liveThreshold(), this.quoteToken!.decimals));
+        return Number(formatUnits((await this.vault.getConfiguration()).liveThreshold, this.quoteToken!.decimals));
     }
 
     async deposit(
@@ -196,7 +282,7 @@ export class VaultClient {
         isNative: boolean,
         shares: BigNumber,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const tx = await this.vault.populateTransaction.withdraw(encodeNativeAmount(isNative, shares));
+        const tx = await this.vault.populateTransaction.withdraw(isNative, shares);
         return await this.ctx.sendTx(signer, tx);
     }
 
@@ -205,23 +291,16 @@ export class VaultClient {
         isNative: boolean,
         quoteAmount: BigNumber,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const [totalValue, totalShares] = await Promise.all([this.vault.getTotalValue(), this.vault.totalShares()]);
+        const [totalValue, totalShares] = await Promise.all([this.vault.getPortfolioValue(), this.vault.totalShare()]);
         const shares = quoteAmount.mul(totalShares).div(totalValue);
-        const tx = await this.vault.populateTransaction.withdraw(encodeNativeAmount(isNative, shares));
+        const tx = await this.vault.populateTransaction.withdraw(isNative, shares);
         return await this.ctx.sendTx(signer, tx);
     }
 
     async claimPendingWithdraw(
         signer: Signer,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const tx = await this.vault.populateTransaction.claimPendingWithdraw();
-        return await this.ctx.sendTx(signer, tx);
-    }
-
-    async cancelPendingWithdraw(
-        signer: Signer,
-    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const tx = await this.vault.populateTransaction.cancelPendingWithdraw();
+        const tx = await this.vault.populateTransaction.claimArrear();
         return await this.ctx.sendTx(signer, tx);
     }
 
@@ -252,7 +331,6 @@ export class VaultClient {
         const tokenInfo = await this.ctx.getTokenInfo(baseSymbol);
         const abiCoder = new AbiCoder();
         const ptx = await this.vault.populateTransaction.launch(
-            this.quoteAddr,
             mtype,
             instrument,
             abiCoder.encode(
@@ -355,10 +433,7 @@ export class VaultClient {
         expiry: number,
         ticks: number[],
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const ptx = await this.vault.populateTransaction.batchCancel(
-            encodeInstrumentExpiry(instrument, expiry),
-            encodeBatchCancelTicks(ticks),
-        );
+        const ptx = await this.vault.populateTransaction.batchCancel(instrument, expiry, encodeBatchCancelTicks(ticks));
         return await this.ctx.sendTx(manager, ptx);
     }
 
@@ -368,26 +443,11 @@ export class VaultClient {
         liquidateParam: LiquidateParam,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
         const ptx = await this.vault.populateTransaction.liquidate(
-            encodeLiquidateParam(
-                instrument,
-                liquidateParam.expiry,
-                liquidateParam.target,
-                liquidateParam.size,
-                liquidateParam.amount,
-            ),
-        );
-        return await this.ctx.sendTx(manager, ptx);
-    }
-
-    async sweep(
-        manager: Signer,
-        instrument: string,
-        sweepParam: SweepParam,
-    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const ptx = await this.vault.populateTransaction.sweep(
-            encodeInstrumentExpiry(instrument, sweepParam.expiry),
-            sweepParam.target,
-            sweepParam.size,
+            instrument,
+            liquidateParam.expiry,
+            liquidateParam.target,
+            liquidateParam.size,
+            liquidateParam.amount,
         );
         return await this.ctx.sendTx(manager, ptx);
     }
@@ -397,64 +457,16 @@ export class VaultClient {
         instrument: string,
         expiry: number,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const ptx = await this.vault.populateTransaction.settle(encodeInstrumentExpiry(instrument, expiry));
+        const ptx = await this.vault.populateTransaction.settle(instrument, expiry);
         return await this.ctx.sendTx(manager, ptx);
     }
 
-    async setVaultStatus(
-        manager: Signer,
-        status: VaultStatus,
-    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        let statusNum;
-        switch (status) {
-            case VaultStatus.UPCOMING:
-                statusNum = 0;
-                break;
-            case VaultStatus.LIVE:
-                statusNum = 1;
-                break;
-            case VaultStatus.SUSPENDED:
-                statusNum = 2;
-                break;
-            case VaultStatus.INVALID:
-                statusNum = 3;
-                break;
-        }
-        const ptx = await this.vault.populateTransaction.setVaultStatus(statusNum);
-        return await this.ctx.sendTx(manager, ptx);
-    }
-
-    async setProfitFeeRatio(
-        manager: Signer,
-        ratio: BigNumber,
-    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const ptx = await this.vault.populateTransaction.setProfitFeeRatio(ratio);
-        return await this.ctx.sendTx(manager, ptx);
-    }
-
-    async setPairConfig(
-        manager: Signer,
-        maxRangeNumber: number,
-        maxOrderNumber: number,
-        maxPairNumber: number,
-    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const ptx = await this.vault.populateTransaction.setPairConfig(maxRangeNumber, maxOrderNumber, maxPairNumber);
-        return await this.ctx.sendTx(manager, ptx);
-    }
-
-    async claimFee(
+    async claimCommission(
         manager: Signer,
         isNative: boolean,
         amount: BigNumber,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const ptx = await this.vault.populateTransaction.claimFee(encodeNativeAmount(isNative, amount));
-        return await this.ctx.sendTx(manager, ptx);
-    }
-
-    async switchOperationMode(
-        manager: Signer,
-    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const ptx = await this.vault.populateTransaction.switchOperationMode();
+        const ptx = await this.vault.populateTransaction.claimCommission(isNative, amount);
         return await this.ctx.sendTx(manager, ptx);
     }
 }

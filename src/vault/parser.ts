@@ -4,7 +4,7 @@ import { ParamType, formatEther } from 'ethers/lib/utils';
 import { LogDescription, TransactionDescription } from '@ethersproject/abi';
 import { ErrorDescription } from '@ethersproject/abi/lib/interface';
 import { Vault__factory } from '../types';
-import { decodeBatchCancelTicks, decodeInstrumentExpiry, decodeLiquidateParam, decodeNativeAmount } from './util';
+import { decodeBatchCancelTicks } from './util';
 import {
     decodeAddParam,
     decodeBatchPlaceParam,
@@ -92,8 +92,6 @@ export class VaultParser extends ContractParser {
             return formatArg(decodeBatchPlaceParam([value[0], value[1], value[2]]));
         } else if (description.name === 'batchPlace' && param.name === 'encodedTicks') {
             return formatArg(decodeBatchCancelTicks([value[0], value[1], value[2]]));
-        } else if (description.name === 'liquidate' && param.name === 'args') {
-            return formatArg(decodeLiquidateParam([value[0], value[1], value[2]]));
         }
         return await super.parseBaseArrayParam(description, param, value);
     }
@@ -119,15 +117,8 @@ export class VaultParser extends ContractParser {
             // handle function fields that need special parsing
             case 'arg': {
                 switch (description.functionFragment.name) {
-                    case 'withdraw':
-                    case 'claimFee':
-                        return formatArg(decodeNativeAmount(data));
                     case 'fill':
                         return formatArg(decodeFillParam(data));
-                    case 'batchCancel':
-                    case 'sweep':
-                    case 'settle':
-                        return formatArg(decodeInstrumentExpiry(data));
                     default:
                         return data.toString();
                 }

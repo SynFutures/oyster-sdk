@@ -1,7 +1,7 @@
 import { ChainContext, GRAPH_PAGE_SIZE, Graph, TokenInfo, ZERO, now } from '@derivation-tech/web3-core';
 import { BigNumber } from 'ethers';
 import { orderBy as _orderBy } from 'lodash';
-import { PendingWithdrawStatusGraph, VaultStatus } from './types';
+import { PhaseGraph, Stage } from './types';
 import { Vault__factory } from '../types';
 import { Pagination } from '../subgraph';
 
@@ -28,8 +28,8 @@ export interface VaultInfo {
     vaultName: string;
     managerAddr: string;
     quoteToken: TokenInfo;
-    status: VaultStatus;
-    totalValue: BigNumber;
+    stage: Stage;
+    portfolioValue: BigNumber;
     liveThreshold: BigNumber;
 }
 
@@ -52,12 +52,12 @@ export interface DepositWithdraw {
     quoteAmount: BigNumber;
 }
 
-export interface PendingWithdraw {
+export interface Arrear {
     userAddr: string;
     vaultAddr: string;
     createdTimestamp: number;
     releasedTimestamp: number;
-    status: PendingWithdrawStatusGraph;
+    phase: PhaseGraph;
     isNative: boolean;
     quantity: BigNumber;
 }
@@ -98,7 +98,7 @@ export class VaultGraph extends Graph {
                 name
                 manager
                 quote
-                status
+                stage
                 liveThreshold
             }
         }`;
@@ -106,8 +106,8 @@ export class VaultGraph extends Graph {
         const result: VaultInfo[] = [];
         const quoteAddrs: Set<string> = new Set(vaults.map((v: any) => v.quote.toLowerCase()));
         const tokenInfos = await Promise.all(Array.from(quoteAddrs).map((addr) => this.ctx.getTokenInfo(addr)));
-        const totalValues = await Promise.all(
-            vaults.map((v: any) => Vault__factory.connect(v.id, this.ctx.provider).getTotalValue()),
+        const portfolioValues = await Promise.all(
+            vaults.map((v: any) => Vault__factory.connect(v.id, this.ctx.provider).getPortfolioValue()),
         );
         for (const vault of vaults) {
             result.push({
@@ -115,8 +115,8 @@ export class VaultGraph extends Graph {
                 vaultName: vault.name,
                 managerAddr: vault.manager,
                 quoteToken: tokenInfos.find((t) => t.address.toLowerCase() === vault.quote.toLowerCase())!,
-                status: vault.status as VaultStatus,
-                totalValue: totalValues.find((_, idx) => vaults[idx].id === vault.id)!,
+                stage: vault.stage as Stage,
+                portfolioValue: portfolioValues.find((_, idx) => vaults[idx].id === vault.id)!,
                 liveThreshold: BigNumber.from(vault.liveThreshold),
             });
         }
@@ -138,8 +138,8 @@ export class VaultGraph extends Graph {
         const deposits = await this.query(graphQL, 0, GRAPH_PAGE_SIZE);
         const result: DepositInfo[] = [];
         const vaultAddrs: string[] = Array.from(new Set(deposits.users.map((d: any) => d.vault.id)));
-        const totalValues = await Promise.all(
-            vaultAddrs.map((addr) => Vault__factory.connect(addr, this.ctx.provider).getTotalValue()),
+        const portfolioValues = await Promise.all(
+            vaultAddrs.map((addr) => Vault__factory.connect(addr, this.ctx.provider).getPortfolioValue()),
         );
         const depositWithdraws = await this.getUserDepositWithdrawHistory(account);
         for (const deposit of deposits.users) {
@@ -148,7 +148,7 @@ export class VaultGraph extends Graph {
             const entryValue = BigNumber.from(deposit.entryValue);
             const holdingValue = totalShares.eq(ZERO)
                 ? ZERO
-                : totalValues
+                : portfolioValues
                       .find((_, idx) => vaultAddrs[idx] === deposit.vault.id)!
                       .mul(deposit.shares)
                       .div(totalShares);
@@ -205,9 +205,9 @@ export class VaultGraph extends Graph {
         return result;
     }
 
-    async getUserPendingWithdraws(account: string): Promise<PendingWithdraw[]> {
+    async getArrears(account: string): Promise<Arrear[]> {
         const graphQL = `query($skip: Int, $first: Int, $lastID: String){
-            pendingWithdraws(skip: $skip, first: $first, where:{
+            arrears(skip: $skip, first: $first, where:{
                 user:"${account.toLowerCase()}"
             }){
                 user {
@@ -216,38 +216,38 @@ export class VaultGraph extends Graph {
                 vault
                 createdTimestamp
                 releasedTimestamp
-                status
+                phase
                 isNative
                 quantity
             }
         }`;
-        const pendingWithdraws = await this.queryAll(graphQL, GRAPH_PAGE_SIZE, true);
-        const result: PendingWithdraw[] = [];
-        for (const pendingWithdraw of pendingWithdraws) {
+        const arrears = await this.queryAll(graphQL, GRAPH_PAGE_SIZE, true);
+        const result: Arrear[] = [];
+        for (const arrear of arrears) {
             result.push({
-                userAddr: pendingWithdraw.user,
-                vaultAddr: pendingWithdraw.vault,
-                createdTimestamp: Number(pendingWithdraw.createdTimestamp),
-                releasedTimestamp: Number(pendingWithdraw.releasedTimestamp),
-                status: pendingWithdraw.status as PendingWithdrawStatusGraph,
-                isNative: pendingWithdraw.isNative,
-                quantity: BigNumber.from(pendingWithdraw.quantity),
+                userAddr: arrear.user,
+                vaultAddr: arrear.vault,
+                createdTimestamp: Number(arrear.createdTimestamp),
+                releasedTimestamp: Number(arrear.releasedTimestamp),
+                phase: arrear.phase as PhaseGraph,
+                isNative: arrear.isNative,
+                quantity: BigNumber.from(arrear.quantity),
             });
         }
         return result;
     }
 
-    async getUserPendingWithdraw(account: string, vault: string): Promise<PendingWithdraw> {
-        const pendingWithdraws = await this.getUserPendingWithdraws(account);
+    async getArrear(account: string, vault: string): Promise<Arrear> {
+        const arrears = await this.getArrears(account);
         // filter by vault address and find out the latest one with newest createdTimestamp
-        return pendingWithdraws
+        return arrears
             .filter((p) => p.vaultAddr === vault)
             .reduce((prev, curr) => (prev.createdTimestamp > curr.createdTimestamp ? prev : curr), {
                 userAddr: account,
                 vaultAddr: vault,
                 createdTimestamp: 0,
                 releasedTimestamp: 0,
-                status: PendingWithdrawStatusGraph.NONE,
+                phase: PhaseGraph.NONE,
                 isNative: false,
                 quantity: ZERO,
             });

@@ -1,42 +1,6 @@
 import { hexZeroPad } from 'ethers/lib/utils';
 import { BigNumber } from 'ethers';
-import { asInt128, asInt24, asUint128, asUint24 } from '../common';
-import { ONE, ZERO } from '@derivation-tech/web3-core';
-
-export function encodeInstrumentExpiry(instrument: string, expiry: number): string {
-    return hexZeroPad(BigNumber.from(instrument).shl(32).add(BigNumber.from(expiry)).toHexString(), 32);
-}
-
-export function decodeInstrumentExpiry(arg: string): [string, number] {
-    const uArg = BigNumber.from(arg);
-    const instrument = uArg.shr(32).mask(160).toHexString();
-    const expiry = uArg.mask(32).toNumber();
-
-    return [instrument, expiry];
-}
-
-export function encodeLiquidateParam(
-    instrument: string,
-    expiry: number,
-    target: string,
-    size: BigNumber,
-    amount: BigNumber,
-): [string, string, string] {
-    const param0 = encodeInstrumentExpiry(instrument, expiry);
-    const param1 = hexZeroPad(target, 32);
-    const uSize = asUint128(size);
-    const param2 = hexZeroPad(uSize.shl(128).add(amount).toHexString(), 32);
-    return [param0, param1, param2];
-}
-
-export function decodeLiquidateParam(args: [string, string, string]): [string, number, string, BigNumber, BigNumber] {
-    const [instrument, expiry] = decodeInstrumentExpiry(args[0]);
-    const target = BigNumber.from(args[1]).toHexString();
-    const uSize = BigNumber.from(args[2]).shr(128).mask(128);
-    const size = asInt128(uSize);
-    const amount = BigNumber.from(args[2]).mask(128);
-    return [instrument, expiry, target, size, amount];
-}
+import { asInt24, asUint24 } from '../common';
 
 export function encodeBatchCancelTicks(ticks: number[]): [string, string, string] {
     const ENCODE_TICK_AMOUNT = 3;
@@ -79,21 +43,4 @@ export function decodeBatchCancelTicks(encodedTicks: [string, string, string]): 
         }
     }
     return ticks;
-}
-
-export function encodeNativeAmount(isNative: boolean, amount: BigNumber): string {
-    return hexZeroPad(
-        amount
-            .shl(8)
-            .add(isNative ? ONE : ZERO)
-            .toHexString(),
-        32,
-    );
-}
-
-export function decodeNativeAmount(arg: string): [boolean, BigNumber] {
-    const uArg = BigNumber.from(arg);
-    const isNative = uArg.mask(8).toNumber() === 1;
-    const amount = uArg.shr(8);
-    return [isNative, amount];
 }

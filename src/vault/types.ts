@@ -1,18 +1,18 @@
-export enum VaultStatus {
+export enum Stage {
     UPCOMING = 'UPCOMING',
     LIVE = 'LIVE',
     SUSPENDED = 'SUSPENDED',
     INVALID = 'INVALID',
 }
 
-export enum PendingWithdrawStatus {
+export enum Phase {
     NONE = 0,
     PENDING = 1,
     WAITING = 2,
     READY = 3,
 }
 
-export enum PendingWithdrawStatusGraph {
+export enum PhaseGraph {
     NONE = 'NONE',
     PENDING = 'PENDING',
     WAITING = 'WAITING',
