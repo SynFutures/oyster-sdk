@@ -205,14 +205,14 @@ export class VaultClient {
         return await this.vault.getPortfolioValue();
     }
 
-    async getUserDeposit(user: string): Promise<{
+    async getUserStake(user: string): Promise<{
         share: BigNumber;
         entryValue: BigNumber;
     }> {
         return await this.vault.getStake(user);
     }
 
-    async getUserPendingWithdraw(user: string): Promise<{
+    async getUserArrear(user: string): Promise<{
         canClaim: boolean;
         status: Phase;
         quantity: BigNumber;
@@ -241,8 +241,16 @@ export class VaultClient {
         value: BigNumber;
         phase: number;
     }> {
-        const [totalValue, totalShares] = await Promise.all([this.vault.getPortfolioValue(), this.vault.totalShare()]);
+        const [totalValue, totalShares, arrear, stake] = await Promise.all([
+            this.vault.getPortfolioValue(),
+            this.vault.totalShare(),
+            this.vault.getArrear(user),
+            this.vault.getStake(user),
+        ]);
         const shares = quoteAmount.mul(totalShares).div(totalValue);
+        if (stake.share.lt(shares)) throw new Error('Insufficient shares');
+        if (arrear.phase != Phase.NONE) throw new Error('Arrear exists');
+
         return await this.vault.inquireWithdrawal(user, shares);
     }
 
