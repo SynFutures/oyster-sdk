@@ -241,17 +241,17 @@ export class VaultClient {
         value: BigNumber;
         phase: number;
     }> {
-        const [totalValue, totalShares, arrear, stake] = await Promise.all([
-            this.vault.getPortfolioValue(),
-            this.vault.totalShare(),
-            this.vault.getArrear(user),
-            this.vault.getStake(user),
-        ]);
-        const shares = quoteAmount.mul(totalShares).div(totalValue);
-        if (stake.share.lt(shares)) throw new Error('Insufficient shares');
-        if (arrear.phase != Phase.NONE) throw new Error('Arrear exists');
-
-        return await this.vault.inquireWithdrawal(user, shares);
+        try {
+            const [totalValue, totalShares] = await Promise.all([
+                this.vault.getPortfolioValue(),
+                this.vault.totalShare(),
+            ]);
+            const shares = quoteAmount.mul(totalShares).div(totalValue);
+            return await this.vault.inquireWithdrawal(user, shares);
+        } catch (e) {
+            const error = await this.ctx.normalizeError(e);
+            throw Error(error.msg);
+        }
     }
 
     async willTriggerArrear(user: string, quoteAmount: BigNumber): Promise<boolean> {
