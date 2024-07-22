@@ -77,7 +77,7 @@ export async function getTradeRecords(network: Network) {
     fs.writeFileSync(outputFile, header);
     filterOutputs.forEach((data) => {
         const line = `${data.timestamp},${data.trader},${data.txHash},${data.pair},${data.type},${data.side},${data.size},${data.price},${data.trade_values},${data.fee}\n`;
-        fs.appendFileSync(outputFile,P1+r[24~\P0+r\ line);
+        fs.appendFileSync(outputFile, line);
     });
 }
 
