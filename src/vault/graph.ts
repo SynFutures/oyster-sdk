@@ -40,7 +40,7 @@ export interface DepositInfo {
     share: BigNumber;
     entryValue: BigNumber;
     holdingValue: BigNumber;
-    allTimeEerned: BigNumber;
+    allTimeEarned: BigNumber;
 }
 
 export interface DepositWithdraw {
@@ -155,7 +155,7 @@ export class VaultGraph extends Graph {
                       .find((_, idx) => vaultAddrs[idx] === deposit.vault.id)!
                       .mul(deposit.share)
                       .div(totalShare);
-            const allTimeEerned = depositWithdraws
+            const allTimeEarned = depositWithdraws
                 .filter((d) => d.vaultAddr === deposit.vault.id)
                 .reduce((acc, d) => (d.type === 'DEPOSIT' ? acc.add(d.quoteAmount) : acc.sub(d.quoteAmount)), ZERO)
                 .add(holdingValue)
@@ -166,7 +166,7 @@ export class VaultGraph extends Graph {
                 share,
                 entryValue,
                 holdingValue,
-                allTimeEerned,
+                allTimeEarned,
             });
         }
         return result;

@@ -1,4 +1,4 @@
-import { ChainContext, ContractParser, formatUnits, TokenInfo, ZERO } from '@derivation-tech/web3-core';
+import { ChainContext, ContractParser, formatUnits, TokenInfo, WAD, ZERO } from '@derivation-tech/web3-core';
 import { Gate, Gate__factory, VaultFactory } from '../types/typechain/';
 import { VAULT_FACTORY_ADDRESSES } from './constants';
 import {
@@ -6,6 +6,7 @@ import {
     BatchPlaceParam,
     FillParam,
     LiquidateParam,
+    NumericConverter,
     PlaceParam,
     RemoveParam,
     TradeParam,
@@ -249,8 +250,7 @@ export class VaultClient {
             const shares = quoteAmount.mul(totalShares).div(totalValue);
             return await this.vault.inquireWithdrawal(user, shares);
         } catch (e) {
-            const error = await this.ctx.normalizeError(e);
-            throw Error(error.msg);
+            throw Error(JSON.stringify(e, null, 2));
         }
     }
 
@@ -266,10 +266,11 @@ export class VaultClient {
     async deposit(
         signer: Signer,
         isNative: boolean,
-        amount: BigNumber,
+        quoteAmountWad: BigNumber,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
+        const quoteAmount = NumericConverter.toContractQuoteAmount(quoteAmountWad, this.quoteToken!.decimals);
         if (isNative) {
-            const tx = await this.vault.populateTransaction.deposit(amount, { value: amount });
+            const tx = await this.vault.populateTransaction.deposit(quoteAmount, { value: quoteAmount });
             return await this.ctx.sendTx(signer, tx);
         } else {
             const allowance = await this.ctx.erc20.getAllowance(
@@ -277,10 +278,10 @@ export class VaultClient {
                 await signer.getAddress(),
                 this.vault.address,
             );
-            if (allowance.lt(amount)) {
-                await this.ctx.erc20.approveIfNeeded(signer, this.quoteAddr, this.vault.address, amount);
+            if (allowance.lt(quoteAmount)) {
+                await this.ctx.erc20.approveIfNeeded(signer, this.quoteAddr, this.vault.address, quoteAmount);
             }
-            const tx = await this.vault.populateTransaction.deposit(amount);
+            const tx = await this.vault.populateTransaction.deposit(quoteAmount);
             return await this.ctx.sendTx(signer, tx);
         }
     }
@@ -297,8 +298,9 @@ export class VaultClient {
     async withdrawQuote(
         signer: Signer,
         isNative: boolean,
-        quoteAmount: BigNumber,
+        quoteAmountWad: BigNumber,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
+        const quoteAmount = NumericConverter.toContractQuoteAmount(quoteAmountWad, this.quoteToken!.decimals);
         const [totalValue, totalShare, stake] = await Promise.all([
             this.vault.getPortfolioValue(),
             this.vault.totalShare(),
