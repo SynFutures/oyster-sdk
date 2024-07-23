@@ -1,4 +1,4 @@
-import { ChainContext, ContractParser, formatUnits, TokenInfo, WAD, ZERO } from '@derivation-tech/web3-core';
+import { ChainContext, ContractParser, formatUnits, TokenInfo, ZERO } from '@derivation-tech/web3-core';
 import { Gate, Gate__factory, VaultFactory } from '../types/typechain/';
 import { VAULT_FACTORY_ADDRESSES } from './constants';
 import {
