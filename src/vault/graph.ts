@@ -31,6 +31,7 @@ export interface VaultInfo {
     stage: Stage;
     portfolioValue: BigNumber;
     liveThreshold: BigNumber;
+    minQuoteAmount: BigNumber;
 }
 
 export interface DepositInfo {
@@ -100,6 +101,7 @@ export class VaultGraph extends Graph {
                 quote
                 stage
                 liveThreshold
+                minQuoteAmount
             }
         }`;
         const vaults = (await this.query(graphQL, 0, GRAPH_PAGE_SIZE)).vaults;
@@ -118,6 +120,7 @@ export class VaultGraph extends Graph {
                 stage: vault.stage as Stage,
                 portfolioValue: portfolioValues.find((_, idx) => vaults[idx].id === vault.id)!,
                 liveThreshold: BigNumber.from(vault.liveThreshold),
+                minQuoteAmount: BigNumber.from(vault.minQuoteAmount),
             });
         }
         return result;
