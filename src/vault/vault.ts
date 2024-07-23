@@ -299,9 +299,13 @@ export class VaultClient {
         isNative: boolean,
         quoteAmount: BigNumber,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const [totalValue, totalShares] = await Promise.all([this.vault.getPortfolioValue(), this.vault.totalShare()]);
-        const shares = quoteAmount.mul(totalShares).div(totalValue);
-        const tx = await this.vault.populateTransaction.withdraw(isNative, shares);
+        const [totalValue, totalShare, stake] = await Promise.all([
+            this.vault.getPortfolioValue(),
+            this.vault.totalShare(),
+            this.vault.getStake(await signer.getAddress()),
+        ]);
+        const share = quoteAmount.mul(totalShare).div(totalValue);
+        const tx = await this.vault.populateTransaction.withdraw(isNative, share.gt(stake.share) ? stake.share : share);
         return await this.ctx.sendTx(signer, tx);
     }
 
