@@ -1,4 +1,4 @@
-import { ChainContext, GRAPH_PAGE_SIZE, Graph, TokenInfo, ZERO, now } from '@derivation-tech/web3-core';
+import { BlockInfo, ChainContext, GRAPH_PAGE_SIZE, Graph, TokenInfo, ZERO, now } from '@derivation-tech/web3-core';
 import { BigNumber } from 'ethers';
 import { orderBy as _orderBy } from 'lodash';
 import { PhaseGraph, Stage } from './types';
@@ -126,8 +126,17 @@ export class VaultGraph extends Graph {
         return result;
     }
 
-    async getUserDepositInfo(account: string): Promise<DepositInfo[]> {
+    async getUserDepositInfo(account: string): Promise<{
+        depositInfos: DepositInfo[];
+        blockInfo: BlockInfo; // return blockInfo for later withdraw's quantity->share calculation
+    }> {
         const graphQL = `query{
+            _meta{
+                block{
+                  number
+                  timestamp
+                }
+            }
             users(where: {address: "${account.toLowerCase()}"}) {
                 address
                 vault {
@@ -138,14 +147,14 @@ export class VaultGraph extends Graph {
                 entryValue
             }
         }`;
-        const deposits = await this.query(graphQL, 0, GRAPH_PAGE_SIZE);
-        const result: DepositInfo[] = [];
-        const vaultAddrs: string[] = Array.from(new Set(deposits.users.map((d: any) => d.vault.id)));
+        const result = await this.query(graphQL, 0, GRAPH_PAGE_SIZE);
+        const depositInfos: DepositInfo[] = [];
+        const vaultAddrs: string[] = Array.from(new Set(result.users.map((d: any) => d.vault.id)));
         const portfolioValues = await Promise.all(
             vaultAddrs.map((addr) => Vault__factory.connect(addr, this.ctx.provider).getPortfolioValue()),
         );
         const depositWithdraws = await this.getUserDepositWithdrawHistory(account);
-        for (const deposit of deposits.users) {
+        for (const deposit of result.users) {
             const share = BigNumber.from(deposit.share);
             const totalShare = BigNumber.from(deposit.vault.totalShare);
             const entryValue = BigNumber.from(deposit.entryValue);
@@ -160,7 +169,7 @@ export class VaultGraph extends Graph {
                 .reduce((acc, d) => (d.type === 'DEPOSIT' ? acc.add(d.quoteAmount) : acc.sub(d.quoteAmount)), ZERO)
                 .add(holdingValue)
                 .sub(entryValue);
-            result.push({
+            depositInfos.push({
                 user: deposit.address,
                 vault: deposit.vault.id,
                 share,
@@ -169,7 +178,13 @@ export class VaultGraph extends Graph {
                 allTimeEarned,
             });
         }
-        return result;
+        return {
+            depositInfos: depositInfos,
+            blockInfo: {
+                height: Number(result._meta.block.number),
+                timestamp: Number(result._meta.block.timestamp),
+            },
+        };
     }
 
     async getUserDepositWithdrawHistory(account: string): Promise<DepositWithdraw[]> {

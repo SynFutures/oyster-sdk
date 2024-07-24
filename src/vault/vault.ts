@@ -1,4 +1,4 @@
-import { ChainContext, ContractParser, formatUnits, TokenInfo, ZERO } from '@derivation-tech/web3-core';
+import { BlockInfo, ChainContext, ContractParser, formatUnits, ONE, TokenInfo, ZERO } from '@derivation-tech/web3-core';
 import { Gate, Gate__factory, VaultFactory } from '../types/typechain/';
 import { VAULT_FACTORY_ADDRESSES } from './constants';
 import {
@@ -299,14 +299,17 @@ export class VaultClient {
         signer: Signer,
         isNative: boolean,
         quoteAmountWad: BigNumber,
+        blockInfo?: BlockInfo,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
+        const overrides = blockInfo ? { blockTag: blockInfo.height } : {};
         const quoteAmount = NumericConverter.toContractQuoteAmount(quoteAmountWad, this.quoteToken!.decimals);
         const [totalValue, totalShare, stake] = await Promise.all([
-            this.vault.getPortfolioValue(),
-            this.vault.totalShare(),
-            this.vault.getStake(await signer.getAddress()),
+            this.vault.getPortfolioValue(overrides),
+            this.vault.totalShare(overrides),
+            this.vault.getStake(await signer.getAddress(), overrides),
         ]);
-        const share = quoteAmount.mul(totalShare).div(totalValue);
+        // share = quoteAmount * totalShare / totalValue, should round up to avoid dust
+        const share = quoteAmount.mul(totalShare).add(totalValue.sub(ONE)).div(totalValue);
         const tx = await this.vault.populateTransaction.withdraw(isNative, share.gt(stake.share) ? stake.share : share);
         return await this.ctx.sendTx(signer, tx);
     }
