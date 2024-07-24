@@ -166,9 +166,8 @@ export class VaultGraph extends Graph {
                       .div(totalShare);
             const allTimeEarned = depositWithdraws
                 .filter((d) => d.vaultAddr === deposit.vault.id)
-                .reduce((acc, d) => (d.type === 'DEPOSIT' ? acc.add(d.quoteAmount) : acc.sub(d.quoteAmount)), ZERO)
-                .add(holdingValue)
-                .sub(entryValue);
+                .reduce((acc, d) => (d.type === 'WITHDRAW' ? acc.add(d.quoteAmount) : acc.sub(d.quoteAmount)), ZERO)
+                .add(holdingValue);
             depositInfos.push({
                 user: deposit.address,
                 vault: deposit.vault.id,
