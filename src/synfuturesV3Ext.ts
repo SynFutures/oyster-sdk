@@ -1,19 +1,17 @@
 import { BigNumber, Overrides, Signer, ethers } from 'ethers';
 import { SynFuturesV3 } from './synfuturesV3Core';
-import { ChainContext, CHAIN_ID, ERC20__factory, ADDR_BATCH_SIZE, BlockInfo } from '@derivation-tech/web3-core';
+import { ChainContext, CHAIN_ID, ERC20__factory } from '@derivation-tech/web3-core';
 import {
     CexFeederSource,
     CexMarket,
     InstrumentIdentifier,
     MarketType,
     PriceFeeder,
-    Range,
     SetChainlinkFeederParam,
 } from './types';
-import { batchQuery, encodeAddParam, parseTicks } from './common/util';
+import { encodeAddParam } from './common';
 import { PERP_EXPIRY, NULL_DDL } from './constants';
 import { ZERO, TICK_DELTA_MAX, ANY_PRICE_TICK } from './math';
-import { ExtendedRange } from './subgraph';
 
 export class SynFuturesV3Ext {
     private static instances = new Map<number, SynFuturesV3Ext>();
@@ -231,94 +229,94 @@ export class SynFuturesV3Ext {
         return this.ctx.sendTx(signer, unsignedTx);
     }
 
-    async getRanges(
-        instrumentAddr: string,
-        expiry: number,
-        lpAddrs?: string[],
-        batchSize = ADDR_BATCH_SIZE,
-    ): Promise<(ExtendedRange & { lpAddr: string })[]> {
-        // get from observer
-        if (lpAddrs !== undefined && lpAddrs.length > 0) {
-            const instrument = this.core.instrumentMap.get(instrumentAddr.toLowerCase());
-            if (!instrument) {
-                throw new Error(`instrument ${instrumentAddr} not found`);
-            }
-            const latestBlock = await this.ctx.provider.getBlock('latest');
-            const blockInfo: BlockInfo = {
-                height: latestBlock.number,
-                timestamp: latestBlock.timestamp,
-            };
-            const overrides = {
-                blockTag: blockInfo.height,
-            };
-            // chunks lpAddrs into smaller batches according to the number of pairs
-            const rangeIndexes = (
-                await batchQuery(
-                    this.ctx,
-                    this.core.contracts.observer.interface,
-                    lpAddrs.map((addr) => {
-                        return {
-                            target: this.core.contracts.observer.address,
-                            method: 'getRangeIndexes',
-                            params: [instrument.info.addr, expiry, addr],
-                        };
-                    }),
-                    batchSize,
-                    overrides,
-                )
-            ).map((ret) => ret[0] as BigNumber[]);
-            // flat rangeIndexes from 2D to 1D while preserving lp info
-            const lpRangeIndex: { lpAddr: string; rangeIndex: BigNumber }[] = [];
-            rangeIndexes.forEach((group, index) => {
-                group.forEach((value) => {
-                    lpRangeIndex.push({
-                        lpAddr: lpAddrs[index],
-                        rangeIndex: value,
-                    });
-                });
-            });
-            const ranges = (
-                await batchQuery(
-                    this.ctx,
-                    this.core.contracts.observer.interface,
-                    lpRangeIndex.map((item) => {
-                        return {
-                            target: this.core.contracts.observer.address,
-                            method: 'getRanges',
-                            params: [instrument.info.addr, expiry, item.lpAddr, [item.rangeIndex]],
-                        };
-                    }),
-                    batchSize,
-                    overrides,
-                )
-            ).map((ret) => ret[0][0] as Range); // first return argument is Range[]
-
-            return ranges.map((range, index) => {
-                return {
-                    lpAddr: lpRangeIndex[index].lpAddr,
-                    liquidity: range.liquidity,
-                    entryFeeIndex: range.entryFeeIndex,
-                    balance: range.balance,
-                    sqrtEntryPX96: range.sqrtEntryPX96,
-                    instrumentAddr,
-                    expiry,
-                    ...parseTicks(Number(lpRangeIndex[index].rangeIndex)),
-                    blockInfo,
-                };
-            });
-        } else {
-            // get from subgraph
-            const rangesMap = await this.core.subgraph.getRanges({ instrumentAddr, expiry });
-            const ranges = [];
-            for (const [k, v] of rangesMap) {
-                for (const range of v) {
-                    ranges.push({
-                        ...range,
-                        lpAddr: k,
-                    });
-                }
-            }
-            return ranges;
-        }
-    }
+    // async getRanges(
+    //     instrumentAddr: string,
+    //     expiry: number,
+    //     lpAddrs?: string[],
+    //     batchSize = ADDR_BATCH_SIZE,
+    // ): Promise<(ExtendedRange & { lpAddr: string })[]> {
+    //     // get from observer
+    //     if (lpAddrs !== undefined && lpAddrs.length > 0) {
+    //         const instrument = this.core.instrumentMap.get(instrumentAddr.toLowerCase());
+    //         if (!instrument) {
+    //             throw new Error(`instrument ${instrumentAddr} not found`);
+    //         }
+    //         const latestBlock = await this.ctx.provider.getBlock('latest');
+    //         const blockInfo: BlockInfo = {
+    //             height: latestBlock.number,
+    //             timestamp: latestBlock.timestamp,
+    //         };
+    //         const overrides = {
+    //             blockTag: blockInfo.height,
+    //         };
+    //         // chunks lpAddrs into smaller batches according to the number of pairs
+    //         const rangeIndexes = (
+    //             await batchQuery(
+    //                 this.ctx,
+    //                 this.core.contracts.observer.interface,
+    //                 lpAddrs.map((addr) => {
+    //                     return {
+    //                         target: this.core.contracts.observer.address,
+    //                         method: 'getRangeIndexes',
+    //                         params: [instrument.info.addr, expiry, addr],
+    //                     };
+    //                 }),
+    //                 batchSize,
+    //                 overrides,
+    //             )
+    //         ).map((ret) => ret[0] as BigNumber[]);
+    //         // flat rangeIndexes from 2D to 1D while preserving lp info
+    //         const lpRangeIndex: { lpAddr: string; rangeIndex: BigNumber }[] = [];
+    //         rangeIndexes.forEach((group, index) => {
+    //             group.forEach((value) => {
+    //                 lpRangeIndex.push({
+    //                     lpAddr: lpAddrs[index],
+    //                     rangeIndex: value,
+    //                 });
+    //             });
+    //         });
+    //         const ranges = (
+    //             await batchQuery(
+    //                 this.ctx,
+    //                 this.core.contracts.observer.interface,
+    //                 lpRangeIndex.map((item) => {
+    //                     return {
+    //                         target: this.core.contracts.observer.address,
+    //                         method: 'getRanges',
+    //                         params: [instrument.info.addr, expiry, item.lpAddr, [item.rangeIndex]],
+    //                     };
+    //                 }),
+    //                 batchSize,
+    //                 overrides,
+    //             )
+    //         ).map((ret) => ret[0][0] as Range); // first return argument is Range[]
+    //
+    //         return ranges.map((range, index) => {
+    //             return {
+    //                 lpAddr: lpRangeIndex[index].lpAddr,
+    //                 liquidity: range.liquidity,
+    //                 entryFeeIndex: range.entryFeeIndex,
+    //                 balance: range.balance,
+    //                 sqrtEntryPX96: range.sqrtEntryPX96,
+    //                 instrumentAddr,
+    //                 expiry,
+    //                 ...parseTicks(Number(lpRangeIndex[index].rangeIndex)),
+    //                 blockInfo,
+    //             };
+    //         });
+    //     } else {
+    //         // get from subgraph
+    //         const rangesMap = await this.core.subgraph.getRanges({ instrumentAddr, expiry });
+    //         const ranges = [];
+    //         for (const [k, v] of rangesMap) {
+    //             for (const range of v) {
+    //                 ranges.push({
+    //                     ...range,
+    //                     lpAddr: k,
+    //                 });
+    //             }
+    //         }
+    //         return ranges;
+    //     }
+    // }
 }

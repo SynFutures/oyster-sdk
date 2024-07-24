@@ -12,6 +12,13 @@ export interface Range {
     blockInfo?: BlockInfo;
 }
 
+export interface ExtendedRange extends Range {
+    instrumentAddr: string;
+    expiry: number;
+    tickLower: number;
+    tickUpper: number;
+}
+
 export function entryDelta(
     sqrtEntryPX96: BigNumber,
     tickLower: number,

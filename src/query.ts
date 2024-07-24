@@ -1,5 +1,5 @@
 import { BigNumber } from 'ethers';
-import { Observer } from './types/typechain';
+import { Observer } from './types';
 import { TickMath, ZERO, SqrtPriceMath } from './math';
 
 // get instrument's all tick bitmaps

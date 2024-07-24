@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { Subgraph } from './subgraph';
 import {
     ConfigManager,
     ContractAddress,
@@ -132,6 +131,7 @@ import {
 import { FundFlow, GateState, Pending } from './types/gate';
 import { ConfigState } from './types/config';
 import { updateFundingIndex } from './math/funding';
+import { SdkError } from './errors/sdk.error';
 
 export const synfV3Utils = {
     parseInstrumentSymbol: function (symbol: string): InstrumentIdentifier {
@@ -156,9 +156,7 @@ export class SynFuturesV3 {
     ctx: ChainContext;
     // this is not initialized in constructor, but in _init().
     config!: SynfConfig;
-    subgraph!: Subgraph;
     contracts!: SynFuturesV3Contracts;
-
     gateState: GateState;
     configState: ConfigState;
     // update <-- new block info
@@ -189,7 +187,6 @@ export class SynFuturesV3 {
 
     private _init(config: SynfConfig): void {
         this.config = config;
-        this.subgraph = new Subgraph(config.subgraphProxy);
 
         const provider = this.ctx.provider;
         if (provider) {
@@ -346,7 +343,8 @@ export class SynFuturesV3 {
             quoteAddress =
                 typeof quote !== 'string' ? (quote as TokenInfo).address : await this.ctx.getAddress(quoteSymbol);
         } catch {
-            quoteAddress = (await this.subgraph.getQuotes()).find((q) => q.symbol === quoteSymbol)!.address;
+            //todo beore fetch from graph
+            throw new SdkError('Get quote address failed');
         }
         if (cexMarket(marketType)) {
             salt = ethers.utils.defaultAbiCoder.encode(

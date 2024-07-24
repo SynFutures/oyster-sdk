@@ -3,7 +3,7 @@ import { TransactionReceipt } from '@ethersproject/abstract-provider';
 import * as template from './event-mapping-template.json';
 import { BigNumber, ethers } from 'ethers';
 import { TickMath, wdiv } from '../math';
-import { sqrtX96ToWad } from '../math/basic';
+import { sqrtX96ToWad } from '../math';
 import { SynFuturesV3 } from '../synfuturesV3Core';
 import { Instrument__factory } from '../types';
 

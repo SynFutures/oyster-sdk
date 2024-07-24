@@ -14,12 +14,11 @@ import {
 } from './types';
 import { INITIAL_MARGIN_RATIO } from './constants';
 import { formatEther, parseEther } from 'ethers/lib/utils';
-import { tickDeltaToAlphaWad } from './common/util';
+import { tickDeltaToAlphaWad } from './common';
 
 export class SynFuturesV3Front {
     private static instances = new Map<number, SynFuturesV3Front>();
     core: SynFuturesV3;
-    THREE_WAD: BigNumber = parseEther('3');
     TWO_WAD: BigNumber = parseEther('2');
 
     get ctx(): ChainContext {

@@ -258,9 +258,7 @@ export class GateState extends EventHandler {
             this._pendingOf.set(quote, accountPending);
         }
         if (!this._pendingOf.get(quote)!.has(trader)) {
-            this._pendingOf
-                .get(quote)!
-                .set(trader, { timestamp: 0, native: false, amount: ZERO, exemption: ZERO });
+            this._pendingOf.get(quote)!.set(trader, { timestamp: 0, native: false, amount: ZERO, exemption: ZERO });
         }
         return this._pendingOf.get(quote)!.get(trader)!;
     }
