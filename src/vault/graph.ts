@@ -211,7 +211,9 @@ export class VaultGraph extends Graph {
     async getArrears(account: string): Promise<Arrear[]> {
         const graphQL = `query($skip: Int, $first: Int, $lastID: String){
             arrears(skip: $skip, first: $first, where:{
-                user:"${account.toLowerCase()}"
+                user_: {
+                    address: "${account.toLowerCase()}"
+                }
             }){
                 user {
                     id
