@@ -37,7 +37,7 @@ export class SynFuturesV3Ext {
     }
 
     async init(): Promise<void> {
-        await this.core.initInstruments();
+        await this.core.instrumentModule.initInstruments();
     }
 
     async setCexFeeder(
