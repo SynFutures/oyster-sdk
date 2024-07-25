@@ -131,8 +131,7 @@ export class AccountModule {
             }
         }
         // get info on chain and load into cache
-        const pairLevelAccountModel = await this.updatePairLevelAccount(target, instrument, expiry);
-        return pairLevelAccountModel;
+        return await this.updatePairLevelAccount(target, instrument, expiry);
     }
 }
 

@@ -1,5 +1,5 @@
 import { MAX_UINT_160, ONE, Q96, ZERO } from './constants';
-import { addIn256, r2w, mulDivRoundingUp, multiplyIn256, wmulUp } from './basic';
+import { addIn256, r2w, mulDivRoundingUp, multiplyIn256, wmulUp, wdiv } from './basic';
 import { BigNumber } from 'ethers';
 import { solidityRequire } from '../common/util';
 import { Quotation, QuoteParam } from '../types';
@@ -163,5 +163,15 @@ export abstract class SqrtPriceMath {
         let stabilityFee = feePaid.sub(protocolFeePaid).sub(baseFeePaid);
         if (stabilityFee.lt(0)) stabilityFee = ZERO;
         return stabilityFee;
+    }
+
+    getStabilityFeeRatio(quotation: Quotation, param: QuoteParam, maintenanceMarginRatio: number): number {
+        // maintenanceMarginRatio is no more needed
+        maintenanceMarginRatio;
+        const stabilityFee = SqrtPriceMath.getStabilityFee(quotation, param);
+        const ratioTemp = wdiv(stabilityFee, quotation.entryNotional);
+        const scaler = BigNumber.from(10).pow(14);
+        const ratio = ratioTemp.add(scaler.sub(1)).div(scaler);
+        return ratio.toNumber();
     }
 }

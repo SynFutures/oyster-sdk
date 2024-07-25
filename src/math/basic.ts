@@ -340,3 +340,11 @@ export function alignPriceWadToTick(priceWad: BigNumber): { tick: number; priceW
     const alignedPriceWad = TickMath.getWadAtTick(tick);
     return { tick: tick, priceWad: alignedPriceWad };
 }
+
+export function calcBoost(alpha: number, imr: number): number {
+    if (alpha === 1) {
+        throw new Error('Invalid alpha');
+    }
+    imr = imr / 10 ** RATIO_DECIMALS;
+    return -2 / (alpha * (imr + 1) - Math.sqrt(alpha)) / (1 / Math.sqrt(alpha) - 1);
+}

@@ -1,17 +1,27 @@
 import { SynFuturesV3 } from '../synfuturesV3Core';
 import {
+    alignRangeTick,
     BatchOrderSizeDistribution,
+    cexMarket,
     combine,
+    entryDelta,
+    getMarginFromLiquidity,
+    InstrumentIdentifier,
+    InstrumentModel,
+    InstrumentSetting,
     NumericConverter,
     PairLevelAccountModel,
+    PairModel,
     PositionModel,
     Quotation,
+    RangeModel,
     Side,
     signOfSide,
     SimulateOrderResult,
     SimulateTradeResult,
+    TokenInfo,
 } from '../types';
-import { BigNumber, ethers } from 'ethers';
+import { BigNumber, ethers, PayableOverrides, Signer } from 'ethers';
 import {
     getMaxLeverage,
     max,
@@ -22,24 +32,103 @@ import {
     wdiv,
     wdivUp,
     wmul,
+    wmulDown,
     wmulUp,
     ZERO,
 } from '../math';
 import {
+    DEFAULT_REFERRAL_CODE,
     MAX_BATCH_ORDER_COUNT,
     MIN_BATCH_ORDER_COUNT,
     ONE_RATIO,
+    ORDER_SPACING,
     PEARL_SPACING,
     PERP_EXPIRY,
     RATIO_BASE,
 } from '../constants';
 import { updateFundingIndex } from '../math/funding';
-import { withinOrderLimit } from '../common';
+import {
+    alignTick,
+    alphaWadToTickDelta,
+    encodePlaceWithReferralParam,
+    encodeTradeWithReferralParam,
+    rangeKey,
+    tickDeltaToAlphaWad,
+    withinOrderLimit,
+} from '../common';
 
 export class SimulateModule {
-    v3Sdk: SynFuturesV3;
+    synfV3: SynFuturesV3;
     constructor(v3Sdk: SynFuturesV3) {
-        this.v3Sdk = v3Sdk;
+        this.synfV3 = v3Sdk;
+    }
+
+    // given lower price and upper price, return the ticks for batch orders
+    // last tick should be upper tick
+    getBatchOrderTicks(lowerTick: number, upperTick: number, orderCount: number): number[] {
+        // adapt reserve price pair
+        [lowerTick, upperTick] = [lowerTick, upperTick].sort((a, b) => a - b);
+        lowerTick = alignTick(lowerTick, ORDER_SPACING);
+        upperTick = alignTick(upperTick, ORDER_SPACING);
+        const tickDiff = upperTick - lowerTick;
+        const step = Math.floor(tickDiff / (orderCount - 1) / ORDER_SPACING);
+        const ticks = [];
+        for (let i = 0; i < orderCount; i++) {
+            ticks.push(lowerTick + step * i * ORDER_SPACING);
+        }
+        ticks[ticks.length - 1] = upperTick;
+        return ticks;
+    }
+
+    async placeCrossMarketOrder(
+        signer: Signer,
+        pair: PairModel,
+        side: Side,
+
+        swapSize: BigNumber,
+        swapMargin: BigNumber,
+        swapTradePrice: BigNumber,
+
+        orderTickNumber: number,
+        orderBaseWad: BigNumber,
+        orderMargin: BigNumber,
+
+        slippage: number,
+        deadline: number,
+        referralCode = DEFAULT_REFERRAL_CODE,
+        overrides?: PayableOverrides,
+    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
+        const sign = signOfSide(side);
+        const instrument = this.synfV3.getInstrumentContract(pair.rootInstrument.info.addr);
+        const swapLimitTick = TickMath.getLimitTick(swapTradePrice, slippage, side);
+        const callData = [];
+        callData.push(
+            instrument.interface.encodeFunctionData('trade', [
+                encodeTradeWithReferralParam(
+                    pair.amm.expiry,
+                    swapSize.mul(sign),
+                    swapMargin,
+                    swapLimitTick,
+                    deadline,
+                    referralCode,
+                ),
+            ]),
+        );
+
+        callData.push(
+            instrument.interface.encodeFunctionData('place', [
+                encodePlaceWithReferralParam(
+                    pair.amm.expiry,
+                    orderBaseWad.mul(sign),
+                    orderMargin,
+                    orderTickNumber,
+                    deadline,
+                    referralCode,
+                ),
+            ]),
+        );
+        const tx = await instrument.populateTransaction.multicall(callData, overrides ?? {});
+        return await this.synfV3.ctx.sendTx(signer, tx);
     }
 
     async simulateCrossMarketOrder(
@@ -64,14 +153,14 @@ export class SimulateModule {
         if ((long && targetTick <= currentTick) || (!long && targetTick >= currentTick))
             throw Error('please place normal order');
         let swapToTick = long ? targetTick + 1 : targetTick - 1;
-        let { size: swapSize, quotation: quotation } = await this.v3Sdk.contracts.observer.inquireByTick(
+        let { size: swapSize, quotation: quotation } = await this.synfV3.contracts.observer.inquireByTick(
             pair.rootInstrument.info.addr,
             pair.amm.expiry,
             swapToTick,
         );
         if ((long && quotation.postTick <= targetTick) || (!long && quotation.postTick >= targetTick)) {
             swapToTick = long ? swapToTick + 1 : swapToTick - 1;
-            const retry = await this.v3Sdk.contracts.observer.inquireByTick(
+            const retry = await this.synfV3.contracts.observer.inquireByTick(
                 pair.rootInstrument.info.addr,
                 pair.amm.expiry,
                 swapToTick,
@@ -96,7 +185,7 @@ export class SimulateModule {
         const minOrderSize = wdivUp(minOrderValue, targetTickPrice);
         const quoteInfo = pair.rootInstrument.info.quote;
         const balanceInVaultWad = NumericConverter.scaleQuoteAmount(
-            this.v3Sdk.getCachedVaultBalance(quoteInfo.address, pairAccountModel.traderAddr),
+            this.synfV3.cacheModule.getCachedVaultBalance(quoteInfo.address, pairAccountModel.traderAddr),
             quoteInfo.decimals,
         );
         function getBalanceInVaultWadOverride(
@@ -205,7 +294,7 @@ export class SimulateModule {
             baseSize: baseSize,
             balance: margin,
             leverageWad: leverageWad,
-            marginToDepositWad: this.v3Sdk.marginToDepositWad(
+            marginToDepositWad: this.synfV3.marginToDepositWad(
                 pairAccountModel.traderAddr,
                 pairModel.rootInstrument.info.quote,
                 margin,
@@ -278,7 +367,7 @@ export class SimulateModule {
         const pairModel = pairAccountModel.rootPair;
         return {
             orders,
-            marginToDepositWad: this.v3Sdk.marginToDepositWad(
+            marginToDepositWad: this.synfV3.marginToDepositWad(
                 pairAccountModel.traderAddr,
                 pairModel.rootInstrument.info.quote,
                 orders.reduce((acc, order) => acc.add(order.balance), ZERO),
@@ -312,8 +401,8 @@ export class SimulateModule {
     } {
         if (orderCount < MIN_BATCH_ORDER_COUNT || orderCount > MAX_BATCH_ORDER_COUNT)
             throw new Error(`order count should be between ${MIN_BATCH_ORDER_COUNT} and ${MAX_BATCH_ORDER_COUNT}`);
-        const targetTicks = this.v3Sdk.getBatchOrderTicks(lowerTick, upperTick, orderCount);
-        let ratios = this.v3Sdk.getBatchOrderRatios(sizeDistribution, orderCount);
+        const targetTicks = this.getBatchOrderTicks(lowerTick, upperTick, orderCount);
+        let ratios = this.synfV3.getBatchOrderRatios(sizeDistribution, orderCount);
         // if sizeDistribution is random, we need to adjust the ratios to make sure orderValue meet minOrderValue with best effort
         const minOrderValue = pairAccountModel.rootPair.rootInstrument.minOrderValue;
         const minSizes = targetTicks.map((tick) => wdivUp(minOrderValue, TickMath.getWadAtTick(tick)));
@@ -328,7 +417,7 @@ export class SimulateModule {
             }
             // only adjust sizes if possible
             if (needNewRatios && minSizes.reduce((acc, minSize) => acc.add(minSize), ZERO).lt(baseSize)) {
-                ratios = this.v3Sdk.getBatchOrderRatios(BatchOrderSizeDistribution.FLAT, orderCount);
+                ratios = this.synfV3.getBatchOrderRatios(BatchOrderSizeDistribution.FLAT, orderCount);
             }
         }
 
@@ -479,13 +568,254 @@ export class SimulateModule {
             priceImpactWad: priceImpactWad,
             simulationMainPosition: simulationMainPosition,
             realized: realized,
-            marginToDepositWad: this.v3Sdk.marginToDepositWad(
+            marginToDepositWad: this.synfV3.marginToDepositWad(
                 pairAccountModel.traderAddr,
                 pairAccountModel.rootPair.rootInstrument.info.quote,
                 margin,
             ),
             limitTick: limitTick,
             exceedMaxLeverage: exceedMaxLeverage,
+        };
+    }
+
+    // @param transferAmount: decimal in 18 units; positive if transferIn, negative if transferOut
+    // @param leverageWad: decimal in 18 units
+    // @param vaultBalanceWad: decimal in 18 units
+    public simulateAdjustMargin(
+        pairAccountModel: PairLevelAccountModel,
+        transferAmount: BigNumber | undefined,
+        leverageWad: BigNumber | undefined,
+    ): {
+        transferAmount: BigNumber;
+        simulationMainPosition: PositionModel;
+        marginToDepositWad: BigNumber;
+        leverageWad: BigNumber;
+    } {
+        const position = PositionModel.fromRawPosition(pairAccountModel.rootPair, pairAccountModel.getMainPosition());
+        const vaultBalance = this.synfV3.cacheModule.getCachedVaultBalance(
+            pairAccountModel.rootPair.rootInstrument.info.quote.address,
+            pairAccountModel.traderAddr,
+        );
+        const quoteDecimals = position.rootPair.rootInstrument.info.quote.decimals;
+        const vaultBalanceWad = NumericConverter.scaleQuoteAmount(vaultBalance, quoteDecimals);
+        const maxWithdrawableMargin = position.getMaxWithdrawableMargin();
+        let marginToDepositWad: BigNumber = ZERO;
+
+        if (!transferAmount && leverageWad) {
+            transferAmount = this.synfV3.inquireTransferAmountFromTargetLeverage(position, leverageWad);
+            if (transferAmount.gt(vaultBalanceWad)) marginToDepositWad = transferAmount.sub(vaultBalanceWad);
+        } else if (!leverageWad && transferAmount) {
+            if (transferAmount.gt(vaultBalanceWad)) marginToDepositWad = transferAmount.sub(vaultBalanceWad);
+            const value = wmul(position.rootPair.markPrice, position.size.abs());
+            const equity = position.getEquity().add(transferAmount);
+            leverageWad = wdiv(value, equity);
+        } else {
+            throw new Error('Invalid input');
+        }
+        if (transferAmount.lt(ZERO) && transferAmount.abs().gt(maxWithdrawableMargin)) {
+            throw new Error('Invalid input');
+        }
+
+        position.balance = position.balance.add(transferAmount);
+        return {
+            marginToDepositWad: marginToDepositWad,
+            simulationMainPosition: position,
+            transferAmount: transferAmount,
+            leverageWad: leverageWad,
+        };
+    }
+
+    async simulateBenchmarkPrice(instrumentIdentifier: InstrumentIdentifier, expiry: number): Promise<BigNumber> {
+        let benchmarkPrice;
+        if (cexMarket(instrumentIdentifier.marketType)) {
+            benchmarkPrice = await this.synfV3.inspectCexMarketBenchmarkPrice(instrumentIdentifier, expiry);
+        } else {
+            benchmarkPrice = await this.synfV3.inspectDexV2MarketBenchmarkPrice(instrumentIdentifier, expiry);
+        }
+        return benchmarkPrice;
+    }
+
+    // @param alphaWad: decimal 18 units 1.3e18 means 1.3
+    // @param marginWad: decimal 18 units
+    // @param slippage: 0 ~ 10000. e.g. 500 means 5%
+    async simulateAddLiquidity(
+        targetAddress: string,
+        instrumentIdentifier: InstrumentIdentifier,
+        expiry: number,
+        alphaWad: BigNumber,
+        margin: BigNumber,
+        slippage: number,
+        currentSqrtPX96?: BigNumber,
+    ): Promise<{
+        tickDelta: number;
+        liquidity: BigNumber;
+        upperPrice: BigNumber;
+        lowerPrice: BigNumber;
+        lowerPosition: PositionModel;
+        lowerLeverageWad: BigNumber;
+        upperPosition: PositionModel;
+        upperLeverageWad: BigNumber;
+        sqrtStrikeLowerPX96: BigNumber;
+        sqrtStrikeUpperPX96: BigNumber;
+        marginToDepositWad: BigNumber;
+        minMargin: BigNumber;
+        minEffectiveQuoteAmount: BigNumber;
+        equivalentAlpha: BigNumber;
+    }> {
+        const res = await this.simulateAddLiquidityWithAsymmetricRange(
+            targetAddress,
+            instrumentIdentifier,
+            expiry,
+            alphaWad,
+            alphaWad,
+            margin,
+            slippage,
+            currentSqrtPX96,
+        );
+
+        return {
+            ...res,
+            tickDelta: res.tickDeltaUpper,
+            equivalentAlpha: tickDeltaToAlphaWad(
+                ~~((TickMath.getTickAtPWad(res.upperPrice) - TickMath.getTickAtPWad(res.lowerPrice)) / 2),
+            ),
+        };
+    }
+
+    // @param alphaWad: decimal 18 units 1.3e18 means 1.3
+    // @param marginWad: decimal 18 units
+    // @param slippage: 0 ~ 10000. e.g. 500 means 5%
+    async simulateAddLiquidityWithAsymmetricRange(
+        targetAddress: string,
+        instrumentIdentifier: InstrumentIdentifier,
+        expiry: number,
+        alphaWadLower: BigNumber,
+        alphaWadUpper: BigNumber,
+        margin: BigNumber,
+        slippage: number,
+        currentSqrtPX96?: BigNumber,
+    ): Promise<{
+        tickDeltaLower: number;
+        tickDeltaUpper: number;
+        liquidity: BigNumber;
+        upperPrice: BigNumber;
+        lowerPrice: BigNumber;
+        lowerPosition: PositionModel;
+        lowerLeverageWad: BigNumber;
+        upperPosition: PositionModel;
+        upperLeverageWad: BigNumber;
+        sqrtStrikeLowerPX96: BigNumber;
+        sqrtStrikeUpperPX96: BigNumber;
+        marginToDepositWad: BigNumber;
+        minMargin: BigNumber;
+        minEffectiveQuoteAmount: BigNumber;
+        equivalentAlphaLower: BigNumber;
+        equivalentAlphaUpper: BigNumber;
+    }> {
+        const instrumentAddress = await this.synfV3.computeInstrumentAddress(
+            instrumentIdentifier.marketType,
+            instrumentIdentifier.baseSymbol,
+            instrumentIdentifier.quoteSymbol,
+        );
+        let quoteInfo: TokenInfo;
+        let pairModel: PairModel;
+        let setting: InstrumentSetting;
+        // see if this instrument is created
+        let instrument = this.synfV3.cacheModule.instrumentMap.get(instrumentAddress.toLowerCase());
+        if (!instrument || !instrument.state.pairStates.has(expiry)) {
+            // need uncreated instrument
+            const benchmarkPrice = await this.simulateBenchmarkPrice(instrumentIdentifier, expiry);
+            const { quoteTokenInfo } = await this.synfV3.getTokenInfo(instrumentIdentifier);
+            quoteInfo = quoteTokenInfo;
+            if (instrument) {
+                setting = instrument.setting;
+            } else {
+                const quoteParam = this.synfV3.config.quotesParam[quoteInfo.symbol]!;
+                instrument = InstrumentModel.minimumInstrumentWithParam(quoteParam);
+                setting = instrument.setting;
+            }
+            pairModel = PairModel.minimalPairWithAmm(instrument, benchmarkPrice);
+        } else {
+            pairModel = instrument.getPairModel(expiry);
+            quoteInfo = pairModel.rootInstrument.info.quote;
+            setting = pairModel.rootInstrument.setting;
+        }
+        const amm = pairModel.amm;
+        const tickDeltaLower = alphaWadToTickDelta(alphaWadLower);
+        const tickDeltaUpper = alphaWadToTickDelta(alphaWadUpper);
+
+        const upperTick = alignRangeTick(amm.tick + tickDeltaUpper, false);
+        const lowerTick = alignRangeTick(amm.tick - tickDeltaLower, true);
+
+        // if (pairAccountModel.containsRange(lowerTick, upperTick)) throw new Error('range is occupied');
+        const upperPrice = TickMath.getWadAtTick(upperTick);
+        const lowerPrice = TickMath.getWadAtTick(lowerTick);
+        const { liquidity: liquidity } = entryDelta(
+            amm.sqrtPX96,
+            lowerTick,
+            upperTick,
+            margin,
+            setting.initialMarginRatio,
+        );
+        const simulationRangeModel: RangeModel = RangeModel.fromRawRange(
+            pairModel,
+            {
+                liquidity: liquidity,
+                balance: margin,
+                sqrtEntryPX96: amm.sqrtPX96,
+                entryFeeIndex: amm.feeIndex,
+            },
+            rangeKey(lowerTick, upperTick),
+        );
+        const lowerPositionModel = simulationRangeModel.lowerPositionModelIfRemove;
+        const upperPositionModel = simulationRangeModel.upperPositionModelIfRemove;
+        const minMargin = getMarginFromLiquidity(
+            amm.sqrtPX96,
+            upperTick,
+            pairModel.getMinLiquidity(amm.sqrtPX96),
+            setting.initialMarginRatio,
+        );
+        const basedPX96 = currentSqrtPX96 ? currentSqrtPX96 : amm.sqrtPX96;
+        return {
+            tickDeltaLower,
+            tickDeltaUpper,
+            liquidity: liquidity,
+            upperPrice: simulationRangeModel.upperPrice,
+            lowerPrice: simulationRangeModel.lowerPrice,
+            lowerPosition: lowerPositionModel,
+            lowerLeverageWad: lowerPositionModel.size.mul(lowerPrice).div(lowerPositionModel.balance).abs(),
+            upperPosition: upperPositionModel,
+            upperLeverageWad: upperPositionModel.size.mul(upperPrice).div(upperPositionModel.balance).abs(),
+            sqrtStrikeLowerPX96: basedPX96.sub(wmulDown(basedPX96, r2w(slippage))),
+            sqrtStrikeUpperPX96: basedPX96.add(wmulDown(basedPX96, r2w(slippage))),
+            marginToDepositWad: this.synfV3.marginToDepositWad(targetAddress, quoteInfo, margin),
+            minMargin: minMargin,
+            minEffectiveQuoteAmount: instrument.minRangeValue,
+            equivalentAlphaLower: tickDeltaToAlphaWad(~~(upperTick - amm.tick)),
+            equivalentAlphaUpper: tickDeltaToAlphaWad(~~(amm.tick - lowerTick)),
+        };
+    }
+
+    simulateRemoveLiquidity(
+        pairAccountModel: PairLevelAccountModel,
+        rangeModel: RangeModel,
+        slippage: number,
+    ): {
+        simulatePositionRemoved: PositionModel;
+        simulationMainPosition: PositionModel;
+        sqrtStrikeLowerPX96: BigNumber;
+        sqrtStrikeUpperPX96: BigNumber;
+    } {
+        const amm = pairAccountModel.rootPair.amm;
+        const rawPositionRemoved = rangeModel.rawPositionIfRemove(amm);
+        const rawMainPosition = combine(amm, rawPositionRemoved, pairAccountModel.getMainPosition()).position;
+        const mainPosition = PositionModel.fromRawPosition(pairAccountModel.rootPair, rawMainPosition);
+        const positionRemoved = PositionModel.fromRawPosition(pairAccountModel.rootPair, rawPositionRemoved);
+        return {
+            simulatePositionRemoved: positionRemoved,
+            simulationMainPosition: mainPosition,
+            sqrtStrikeLowerPX96: amm.sqrtPX96.sub(wmulDown(amm.sqrtPX96, r2w(slippage))),
+            sqrtStrikeUpperPX96: amm.sqrtPX96.add(wmulDown(amm.sqrtPX96, r2w(slippage))),
         };
     }
 }

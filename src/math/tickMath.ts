@@ -11,8 +11,8 @@ import {
     wmul,
 } from './basic';
 import { BigNumber } from 'ethers';
-import { asInt256, asUint256, decompose, forceAsInt24, solidityRequire } from '../common/util';
-import { INT24_MAX, INT24_MIN, MAX_TICK, MIN_TICK, ONE_RATIO, PEARL_SPACING } from '../constants';
+import { alphaWadToTickDelta, asInt256, asUint256, decompose, forceAsInt24, solidityRequire } from '../common/util';
+import { INT24_MAX, INT24_MIN, MAX_TICK, MIN_TICK, ONE_RATIO, PEARL_SPACING, RANGE_SPACING } from '../constants';
 import { Observer, Side, signOfSide } from '../types';
 import { SqrtPriceMath } from './sqrtPriceMath';
 
@@ -297,5 +297,12 @@ export abstract class TickMath {
             nextTick = await this.getNextInitializedTickOutside(observer, instrumentAddr, expiry, nextTick, long);
         }
         return size;
+    }
+
+    getTickRangeByAlpha(alphaWad: BigNumber, curTick: number): [number, number] {
+        const tickDelta = alphaWadToTickDelta(alphaWad);
+        const upperTick = RANGE_SPACING * ~~((curTick + tickDelta) / RANGE_SPACING);
+        const lowerTick = RANGE_SPACING * ~~((curTick - tickDelta) / RANGE_SPACING);
+        return [lowerTick, upperTick];
     }
 }
