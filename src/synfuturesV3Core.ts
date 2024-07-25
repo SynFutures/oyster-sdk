@@ -132,46 +132,25 @@ import { FundFlow, GateState, Pending } from './types/gate';
 import { ConfigState } from './types/config';
 import { updateFundingIndex } from './math/funding';
 import { SdkError } from './errors/sdk.error';
-
-export const synfV3Utils = {
-    parseInstrumentSymbol: function (symbol: string): InstrumentIdentifier {
-        const [prefix, baseSymbol, quoteSymbol, marketType] = symbol.split('-');
-        if (prefix !== 'SynFuturesV3') {
-            throw new Error('Technically the instrument symbol should start with SynFuturesV3');
-        }
-        return {
-            marketType: marketType as MarketType,
-            baseSymbol: baseSymbol,
-            quoteSymbol: quoteSymbol,
-        };
-    },
-
-    isEmptyPortfolio: function (portfolio: Portfolio): boolean {
-        return portfolio.oids.length === 0 && portfolio.rids.length === 0 && portfolio.position.size.isZero();
-    },
-};
+import { CacheModule } from './modules/cache.module';
+import { InstrumentModule } from './modules/instrument.module';
+import { AccountModule } from './modules/account.module';
 
 export class SynFuturesV3 {
     private static instances = new Map<number, SynFuturesV3>();
     ctx: ChainContext;
-    // this is not initialized in constructor, but in _init().
     config!: SynfConfig;
+    // this is not initialized in constructor, but in _init().
     contracts!: SynFuturesV3Contracts;
-    gateState: GateState;
-    configState: ConfigState;
-    // update <-- new block info
-    instrumentMap: Map<string, InstrumentModel> = new Map(); // lowercase address => instrument
-
-    // lowercase address user => lowercase instrument address => expiry => PairLevelAccountModel
-    accountCache: Map<string, Map<string, Map<number, PairLevelAccountModel>>> = new Map();
-
     // quote symbol => quote token info
     quoteSymbolToInfo: Map<string, TokenInfo> = new Map();
 
+    cacheModule: CacheModule;
+    instrumentModel: InstrumentModule;
+    accountModule: AccountModule;
+
     protected constructor(ctx: ChainContext) {
         this.ctx = ctx;
-        this.gateState = new GateState(ctx.wrappedNativeToken.address.toLowerCase());
-        this.configState = new ConfigState();
     }
 
     public static getInstance(chanIdOrName: CHAIN_ID | string): SynFuturesV3 {
@@ -291,22 +270,6 @@ export class SynFuturesV3 {
         this._initContracts(provider, this.config.contractAddress);
     }
 
-    public getCachedVaultBalance(quoteAddress: string, userAddress: string): BigNumber {
-        const quote = quoteAddress.toLowerCase();
-        const user = userAddress.toLowerCase();
-        const balanceMap = this.gateState.reserveOf.get(quote.toLowerCase());
-        if (balanceMap) {
-            const balance = balanceMap.get(user);
-            if (balance) {
-                return balance;
-            } else {
-                throw new Error(`Not cached: vault balance for quote ${quote} of user ${user}`);
-            }
-        } else {
-            throw new Error(`Not cached: vault for quote ${quote}`);
-        }
-    }
-
     async computeInitData(instrumentIdentifier: InstrumentIdentifier): Promise<string> {
         const { baseTokenInfo, quoteTokenInfo } = await this.getTokenInfo(instrumentIdentifier);
 
@@ -374,296 +337,9 @@ export class SynFuturesV3 {
     }
 
     async init(): Promise<void> {
-        const list = await this.initInstruments();
-        await this.initGateState(list);
-        await this.updateConfigState();
-    }
-
-    async initInstruments(symbolToInfo?: Map<string, TokenInfo>): Promise<InstrumentModel[]> {
-        this.quoteSymbolToInfo = symbolToInfo ?? new Map();
-        for (const [, info] of this.quoteSymbolToInfo) {
-            this.registerQuoteInfo(info);
-        }
-        const list = await this.getAllInstruments();
-
-        for (const instrument of list) {
-            this.instrumentMap.set(instrument.info.addr.toLowerCase(), instrument);
-            this.ctx.registerAddress(instrument.info.addr, instrument.info.symbol);
-            this.ctx.registerContractParser(instrument.info.addr, new InstrumentParser());
-        }
-        return list;
-    }
-
-    async updateConfigState(): Promise<void> {
-        this.configState.openLp = true;
-        if (this.ctx.chainId !== CHAIN_ID.BASE) {
-            try {
-                this.configState.openLp = await this.contracts.config.openLp();
-            } catch (e) {
-                // ignore error since the contract on some network may not have this function
-            }
-        }
-        this.configState.openLiquidator = await this.contracts.config.openLiquidator();
-        for (const [symbol, param] of Object.entries(this.config.quotesParam)) {
-            const quoteInfo = await this.ctx.getTokenInfo(symbol);
-            this.configState.setQuoteParam(quoteInfo.address, param ?? EMPTY_QUOTE_PARAM);
-        }
-
-        for (const type of Object.keys(this.config.marketConfig)) {
-            const info = await this.contracts.config.getMarketInfo(type);
-            this.configState.marketsInfo.set(type as MarketType, {
-                addr: info.market,
-                beacon: info.beacon,
-                type: type,
-            });
-        }
-    }
-
-    async initGateState(instrumentList: InstrumentModel[]): Promise<void> {
-        this.gateState.allInstruments = instrumentList.map((i) => i.info.addr);
-        for (const addr of this.gateState.allInstruments) {
-            const index = await this.contracts.gate.indexOf(addr);
-            this.gateState.indexOf.set(addr.toLowerCase(), index);
-        }
-    }
-
-    // first try to find in cache, if not found, then fetch from chain
-    async getInstrumentInfo(instrumentAddress: string): Promise<InstrumentInfo> {
-        if (!this.instrumentMap.has(instrumentAddress.toLowerCase())) {
-            await this.initInstruments();
-        }
-        const instrument = this.instrumentMap.get(instrumentAddress.toLowerCase());
-        if (!instrument) {
-            throw new Error(`Invalid instrument`);
-        }
-        return instrument.info;
-    }
-
-    async getAllInstruments(batchSize = 10, overrides?: CallOverrides): Promise<InstrumentModel[]> {
-        const instrumentLists = await this.contracts.gate.getAllInstruments(overrides ?? {});
-        let instrumentModels: InstrumentModel[] = [];
-        const totalPage = Math.ceil(instrumentLists.length / batchSize);
-
-        for (let i = 0; i < totalPage; i++) {
-            const queryList = instrumentLists.slice(
-                i * batchSize,
-                (i + 1) * batchSize >= instrumentLists.length ? instrumentLists.length : (i + 1) * batchSize,
-            );
-            const [rawList, rawBlockInfo] = trimObj(
-                await this.contracts.observer.getInstrumentByAddressList(queryList, overrides ?? {}),
-            );
-            instrumentModels = instrumentModels.concat(await this.parseInstrumentData(rawList, rawBlockInfo));
-        }
-
-        return instrumentModels;
-    }
-
-    async fetchInstrumentBatch(params: FetchInstrumentParam[], overrides?: CallOverrides): Promise<InstrumentModel[]> {
-        const [rawList, rawBlockInfo] = trimObj(
-            await this.contracts.observer.getInstrumentBatch(params, overrides ?? {}),
-        );
-        return this.parseInstrumentData(rawList, rawBlockInfo);
-    }
-
-    async parseInstrumentData(rawList: AssembledInstrumentData[], blockInfo: BlockInfo): Promise<InstrumentModel[]> {
-        const instrumentModels: InstrumentModel[] = [];
-        for (const rawInstrument of rawList) {
-            const [baseSymbol, quoteSymbol, marketType] = rawInstrument.symbol.split('-');
-            const quoteTokenInfo = await this.getQuoteTokenInfo(quoteSymbol, rawInstrument.instrumentAddr);
-            let baseInfo: TokenInfo = { symbol: baseSymbol, address: ethers.constants.AddressZero, decimals: 0 };
-            if (!cexMarket(marketType as MarketType)) {
-                // fetch base token info from ctx
-                const onCtxBaseInfo = await this.ctx.getTokenInfo(baseSymbol);
-                if (onCtxBaseInfo) {
-                    baseInfo = onCtxBaseInfo;
-                }
-            }
-            const instrumentInfo: InstrumentInfo = {
-                addr: rawInstrument.instrumentAddr,
-                symbol: rawInstrument.symbol,
-                base: baseInfo,
-                quote: quoteTokenInfo,
-            };
-            const marketInfo: MarketInfo = {
-                addr: rawInstrument.market,
-                type: marketType,
-                beacon: this.config.contractAddress.market[marketType as MarketType]!.beacon,
-            };
-            const marketConfig: MarketConfig = this.config.marketConfig[marketType as MarketType]!;
-            const feeder = cexMarket(marketType as MarketType)
-                ? (rawInstrument.priceFeeder as PriceFeeder)
-                : (rawInstrument.dexV2Feeder as DexV2Feeder);
-            // we assume that marketConfig is not null
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            const market: InstrumentMarket = { info: marketInfo, config: marketConfig, feeder: feeder };
-            const param: QuoteParam = rawInstrument.param;
-            const instrumentState: InstrumentState = new InstrumentState(
-                rawInstrument.condition as InstrumentCondition,
-                rawInstrument.initialMarginRatio,
-                rawInstrument.maintenanceMarginRatio,
-                param,
-                blockInfo,
-            );
-
-            const instrumentModel = new InstrumentModel(
-                instrumentInfo,
-                market,
-                instrumentState,
-                rawInstrument.spotPrice,
-            );
-            for (let i = 0; i < rawInstrument.amms.length; i++) {
-                const rawAmm = rawInstrument.amms[i];
-                if (rawAmm.expiry === 0) {
-                    continue;
-                }
-                instrumentModel.updatePair(rawAmm as Amm, rawInstrument.markPrices[i], blockInfo);
-            }
-            this.ctx.registerAddress(instrumentInfo.addr, instrumentInfo.symbol);
-            this.ctx.registerContractParser(instrumentInfo.addr, new InstrumentParser());
-            instrumentModels.push(instrumentModel);
-        }
-        return instrumentModels;
-    }
-
-    /// will update all expiries when params.expiry.length is 0
-    public async updateInstrument(
-        params: FetchInstrumentParam[],
-        overrides?: CallOverrides,
-    ): Promise<InstrumentModel[]> {
-        const instrumentModels = await this.fetchInstrumentBatch(params, overrides);
-        this.updateInstrumentCache(instrumentModels);
-        return instrumentModels;
-    }
-
-    public async syncVaultCacheWithAllQuotes(target: string): Promise<void> {
-        const quoteParamConfig = this.config.quotesParam;
-        const quoteAddresses: string[] = [];
-        for (const symbol in quoteParamConfig) {
-            quoteAddresses.push(await this.ctx.getAddress(symbol));
-        }
-        await this.syncVaultCache(target, quoteAddresses);
-    }
-
-    public async syncVaultCache(target: string, quotes: string[]): Promise<void> {
-        const resp = await this.contracts.observer.getVaultBalances(target, quotes);
-        for (let i = 0; i < quotes.length; ++i) {
-            this.gateState.setReserve(quotes[i], target, resp[0][i]);
-        }
-    }
-
-    // given single trader address, return multiple instrument level account which he/she is involved
-    public async getInstrumentLevelAccounts(
-        target: string,
-        overrides?: CallOverrides,
-    ): Promise<InstrumentLevelAccountModel[]> {
-        const allInstrumentAddr = [...this.instrumentMap.keys()];
-        const quotes = Array.from(
-            new Set(
-                allInstrumentAddr.map(
-                    (instrument) => this.instrumentMap.get(instrument.toLowerCase())!.info.quote.address,
-                ),
-            ),
-        );
-        await this.syncVaultCache(target, quotes);
-
-        const observerInterface = this.contracts.observer.interface;
-        const calls = [];
-        for (const instrument of allInstrumentAddr) {
-            calls.push({
-                target: this.contracts.observer.address,
-                callData: observerInterface.encodeFunctionData('getPortfolios', [target, instrument]),
-            });
-        }
-        const rawRet = (await this.ctx.getMulticall3().callStatic.aggregate(calls, overrides ?? {})).returnData;
-
-        const map = new Map<string, InstrumentLevelAccountModel>(); // instrument address in lowercase => InstrumentLevelAccount
-        for (let i = 0; i < rawRet.length; i++) {
-            const decoded = observerInterface.decodeFunctionResult('getPortfolios', rawRet[i]);
-            const expiries = decoded.expiries;
-            const portfolios = decoded.portfolios;
-            const blockInfo = trimObj(decoded.blockInfo);
-
-            const instrumentAddr = allInstrumentAddr[i];
-            const instrumentModel = this.instrumentMap.get(instrumentAddr);
-            if (instrumentModel) {
-                for (let j = 0; j < expiries.length; j++) {
-                    const portfolio = portfolios[j] as Portfolio;
-                    // skip empty portfolio
-                    if (synfV3Utils.isEmptyPortfolio(portfolio)) continue;
-
-                    let instrumentLevelAccount = map.get(instrumentAddr);
-                    if (!instrumentLevelAccount) {
-                        instrumentLevelAccount = new InstrumentLevelAccountModel(
-                            instrumentModel,
-                            instrumentAddr,
-                            target.toLowerCase(),
-                        );
-                        map.set(instrumentAddr, instrumentLevelAccount);
-                    }
-                    const pair = instrumentModel.getPairModel(expiries[j]);
-                    if (pair) {
-                        instrumentLevelAccount.addPairLevelAccount(pair, portfolios[j], blockInfo);
-                    }
-                }
-            }
-        }
-        return Array.from(map.values());
-    }
-
-    public async updatePairLevelAccount(
-        target: string,
-        instrument: string,
-        expiry: number,
-        overrides?: CallOverrides,
-    ): Promise<PairLevelAccountModel> {
-        instrument = instrument.toLowerCase();
-        target = target.toLowerCase();
-        await this.updateInstrument([{ instrument: instrument, expiries: [expiry] }]);
-        const resp = await this.contracts.observer.getAcc(instrument, expiry, target, overrides ?? {});
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const pair: PairModel = this.instrumentMap.get(instrument)!.getPairModel(expiry);
-        const pairLevelAccountModel = PairLevelAccountModel.fromRawPortfolio(
-            pair,
-            target,
-            resp.portfolio,
-            trimObj(resp.blockInfo),
-        );
-        this.instrumentMap.get(instrument)?.state.setAccountState(target, expiry, pairLevelAccountModel.account);
-
-        // load into cache
-        const newTargetInstrumentMap = this.accountCache.get(target) || new Map();
-        const newInstrumentExpiryMap = newTargetInstrumentMap.get(instrument) || new Map();
-        newInstrumentExpiryMap.set(expiry, pairLevelAccountModel);
-        newTargetInstrumentMap.set(instrument, newInstrumentExpiryMap);
-        this.accountCache.set(target, newTargetInstrumentMap);
-        return pairLevelAccountModel;
-    }
-
-    public async getPairLevelAccount(
-        target: string,
-        instrument: string,
-        expiry: number,
-        useCache = false,
-    ): Promise<PairLevelAccountModel> {
-        instrument = instrument.toLowerCase();
-        target = target.toLowerCase();
-        if (!useCache) {
-            return this.updatePairLevelAccount(target, instrument, expiry);
-        }
-        // check whether cache has the info
-        const targetInstrumentMap = this.accountCache.get(target);
-        if (targetInstrumentMap) {
-            const instrumentExpiryMap = targetInstrumentMap.get(instrument);
-            if (instrumentExpiryMap) {
-                const pairLevelAccountModel = instrumentExpiryMap.get(expiry);
-                if (pairLevelAccountModel) {
-                    return pairLevelAccountModel;
-                }
-            }
-        }
-        // get info on chain and load into cache
-        const pairLevelAccountModel = await this.updatePairLevelAccount(target, instrument, expiry);
-        return pairLevelAccountModel;
+        const list = await this.instrumentModel.initInstruments();
+        await this.cacheModule.initGateState(list);
+        await this.cacheModule.updateConfigState();
     }
 
     public getLastestFundingIndex(
@@ -2414,22 +2090,6 @@ export class SynFuturesV3 {
             return marginNeedWad.sub(balanceInVaultWad);
         } else {
             return ZERO;
-        }
-    }
-
-    /// @dev only for internal use, update instrumentMap with params
-    public updateInstrumentCache(instrumentModels: InstrumentModel[]): void {
-        for (let i = 0; i < instrumentModels.length; ++i) {
-            const instrument = instrumentModels[i].info.addr.toLowerCase();
-            const oldModel = this.instrumentMap.get(instrument);
-            if (oldModel) {
-                oldModel.updateInstrumentState(instrumentModels[i].state, instrumentModels[i].spotPrice);
-                for (const pair of instrumentModels[i].state.pairStates.values()) {
-                    oldModel.updatePair(pair.amm, instrumentModels[i].getMarkPrice(pair.amm.expiry), pair.blockInfo);
-                }
-            } else {
-                this.instrumentMap.set(instrument, instrumentModels[i]);
-            }
         }
     }
 
