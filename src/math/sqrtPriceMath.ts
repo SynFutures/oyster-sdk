@@ -2,6 +2,7 @@ import { MAX_UINT_160, ONE, Q96, ZERO } from './constants';
 import { addIn256, r2w, mulDivRoundingUp, multiplyIn256, wmulUp } from './basic';
 import { BigNumber } from 'ethers';
 import { solidityRequire } from '../common/util';
+import { Quotation, QuoteParam } from '../types';
 
 export abstract class SqrtPriceMath {
     public static getDeltaBaseAutoRoundUp(
@@ -152,5 +153,15 @@ export abstract class SqrtPriceMath {
             solidityRequire(sqrtPX96.gt(quotient));
             return sqrtPX96.sub(quotient);
         }
+    }
+
+    public static getStabilityFee(quotation: Quotation, param: QuoteParam): BigNumber {
+        const feePaid = quotation.fee;
+        const protocolFeePaid = wmulUp(quotation.entryNotional, r2w(param.protocolFeeRatio));
+        const baseFeePaid = wmulUp(quotation.entryNotional, r2w(param.tradingFeeRatio));
+
+        let stabilityFee = feePaid.sub(protocolFeePaid).sub(baseFeePaid);
+        if (stabilityFee.lt(0)) stabilityFee = ZERO;
+        return stabilityFee;
     }
 }

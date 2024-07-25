@@ -12,7 +12,9 @@ import {
 } from './basic';
 import { BigNumber } from 'ethers';
 import { asInt256, asUint256, decompose, forceAsInt24, solidityRequire } from '../common/util';
-import { MAX_TICK, MIN_TICK, PEARL_SPACING } from '../constants';
+import { INT24_MAX, INT24_MIN, MAX_TICK, MIN_TICK, ONE_RATIO, PEARL_SPACING } from '../constants';
+import { Observer, Side, signOfSide } from '../types';
+import { SqrtPriceMath } from './sqrtPriceMath';
 
 export abstract class TickMath {
     /**
@@ -184,5 +186,116 @@ export abstract class TickMath {
             }
             throw new Error('search tick down, out of bound');
         }
+    }
+
+    public static getLimitTick(tradePrice: BigNumber, slippage: number, side: Side): number {
+        const sign = signOfSide(side);
+        const limitPrice = tradePrice.mul(ONE_RATIO + sign * slippage).div(ONE_RATIO);
+        const limitTick = TickMath.getTickAtPWad(limitPrice);
+        // to narrow price range compared to using limit price
+        // if LONG, use limitTick where getWadAtTick(limitTick) <= limitPrice,
+        // otherwise use limitTick + 1 where getWadAtTick(limitTick + 1) > limitPrice
+        return side == Side.LONG ? limitTick : limitTick + 1;
+    }
+
+    public static encodeLimitTicks(sqrtStrikeLowerPX96: BigNumber, sqrtStrikeUpperPX96: BigNumber): BigNumber {
+        let strikeLowerTick = sqrtStrikeLowerPX96.eq(0)
+            ? INT24_MIN
+            : TickMath.getTickAtSqrtRatio(sqrtStrikeLowerPX96) + 1;
+        strikeLowerTick = strikeLowerTick < 0 ? (1 << 24) + strikeLowerTick : strikeLowerTick;
+
+        let strikeUpperTick = sqrtStrikeUpperPX96.eq(0) ? INT24_MAX : TickMath.getTickAtSqrtRatio(sqrtStrikeUpperPX96);
+        strikeUpperTick = strikeUpperTick < 0 ? (1 << 24) + strikeUpperTick : strikeUpperTick;
+
+        return BigNumber.from(strikeLowerTick).mul(BigNumber.from(2).pow(24)).add(strikeUpperTick);
+    }
+
+    public static async getTickBitMaps(
+        observer: Observer,
+        instrument: string,
+        expiry: number,
+    ): Promise<Map<number, BigNumber>> {
+        const keys: Array<number> = new Array<number>();
+        for (let i = -128; i < 128; i++) {
+            keys.push(i);
+        }
+        const res: BigNumber[] = await observer.getTickBitmaps(instrument, expiry, keys);
+        const ret: Map<number, BigNumber> = new Map<number, BigNumber>();
+        for (let i = 0; i < keys.length; i++) {
+            ret.set(keys[i], res[i]);
+        }
+        return ret;
+    }
+
+    public static async getNextInitializedTickOutside(
+        observer: Observer,
+        instrumentAddr: string,
+        expiry: number,
+        tick: number,
+        right: boolean,
+    ): Promise<number> {
+        return observer.getNextInitializedTickOutside(instrumentAddr, expiry, tick, right);
+    }
+
+    public static async getSizeToTargetTick(
+        observer: Observer,
+        instrumentAddr: string,
+        expiry: number,
+        targetTick: number,
+    ): Promise<BigNumber> {
+        const amm = await observer.getAmm(instrumentAddr, expiry);
+        const targetPX96 = TickMath.getSqrtRatioAtTick(targetTick);
+        if (targetPX96.eq(amm.sqrtPX96)) {
+            return ZERO;
+        }
+        const long = targetTick > amm.tick;
+        let size = ZERO;
+
+        const currTickLeft = (await observer.getPearls(instrumentAddr, expiry, [amm.tick]))[0].left;
+        if (long && currTickLeft.isNegative()) {
+            size = size.sub(currTickLeft);
+        }
+
+        let sqrtPX96 = amm.sqrtPX96;
+        let liquidity = amm.liquidity;
+
+        let nextTick = await this.getNextInitializedTickOutside(
+            observer,
+            instrumentAddr,
+            expiry,
+            amm.tick + (long ? 0 : 1),
+            long,
+        );
+
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+            const nextPX96 = TickMath.getSqrtRatioAtTick(nextTick);
+            if ((long && nextTick > targetTick) || (!long && nextTick < targetTick)) {
+                // tick has been found
+                const delta = SqrtPriceMath.getDeltaBaseAutoRoundUp(sqrtPX96, targetPX96, liquidity);
+                // for now, add extra 1 to cover precision loss
+                size = long ? size.add(delta).add(1) : size.sub(delta).sub(1);
+                break;
+            }
+            // continue search
+            const nextPearl = (await observer.getPearls(instrumentAddr, expiry, [nextTick]))[0];
+            const delta = SqrtPriceMath.getDeltaBaseAutoRoundUp(sqrtPX96, nextPX96, liquidity);
+            size = long ? size.add(delta) : size.sub(delta);
+            if (nextTick === targetTick) {
+                break;
+            }
+            if ((long && nextPearl.left.isNegative()) || (!long && nextPearl.left.gt(0))) {
+                size = size.sub(nextPearl.left);
+            }
+
+            // update
+            sqrtPX96 = nextPX96;
+            if (nextPearl.liquidityGross.gt(ZERO)) {
+                liquidity = liquidity.add(long ? nextPearl.liquidityNet : nextPearl.liquidityNet.mul(-1));
+            }
+
+            nextTick = await this.getNextInitializedTickOutside(observer, instrumentAddr, expiry, nextTick, long);
+        }
+        return size;
     }
 }

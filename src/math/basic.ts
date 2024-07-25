@@ -17,6 +17,8 @@ import {
 } from './constants';
 import { solidityRequire } from '../common/util';
 import { TickMath } from './tickMath';
+import { PEARL_SPACING, RATIO_DECIMALS } from '../constants';
+import { FundFlow, Pending } from '../types';
 
 export function mulDivRoundingUp(a: BigNumber, b: BigNumber, denominator: BigNumber): BigNumber {
     const product = a.mul(b);
@@ -301,4 +303,40 @@ export function min(left: BigNumber, right: BigNumber): BigNumber {
 
 export function relativeDiffRatioWadAbs(wadA: BigNumber, wadB: BigNumber): BigNumber {
     return wdivUp(wadA.sub(wadB).abs(), wadA.lt(wadB) ? wadA : wadB);
+}
+
+export function getOrderLeverageByMargin(targetTick: number, baseSize: BigNumber, margin: BigNumber): BigNumber {
+    return wdiv(wmul(TickMath.getWadAtTick(targetTick), baseSize.abs()), margin);
+}
+
+export function getMaxLeverage(imr: number): number {
+    return 1 / (imr / 10 ** RATIO_DECIMALS);
+}
+
+export function calcMaxWithdrawable(
+    threshold: BigNumber,
+    pending: Pending,
+    fundFlow: FundFlow,
+    reserve: BigNumber,
+): BigNumber {
+    // exceed threshold condition
+    // totalOut - totalIn + amount + quantity > threshold + exemption
+    // quantity = threshold + exemption - totalOut + totalIn - amount
+    const maxWithdrawable = threshold
+        .add(pending.exemption)
+        .sub(fundFlow.totalOut)
+        .add(fundFlow.totalIn)
+        .sub(pending.amount);
+    // should be capped by 0 and reserve
+    if (maxWithdrawable.lte(0)) return ZERO;
+    if (maxWithdrawable.gt(reserve)) return reserve;
+    return maxWithdrawable;
+}
+
+export function alignPriceWadToTick(priceWad: BigNumber): { tick: number; priceWad: BigNumber } {
+    let tick = wadToTick(priceWad);
+    tick = Math.round(tick / PEARL_SPACING) * PEARL_SPACING;
+
+    const alignedPriceWad = TickMath.getWadAtTick(tick);
+    return { tick: tick, priceWad: alignedPriceWad };
 }
