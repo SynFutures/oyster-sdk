@@ -40,7 +40,7 @@ export class SynFuturesV3Front {
     }
 
     async init(): Promise<void> {
-        await this.core.initInstruments();
+        await this.core.instrumentModel.initInstruments();
     }
 
     capAlphaWad(alphaWad: BigNumber): BigNumber {
@@ -122,7 +122,7 @@ export class SynFuturesV3Front {
             instrumentIdentifier.baseSymbol,
             instrumentIdentifier.quoteSymbol,
         );
-        const instrument = this.core.instrumentMap.get(instrumentAddress.toLowerCase());
+        const instrument = this.core.cacheModule.instrumentMap.get(instrumentAddress.toLowerCase());
         let initialMarginRatio;
         let currentSqrtPX96;
         if (!instrument || !instrument.state.pairStates.has(expiry)) {
@@ -131,7 +131,7 @@ export class SynFuturesV3Front {
             } else {
                 initialMarginRatio = INITIAL_MARGIN_RATIO;
             }
-            const benchmarkPrice = await this.core.simulateBenchmarkPrice(instrumentIdentifier, expiry);
+            const benchmarkPrice = await this.core.simulateModule.simulateBenchmarkPrice(instrumentIdentifier, expiry);
             currentSqrtPX96 = wadToSqrtX96(benchmarkPrice);
         } else {
             initialMarginRatio = instrument.setting.initialMarginRatio;

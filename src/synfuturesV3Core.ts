@@ -116,7 +116,7 @@ export class SynFuturesV3 {
     quoteSymbolToInfo: Map<string, TokenInfo> = new Map();
 
     cacheModule!: CacheModule;
-    instrumentModel!: InstrumentModule;
+    instrumentModule!: InstrumentModule;
     accountModule!: AccountModule;
     simulateModule!: SimulateModule;
 
@@ -138,7 +138,7 @@ export class SynFuturesV3 {
 
     private _initModules(): void {
         this.cacheModule = new CacheModule(this);
-        this.instrumentModel = new InstrumentModule(this);
+        this.instrumentModule = new InstrumentModule(this);
         this.accountModule = new AccountModule(this);
         this.simulateModule = new SimulateModule(this);
     }
@@ -316,7 +316,7 @@ export class SynFuturesV3 {
     }
 
     async init(): Promise<void> {
-        const list = await this.instrumentModel.initInstruments();
+        const list = await this.instrumentModule.initInstruments();
         await this.cacheModule.initGateState(list);
         await this.cacheModule.updateConfigState();
     }
