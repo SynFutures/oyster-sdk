@@ -66,9 +66,11 @@ export interface VaultFactoryInterface extends utils.Interface {
     "config()": FunctionFragment;
     "createVault(address,string,(uint8,address,uint8,uint8,uint8,uint8,uint16,uint128,uint128))": FunctionFragment;
     "getAllVaults()": FunctionFragment;
+    "guardian()": FunctionFragment;
     "indexToVault(bytes32)": FunctionFragment;
     "initialize(address)": FunctionFragment;
     "owner()": FunctionFragment;
+    "releasePendingForVault()": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
     "setVaultCommissionRatio(address,uint16)": FunctionFragment;
     "setVaultLiveThreshold(address,uint128)": FunctionFragment;
@@ -88,9 +90,11 @@ export interface VaultFactoryInterface extends utils.Interface {
       | "config"
       | "createVault"
       | "getAllVaults"
+      | "guardian"
       | "indexToVault"
       | "initialize"
       | "owner"
+      | "releasePendingForVault"
       | "renounceOwnership"
       | "setVaultCommissionRatio"
       | "setVaultLiveThreshold"
@@ -118,6 +122,7 @@ export interface VaultFactoryInterface extends utils.Interface {
     functionFragment: "getAllVaults",
     values?: undefined
   ): string;
+  encodeFunctionData(functionFragment: "guardian", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "indexToVault",
     values: [PromiseOrValue<BytesLike>]
@@ -127,6 +132,10 @@ export interface VaultFactoryInterface extends utils.Interface {
     values: [PromiseOrValue<string>]
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "releasePendingForVault",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
     values?: undefined
@@ -190,12 +199,17 @@ export interface VaultFactoryInterface extends utils.Interface {
     functionFragment: "getAllVaults",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "guardian", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "indexToVault",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "releasePendingForVault",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "renounceOwnership",
     data: BytesLike
@@ -324,6 +338,8 @@ export interface VaultFactory extends BaseContract {
 
     getAllVaults(overrides?: CallOverrides): Promise<[string[]]>;
 
+    guardian(overrides?: CallOverrides): Promise<[string]>;
+
     indexToVault(
       index: PromiseOrValue<BytesLike>,
       overrides?: CallOverrides
@@ -335,6 +351,10 @@ export interface VaultFactory extends BaseContract {
     ): Promise<ContractTransaction>;
 
     owner(overrides?: CallOverrides): Promise<[string]>;
+
+    releasePendingForVault(
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
 
     renounceOwnership(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -409,6 +429,8 @@ export interface VaultFactory extends BaseContract {
 
   getAllVaults(overrides?: CallOverrides): Promise<string[]>;
 
+  guardian(overrides?: CallOverrides): Promise<string>;
+
   indexToVault(
     index: PromiseOrValue<BytesLike>,
     overrides?: CallOverrides
@@ -420,6 +442,10 @@ export interface VaultFactory extends BaseContract {
   ): Promise<ContractTransaction>;
 
   owner(overrides?: CallOverrides): Promise<string>;
+
+  releasePendingForVault(
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
 
   renounceOwnership(
     overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -494,6 +520,8 @@ export interface VaultFactory extends BaseContract {
 
     getAllVaults(overrides?: CallOverrides): Promise<string[]>;
 
+    guardian(overrides?: CallOverrides): Promise<string>;
+
     indexToVault(
       index: PromiseOrValue<BytesLike>,
       overrides?: CallOverrides
@@ -505,6 +533,8 @@ export interface VaultFactory extends BaseContract {
     ): Promise<void>;
 
     owner(overrides?: CallOverrides): Promise<string>;
+
+    releasePendingForVault(overrides?: CallOverrides): Promise<void>;
 
     renounceOwnership(overrides?: CallOverrides): Promise<void>;
 
@@ -607,6 +637,8 @@ export interface VaultFactory extends BaseContract {
 
     getAllVaults(overrides?: CallOverrides): Promise<BigNumber>;
 
+    guardian(overrides?: CallOverrides): Promise<BigNumber>;
+
     indexToVault(
       index: PromiseOrValue<BytesLike>,
       overrides?: CallOverrides
@@ -618,6 +650,10 @@ export interface VaultFactory extends BaseContract {
     ): Promise<BigNumber>;
 
     owner(overrides?: CallOverrides): Promise<BigNumber>;
+
+    releasePendingForVault(
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
 
     renounceOwnership(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -693,6 +729,8 @@ export interface VaultFactory extends BaseContract {
 
     getAllVaults(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    guardian(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     indexToVault(
       index: PromiseOrValue<BytesLike>,
       overrides?: CallOverrides
@@ -704,6 +742,10 @@ export interface VaultFactory extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    releasePendingForVault(
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
 
     renounceOwnership(
       overrides?: Overrides & { from?: PromiseOrValue<string> }

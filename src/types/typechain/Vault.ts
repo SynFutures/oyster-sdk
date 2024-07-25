@@ -62,18 +62,6 @@ export type ConfigurationStructOutput = [
   liveThreshold: BigNumber;
 };
 
-export type ArrearStruct = {
-  phase: PromiseOrValue<BigNumberish>;
-  native: PromiseOrValue<boolean>;
-  quantity: PromiseOrValue<BigNumberish>;
-};
-
-export type ArrearStructOutput = [number, boolean, BigNumber] & {
-  phase: number;
-  native: boolean;
-  quantity: BigNumber;
-};
-
 export type StakeStruct = {
   share: PromiseOrValue<BigNumberish>;
   entryValue: PromiseOrValue<BigNumberish>;
@@ -136,15 +124,13 @@ export interface VaultInterface extends utils.Interface {
     "add(address,bytes32[2])": FunctionFragment;
     "batchCancel(address,uint32,uint240[3])": FunctionFragment;
     "batchPlace(address,bytes32[3])": FunctionFragment;
-    "claimArrear()": FunctionFragment;
-    "claimCommission(bool,uint256)": FunctionFragment;
+    "collectCommission(bool,uint256)": FunctionFragment;
     "commission()": FunctionFragment;
     "deposit(uint256)": FunctionFragment;
     "donate(uint256)": FunctionFragment;
     "factory()": FunctionFragment;
     "fill(address,bytes32)": FunctionFragment;
     "gate()": FunctionFragment;
-    "getArrear(address)": FunctionFragment;
     "getConfiguration()": FunctionFragment;
     "getInvolvedPairs()": FunctionFragment;
     "getPortfolioValue()": FunctionFragment;
@@ -154,8 +140,9 @@ export interface VaultInterface extends utils.Interface {
     "launch(string,address,bytes,bytes32[2])": FunctionFragment;
     "liquidate(address,uint32,address,int256,uint256)": FunctionFragment;
     "manager()": FunctionFragment;
-    "markReady(address[])": FunctionFragment;
     "name()": FunctionFragment;
+    "owedShareOf(address)": FunctionFragment;
+    "payoff(address[])": FunctionFragment;
     "place(address,bytes32[2])": FunctionFragment;
     "remove(address,bytes32[2])": FunctionFragment;
     "setCommissionRatio(uint16)": FunctionFragment;
@@ -169,7 +156,6 @@ export interface VaultInterface extends utils.Interface {
     "trade(address,bytes32[2])": FunctionFragment;
     "weth()": FunctionFragment;
     "withdraw(bool,uint256)": FunctionFragment;
-    "withdrawFromGateAndRelease(address[])": FunctionFragment;
   };
 
   getFunction(
@@ -178,15 +164,13 @@ export interface VaultInterface extends utils.Interface {
       | "add"
       | "batchCancel"
       | "batchPlace"
-      | "claimArrear"
-      | "claimCommission"
+      | "collectCommission"
       | "commission"
       | "deposit"
       | "donate"
       | "factory"
       | "fill"
       | "gate"
-      | "getArrear"
       | "getConfiguration"
       | "getInvolvedPairs"
       | "getPortfolioValue"
@@ -196,8 +180,9 @@ export interface VaultInterface extends utils.Interface {
       | "launch"
       | "liquidate"
       | "manager"
-      | "markReady"
       | "name"
+      | "owedShareOf"
+      | "payoff"
       | "place"
       | "remove"
       | "setCommissionRatio"
@@ -211,7 +196,6 @@ export interface VaultInterface extends utils.Interface {
       | "trade"
       | "weth"
       | "withdraw"
-      | "withdrawFromGateAndRelease"
   ): FunctionFragment;
 
   encodeFunctionData(
@@ -249,11 +233,7 @@ export interface VaultInterface extends utils.Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "claimArrear",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "claimCommission",
+    functionFragment: "collectCommission",
     values: [PromiseOrValue<boolean>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
@@ -274,10 +254,6 @@ export interface VaultInterface extends utils.Interface {
     values: [PromiseOrValue<string>, PromiseOrValue<BytesLike>]
   ): string;
   encodeFunctionData(functionFragment: "gate", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "getArrear",
-    values: [PromiseOrValue<string>]
-  ): string;
   encodeFunctionData(
     functionFragment: "getConfiguration",
     values?: undefined
@@ -327,11 +303,15 @@ export interface VaultInterface extends utils.Interface {
     ]
   ): string;
   encodeFunctionData(functionFragment: "manager", values?: undefined): string;
+  encodeFunctionData(functionFragment: "name", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "markReady",
+    functionFragment: "owedShareOf",
+    values: [PromiseOrValue<string>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "payoff",
     values: [PromiseOrValue<string>[]]
   ): string;
-  encodeFunctionData(functionFragment: "name", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "place",
     values: [
@@ -394,10 +374,6 @@ export interface VaultInterface extends utils.Interface {
     functionFragment: "withdraw",
     values: [PromiseOrValue<boolean>, PromiseOrValue<BigNumberish>]
   ): string;
-  encodeFunctionData(
-    functionFragment: "withdrawFromGateAndRelease",
-    values: [PromiseOrValue<string>[]]
-  ): string;
 
   decodeFunctionResult(functionFragment: "RATIO_BASE", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "add", data: BytesLike): Result;
@@ -407,11 +383,7 @@ export interface VaultInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "batchPlace", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "claimArrear",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "claimCommission",
+    functionFragment: "collectCommission",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "commission", data: BytesLike): Result;
@@ -420,7 +392,6 @@ export interface VaultInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "factory", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "fill", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "gate", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "getArrear", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getConfiguration",
     data: BytesLike
@@ -442,8 +413,12 @@ export interface VaultInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "launch", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "liquidate", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "manager", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "markReady", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "owedShareOf",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "payoff", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "place", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "remove", data: BytesLike): Result;
   decodeFunctionResult(
@@ -469,10 +444,6 @@ export interface VaultInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "trade", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "weth", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "withdrawFromGateAndRelease",
-    data: BytesLike
-  ): Result;
 
   events: {
     "AddInvolvedPair(address,uint32)": EventFragment;
@@ -481,9 +452,10 @@ export interface VaultInterface extends utils.Interface {
     "RemoveInvolvedPair(address,uint32)": EventFragment;
     "SetConfiguration(tuple)": EventFragment;
     "SetManager(address,address)": EventFragment;
-    "UpdateArrear(address,tuple)": EventFragment;
-    "UpdateCommision(uint128)": EventFragment;
-    "UpdateStake(address,tuple,uint256)": EventFragment;
+    "UpdateCommission(uint256)": EventFragment;
+    "UpdateOwedShare(address,uint256)": EventFragment;
+    "UpdateStake(address,tuple)": EventFragment;
+    "UpdateTotalShare(uint256)": EventFragment;
     "Withdraw(address,bool,uint256)": EventFragment;
     "AdminChanged(address,address)": EventFragment;
     "BeaconUpgraded(address)": EventFragment;
@@ -496,9 +468,10 @@ export interface VaultInterface extends utils.Interface {
   getEvent(nameOrSignatureOrTopic: "RemoveInvolvedPair"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "SetConfiguration"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "SetManager"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "UpdateArrear"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "UpdateCommision"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "UpdateCommission"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "UpdateOwedShare"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "UpdateStake"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "UpdateTotalShare"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Withdraw"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "AdminChanged"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "BeaconUpgraded"): EventFragment;
@@ -569,38 +542,49 @@ export type SetManagerEvent = TypedEvent<
 
 export type SetManagerEventFilter = TypedEventFilter<SetManagerEvent>;
 
-export interface UpdateArrearEventObject {
-  user: string;
-  arrear: ArrearStructOutput;
-}
-export type UpdateArrearEvent = TypedEvent<
-  [string, ArrearStructOutput],
-  UpdateArrearEventObject
->;
-
-export type UpdateArrearEventFilter = TypedEventFilter<UpdateArrearEvent>;
-
-export interface UpdateCommisionEventObject {
+export interface UpdateCommissionEventObject {
   commission: BigNumber;
 }
-export type UpdateCommisionEvent = TypedEvent<
+export type UpdateCommissionEvent = TypedEvent<
   [BigNumber],
-  UpdateCommisionEventObject
+  UpdateCommissionEventObject
 >;
 
-export type UpdateCommisionEventFilter = TypedEventFilter<UpdateCommisionEvent>;
+export type UpdateCommissionEventFilter =
+  TypedEventFilter<UpdateCommissionEvent>;
+
+export interface UpdateOwedShareEventObject {
+  user: string;
+  owedShare: BigNumber;
+}
+export type UpdateOwedShareEvent = TypedEvent<
+  [string, BigNumber],
+  UpdateOwedShareEventObject
+>;
+
+export type UpdateOwedShareEventFilter = TypedEventFilter<UpdateOwedShareEvent>;
 
 export interface UpdateStakeEventObject {
   user: string;
   stake: StakeStructOutput;
-  totalShare: BigNumber;
 }
 export type UpdateStakeEvent = TypedEvent<
-  [string, StakeStructOutput, BigNumber],
+  [string, StakeStructOutput],
   UpdateStakeEventObject
 >;
 
 export type UpdateStakeEventFilter = TypedEventFilter<UpdateStakeEvent>;
+
+export interface UpdateTotalShareEventObject {
+  totalShare: BigNumber;
+}
+export type UpdateTotalShareEvent = TypedEvent<
+  [BigNumber],
+  UpdateTotalShareEventObject
+>;
+
+export type UpdateTotalShareEventFilter =
+  TypedEventFilter<UpdateTotalShareEvent>;
 
 export interface WithdrawEventObject {
   user: string;
@@ -698,11 +682,7 @@ export interface Vault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    claimArrear(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    claimCommission(
+    collectCommission(
       native: PromiseOrValue<boolean>,
       amount: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -729,11 +709,6 @@ export interface Vault extends BaseContract {
     ): Promise<ContractTransaction>;
 
     gate(overrides?: CallOverrides): Promise<[string]>;
-
-    getArrear(
-      user: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<[ArrearStructOutput]>;
 
     getConfiguration(
       overrides?: CallOverrides
@@ -764,7 +739,13 @@ export interface Vault extends BaseContract {
       user: PromiseOrValue<string>,
       share: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber, number] & { value: BigNumber; phase: number }>;
+    ): Promise<
+      [boolean, BigNumber, BigNumber] & {
+        availableNow: boolean;
+        netValue: BigNumber;
+        commissionFee: BigNumber;
+      }
+    >;
 
     launch(
       mtype: PromiseOrValue<string>,
@@ -785,12 +766,17 @@ export interface Vault extends BaseContract {
 
     manager(overrides?: CallOverrides): Promise<[string]>;
 
-    markReady(
+    name(overrides?: CallOverrides): Promise<[string]>;
+
+    owedShareOf(
+      user: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber] & { owedShare: BigNumber }>;
+
+    payoff(
       users: PromiseOrValue<string>[],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
-
-    name(overrides?: CallOverrides): Promise<[string]>;
 
     place(
       instrument: PromiseOrValue<string>,
@@ -857,11 +843,6 @@ export interface Vault extends BaseContract {
       share: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
-
-    withdrawFromGateAndRelease(
-      users: PromiseOrValue<string>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
   };
 
   RATIO_BASE(overrides?: CallOverrides): Promise<number>;
@@ -893,11 +874,7 @@ export interface Vault extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  claimArrear(
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  claimCommission(
+  collectCommission(
     native: PromiseOrValue<boolean>,
     amount: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -924,11 +901,6 @@ export interface Vault extends BaseContract {
   ): Promise<ContractTransaction>;
 
   gate(overrides?: CallOverrides): Promise<string>;
-
-  getArrear(
-    user: PromiseOrValue<string>,
-    overrides?: CallOverrides
-  ): Promise<ArrearStructOutput>;
 
   getConfiguration(
     overrides?: CallOverrides
@@ -959,7 +931,13 @@ export interface Vault extends BaseContract {
     user: PromiseOrValue<string>,
     share: PromiseOrValue<BigNumberish>,
     overrides?: CallOverrides
-  ): Promise<[BigNumber, number] & { value: BigNumber; phase: number }>;
+  ): Promise<
+    [boolean, BigNumber, BigNumber] & {
+      availableNow: boolean;
+      netValue: BigNumber;
+      commissionFee: BigNumber;
+    }
+  >;
 
   launch(
     mtype: PromiseOrValue<string>,
@@ -980,12 +958,17 @@ export interface Vault extends BaseContract {
 
   manager(overrides?: CallOverrides): Promise<string>;
 
-  markReady(
+  name(overrides?: CallOverrides): Promise<string>;
+
+  owedShareOf(
+    user: PromiseOrValue<string>,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  payoff(
     users: PromiseOrValue<string>[],
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
-
-  name(overrides?: CallOverrides): Promise<string>;
 
   place(
     instrument: PromiseOrValue<string>,
@@ -1053,11 +1036,6 @@ export interface Vault extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  withdrawFromGateAndRelease(
-    users: PromiseOrValue<string>[],
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
   callStatic: {
     RATIO_BASE(overrides?: CallOverrides): Promise<number>;
 
@@ -1094,9 +1072,7 @@ export interface Vault extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[number[], OrderStructOutput[]]>;
 
-    claimArrear(overrides?: CallOverrides): Promise<void>;
-
-    claimCommission(
+    collectCommission(
       native: PromiseOrValue<boolean>,
       amount: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
@@ -1129,11 +1105,6 @@ export interface Vault extends BaseContract {
 
     gate(overrides?: CallOverrides): Promise<string>;
 
-    getArrear(
-      user: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<ArrearStructOutput>;
-
     getConfiguration(
       overrides?: CallOverrides
     ): Promise<ConfigurationStructOutput>;
@@ -1163,7 +1134,13 @@ export interface Vault extends BaseContract {
       user: PromiseOrValue<string>,
       share: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber, number] & { value: BigNumber; phase: number }>;
+    ): Promise<
+      [boolean, BigNumber, BigNumber] & {
+        availableNow: boolean;
+        netValue: BigNumber;
+        commissionFee: BigNumber;
+      }
+    >;
 
     launch(
       mtype: PromiseOrValue<string>,
@@ -1184,12 +1161,17 @@ export interface Vault extends BaseContract {
 
     manager(overrides?: CallOverrides): Promise<string>;
 
-    markReady(
+    name(overrides?: CallOverrides): Promise<string>;
+
+    owedShareOf(
+      user: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    payoff(
       users: PromiseOrValue<string>[],
       overrides?: CallOverrides
     ): Promise<void>;
-
-    name(overrides?: CallOverrides): Promise<string>;
 
     place(
       instrument: PromiseOrValue<string>,
@@ -1258,11 +1240,6 @@ export interface Vault extends BaseContract {
       share: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
-
-    withdrawFromGateAndRelease(
-      users: PromiseOrValue<string>[],
-      overrides?: CallOverrides
-    ): Promise<void>;
   };
 
   filters: {
@@ -1310,28 +1287,29 @@ export interface Vault extends BaseContract {
       oldManager?: null
     ): SetManagerEventFilter;
 
-    "UpdateArrear(address,tuple)"(
-      user?: PromiseOrValue<string> | null,
-      arrear?: null
-    ): UpdateArrearEventFilter;
-    UpdateArrear(
-      user?: PromiseOrValue<string> | null,
-      arrear?: null
-    ): UpdateArrearEventFilter;
+    "UpdateCommission(uint256)"(commission?: null): UpdateCommissionEventFilter;
+    UpdateCommission(commission?: null): UpdateCommissionEventFilter;
 
-    "UpdateCommision(uint128)"(commission?: null): UpdateCommisionEventFilter;
-    UpdateCommision(commission?: null): UpdateCommisionEventFilter;
-
-    "UpdateStake(address,tuple,uint256)"(
+    "UpdateOwedShare(address,uint256)"(
       user?: PromiseOrValue<string> | null,
-      stake?: null,
-      totalShare?: null
+      owedShare?: null
+    ): UpdateOwedShareEventFilter;
+    UpdateOwedShare(
+      user?: PromiseOrValue<string> | null,
+      owedShare?: null
+    ): UpdateOwedShareEventFilter;
+
+    "UpdateStake(address,tuple)"(
+      user?: PromiseOrValue<string> | null,
+      stake?: null
     ): UpdateStakeEventFilter;
     UpdateStake(
       user?: PromiseOrValue<string> | null,
-      stake?: null,
-      totalShare?: null
+      stake?: null
     ): UpdateStakeEventFilter;
+
+    "UpdateTotalShare(uint256)"(totalShare?: null): UpdateTotalShareEventFilter;
+    UpdateTotalShare(totalShare?: null): UpdateTotalShareEventFilter;
 
     "Withdraw(address,bool,uint256)"(
       user?: PromiseOrValue<string> | null,
@@ -1398,11 +1376,7 @@ export interface Vault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    claimArrear(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    claimCommission(
+    collectCommission(
       native: PromiseOrValue<boolean>,
       amount: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -1429,11 +1403,6 @@ export interface Vault extends BaseContract {
     ): Promise<BigNumber>;
 
     gate(overrides?: CallOverrides): Promise<BigNumber>;
-
-    getArrear(
-      user: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
 
     getConfiguration(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -1479,12 +1448,17 @@ export interface Vault extends BaseContract {
 
     manager(overrides?: CallOverrides): Promise<BigNumber>;
 
-    markReady(
+    name(overrides?: CallOverrides): Promise<BigNumber>;
+
+    owedShareOf(
+      user: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    payoff(
       users: PromiseOrValue<string>[],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
-
-    name(overrides?: CallOverrides): Promise<BigNumber>;
 
     place(
       instrument: PromiseOrValue<string>,
@@ -1551,11 +1525,6 @@ export interface Vault extends BaseContract {
       share: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
-
-    withdrawFromGateAndRelease(
-      users: PromiseOrValue<string>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
@@ -1588,11 +1557,7 @@ export interface Vault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    claimArrear(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    claimCommission(
+    collectCommission(
       native: PromiseOrValue<boolean>,
       amount: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -1619,11 +1584,6 @@ export interface Vault extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     gate(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    getArrear(
-      user: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
 
     getConfiguration(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
@@ -1669,12 +1629,17 @@ export interface Vault extends BaseContract {
 
     manager(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    markReady(
+    name(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    owedShareOf(
+      user: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    payoff(
       users: PromiseOrValue<string>[],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
-
-    name(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     place(
       instrument: PromiseOrValue<string>,
@@ -1739,11 +1704,6 @@ export interface Vault extends BaseContract {
     withdraw(
       native: PromiseOrValue<boolean>,
       share: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    withdrawFromGateAndRelease(
-      users: PromiseOrValue<string>[],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
   };

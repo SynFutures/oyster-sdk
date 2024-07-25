@@ -11,7 +11,7 @@ const _abi = [
     inputs: [
       {
         internalType: "address",
-        name: "gate",
+        name: "_gate",
         type: "address",
       },
       {
@@ -21,12 +21,28 @@ const _abi = [
       },
       {
         internalType: "address",
-        name: "weth",
+        name: "_guardian",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "_weth",
         type: "address",
       },
     ],
     stateMutability: "nonpayable",
     type: "constructor",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "suspicious",
+        type: "address",
+      },
+    ],
+    name: "NotVault",
+    type: "error",
   },
   {
     inputs: [],
@@ -252,6 +268,19 @@ const _abi = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "guardian",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [
       {
         internalType: "bytes32",
@@ -294,6 +323,13 @@ const _abi = [
       },
     ],
     stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "releasePendingForVault",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {

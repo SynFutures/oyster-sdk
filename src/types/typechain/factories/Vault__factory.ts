@@ -25,19 +25,19 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "ArrearExists",
+    name: "CannotPayOff",
     type: "error",
   },
   {
     inputs: [],
-    name: "InsufficientDeposit",
+    name: "InsufficientCommission",
     type: "error",
   },
   {
     inputs: [
       {
         internalType: "address",
-        name: "user",
+        name: "evil",
         type: "address",
       },
       {
@@ -113,11 +113,6 @@ const _abi = [
     type: "error",
   },
   {
-    inputs: [],
-    name: "NotReady",
-    type: "error",
-  },
-  {
     inputs: [
       {
         internalType: "address",
@@ -135,17 +130,59 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "NotWETHQuote",
+    name: "NotWrappedNative",
     type: "error",
   },
   {
     inputs: [],
-    name: "StillPendingInGate",
+    name: "OwedShareExists",
     type: "error",
   },
   {
     inputs: [],
     name: "SuspendedVault",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "deposit",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "threshold",
+        type: "uint256",
+      },
+    ],
+    name: "TrivialDeposit",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "received",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "expected",
+        type: "uint256",
+      },
+    ],
+    name: "UnexplainableWithdrawal",
     type: "error",
   },
   {
@@ -318,49 +355,32 @@ const _abi = [
     anonymous: false,
     inputs: [
       {
-        indexed: true,
-        internalType: "address",
-        name: "user",
-        type: "address",
-      },
-      {
-        components: [
-          {
-            internalType: "enum Phase",
-            name: "phase",
-            type: "uint8",
-          },
-          {
-            internalType: "bool",
-            name: "native",
-            type: "bool",
-          },
-          {
-            internalType: "uint128",
-            name: "quantity",
-            type: "uint128",
-          },
-        ],
         indexed: false,
-        internalType: "struct Arrear",
-        name: "arrear",
-        type: "tuple",
+        internalType: "uint256",
+        name: "commission",
+        type: "uint256",
       },
     ],
-    name: "UpdateArrear",
+    name: "UpdateCommission",
     type: "event",
   },
   {
     anonymous: false,
     inputs: [
       {
+        indexed: true,
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+      {
         indexed: false,
-        internalType: "uint128",
-        name: "commission",
-        type: "uint128",
+        internalType: "uint256",
+        name: "owedShare",
+        type: "uint256",
       },
     ],
-    name: "UpdateCommision",
+    name: "UpdateOwedShare",
     type: "event",
   },
   {
@@ -390,6 +410,13 @@ const _abi = [
         name: "stake",
         type: "tuple",
       },
+    ],
+    name: "UpdateStake",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
       {
         indexed: false,
         internalType: "uint256",
@@ -397,7 +424,7 @@ const _abi = [
         type: "uint256",
       },
     ],
-    name: "UpdateStake",
+    name: "UpdateTotalShare",
     type: "event",
   },
   {
@@ -559,13 +586,6 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [],
-    name: "claimArrear",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
     inputs: [
       {
         internalType: "bool",
@@ -578,7 +598,7 @@ const _abi = [
         type: "uint256",
       },
     ],
-    name: "claimCommission",
+    name: "collectCommission",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -588,9 +608,9 @@ const _abi = [
     name: "commission",
     outputs: [
       {
-        internalType: "uint96",
+        internalType: "uint128",
         name: "",
-        type: "uint96",
+        type: "uint128",
       },
     ],
     stateMutability: "view",
@@ -699,42 +719,6 @@ const _abi = [
         internalType: "address",
         name: "",
         type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "user",
-        type: "address",
-      },
-    ],
-    name: "getArrear",
-    outputs: [
-      {
-        components: [
-          {
-            internalType: "enum Phase",
-            name: "phase",
-            type: "uint8",
-          },
-          {
-            internalType: "bool",
-            name: "native",
-            type: "bool",
-          },
-          {
-            internalType: "uint128",
-            name: "quantity",
-            type: "uint128",
-          },
-        ],
-        internalType: "struct Arrear",
-        name: "",
-        type: "tuple",
       },
     ],
     stateMutability: "view",
@@ -953,14 +937,19 @@ const _abi = [
     name: "inquireWithdrawal",
     outputs: [
       {
+        internalType: "bool",
+        name: "availableNow",
+        type: "bool",
+      },
+      {
         internalType: "uint256",
-        name: "value",
+        name: "netValue",
         type: "uint256",
       },
       {
-        internalType: "enum Phase",
-        name: "phase",
-        type: "uint8",
+        internalType: "uint256",
+        name: "commissionFee",
+        type: "uint256",
       },
     ],
     stateMutability: "view",
@@ -1041,19 +1030,6 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "address[]",
-        name: "users",
-        type: "address[]",
-      },
-    ],
-    name: "markReady",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
     inputs: [],
     name: "name",
     outputs: [
@@ -1064,6 +1040,38 @@ const _abi = [
       },
     ],
     stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+    ],
+    name: "owedShareOf",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "owedShare",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address[]",
+        name: "users",
+        type: "address[]",
+      },
+    ],
+    name: "payoff",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -1236,9 +1244,9 @@ const _abi = [
     name: "totalShare",
     outputs: [
       {
-        internalType: "uint256",
+        internalType: "uint128",
         name: "",
-        type: "uint256",
+        type: "uint128",
       },
     ],
     stateMutability: "view",
@@ -1289,19 +1297,6 @@ const _abi = [
       },
     ],
     name: "withdraw",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address[]",
-        name: "users",
-        type: "address[]",
-      },
-    ],
-    name: "withdrawFromGateAndRelease",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
