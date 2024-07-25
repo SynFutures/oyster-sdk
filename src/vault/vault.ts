@@ -26,7 +26,7 @@ import {
     encodeTradeParam,
 } from '../common';
 import { encodeBatchCancelTicks } from './util';
-import { Phase, Stage } from './types';
+import { Stage } from './types';
 
 export class VaultFactoryClient {
     ctx: ChainContext;
@@ -213,34 +213,22 @@ export class VaultClient {
         return await this.vault.getStake(user);
     }
 
-    async getUserArrear(user: string): Promise<{
-        canClaim: boolean;
-        status: Phase;
-        quantity: BigNumber;
-    }> {
-        const [arrear, portfolioValue, totalShare] = await Promise.all([
-            this.vault.getArrear(user),
+    async getUserArrear(user: string): Promise<BigNumber> {
+        const [owedShare, portfolioValue, totalShare] = await Promise.all([
+            this.vault.owedShareOf(user),
             this.vault.getPortfolioValue(),
             this.vault.totalShare(),
         ]);
-        const canClaim = arrear.phase === Phase.READY;
-        return {
-            canClaim,
-            status: arrear.phase,
-            quantity: totalShare.eq(ZERO)
-                ? ZERO
-                : arrear.phase === Phase.WAIT_ADJUST
-                ? arrear.quantity.mul(portfolioValue).div(totalShare)
-                : arrear.quantity,
-        };
+        return totalShare.eq(ZERO) ? ZERO : owedShare.mul(portfolioValue).div(totalShare);
     }
 
     async inquireWithdrawal(
         user: string,
         quoteAmount: BigNumber,
     ): Promise<{
-        value: BigNumber;
-        phase: number;
+        availableNow: boolean;
+        netValue: ethers.BigNumber;
+        commissionFee: ethers.BigNumber;
     }> {
         try {
             const [totalValue, totalShares] = await Promise.all([
@@ -252,11 +240,6 @@ export class VaultClient {
         } catch (e) {
             throw Error(JSON.stringify(e, null, 2));
         }
-    }
-
-    async willTriggerArrear(user: string, quoteAmount: BigNumber): Promise<boolean> {
-        const result = await this.inquireWithdrawal(user, quoteAmount);
-        return result.phase === Phase.WAIT_ADJUST || result.phase === Phase.WAIT_RELEASE;
     }
 
     async getLiveThreshold(): Promise<number> {
@@ -314,25 +297,15 @@ export class VaultClient {
         return await this.ctx.sendTx(signer, tx);
     }
 
-    async claimArrear(signer: Signer): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const tx = await this.vault.populateTransaction.claimArrear();
-        return await this.ctx.sendTx(signer, tx);
-    }
+    /////////////////////////////////////////////////////////////////////////////
+    //  manager methods
+    /////////////////////////////////////////////////////////////////////////////
 
-    // manager methods
-    async markReady(
+    async payoff(
         manager: Signer,
         addrLists: string[],
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const tx = await this.vault.populateTransaction.markReady(addrLists);
-        return await this.ctx.sendTx(manager, tx);
-    }
-
-    async withdrawFromGateAndRelease(
-        manager: Signer,
-        addrLists: string[],
-    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const tx = await this.vault.populateTransaction.withdrawFromGateAndRelease(addrLists);
+        const tx = await this.vault.populateTransaction.payoff(addrLists);
         return await this.ctx.sendTx(manager, tx);
     }
 
@@ -476,12 +449,12 @@ export class VaultClient {
         return await this.ctx.sendTx(manager, ptx);
     }
 
-    async claimCommission(
+    async collectCommission(
         manager: Signer,
         isNative: boolean,
         amount: BigNumber,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const ptx = await this.vault.populateTransaction.claimCommission(isNative, amount);
+        const ptx = await this.vault.populateTransaction.collectCommission(isNative, amount);
         return await this.ctx.sendTx(manager, ptx);
     }
 }

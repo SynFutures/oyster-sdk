@@ -1,7 +1,7 @@
 import { BlockInfo, ChainContext, GRAPH_PAGE_SIZE, Graph, TokenInfo, ZERO, now } from '@derivation-tech/web3-core';
 import { BigNumber } from 'ethers';
 import { orderBy as _orderBy } from 'lodash';
-import { PhaseGraph, Stage } from './types';
+import { Stage } from './types';
 import { Vault__factory } from '../types';
 import { Pagination } from '../subgraph';
 
@@ -58,9 +58,7 @@ export interface Arrear {
     vaultAddr: string;
     createdTimestamp: number;
     releasedTimestamp: number;
-    phase: PhaseGraph;
-    isNative: boolean;
-    quantity: BigNumber;
+    share: BigNumber;
 }
 
 export class VaultGraph extends Graph {
@@ -236,8 +234,7 @@ export class VaultGraph extends Graph {
                 createdTimestamp
                 releasedTimestamp
                 phase
-                isNative
-                quantity
+                share
             }
         }`;
         const arrears = await this.queryAll(graphQL, GRAPH_PAGE_SIZE, true);
@@ -248,9 +245,7 @@ export class VaultGraph extends Graph {
                 vaultAddr: arrear.vault,
                 createdTimestamp: Number(arrear.createdTimestamp),
                 releasedTimestamp: Number(arrear.releasedTimestamp),
-                phase: arrear.phase as PhaseGraph,
-                isNative: arrear.isNative,
-                quantity: BigNumber.from(arrear.quantity),
+                share: BigNumber.from(arrear.share),
             });
         }
         return result;
@@ -266,9 +261,7 @@ export class VaultGraph extends Graph {
                 vaultAddr: vault,
                 createdTimestamp: 0,
                 releasedTimestamp: 0,
-                phase: PhaseGraph.NONE,
-                isNative: false,
-                quantity: ZERO,
+                share: ZERO,
             });
     }
 
