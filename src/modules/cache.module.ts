@@ -59,14 +59,23 @@ export class CacheModule {
         }
     }
 
-    public async syncVaultCache(target: string, quotes: string[]): Promise<void> {
+    public async syncGateCache(target: string, quotes: string[]): Promise<void> {
         const resp = await this.synfV3.contracts.observer.getVaultBalances(target, quotes);
         for (let i = 0; i < quotes.length; ++i) {
             this.gateState.setReserve(quotes[i], target, resp[0][i]);
         }
     }
 
-    public getCachedVaultBalance(quoteAddress: string, userAddress: string): BigNumber {
+    public async syncGateCacheWithAllQuotes(target: string): Promise<void> {
+        const quoteParamConfig = this.synfV3.config.quotesParam;
+        const quoteAddresses: string[] = [];
+        for (const symbol in quoteParamConfig) {
+            quoteAddresses.push(await this.synfV3.ctx.getAddress(symbol));
+        }
+        await this.syncVaultCache(target, quoteAddresses);
+    }
+
+    public getCachedGateBalance(quoteAddress: string, userAddress: string): BigNumber {
         const quote = quoteAddress.toLowerCase();
         const user = userAddress.toLowerCase();
         const balanceMap = this.gateState.reserveOf.get(quote.toLowerCase());
@@ -82,12 +91,23 @@ export class CacheModule {
         }
     }
 
+    /**
+     * @deprecated The method should not be used since it's name is misleading.
+     */
+    public async syncVaultCache(target: string, quotes: string[]): Promise<void> {
+        await this.syncGateCache(target, quotes);
+    }
+
+    /**
+     * @deprecated The method should not be used since it's name is misleading.
+     */
+    public getCachedVaultBalance(quoteAddress: string, userAddress: string): BigNumber {
+        return this.getCachedGateBalance(quoteAddress, userAddress);
+    }
+    /**
+     * @deprecated The method should not be used since it's name is misleading.
+     */
     public async syncVaultCacheWithAllQuotes(target: string): Promise<void> {
-        const quoteParamConfig = this.synfV3.config.quotesParam;
-        const quoteAddresses: string[] = [];
-        for (const symbol in quoteParamConfig) {
-            quoteAddresses.push(await this.synfV3.ctx.getAddress(symbol));
-        }
-        await this.syncVaultCache(target, quoteAddresses);
+        return this.syncGateCacheWithAllQuotes(target);
     }
 }
