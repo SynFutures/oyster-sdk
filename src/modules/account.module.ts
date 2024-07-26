@@ -85,7 +85,7 @@ export class AccountModule {
     ): Promise<PairLevelAccountModel> {
         instrument = instrument.toLowerCase();
         target = target.toLowerCase();
-        await this.synfV3.instrumentModel.updateInstrument([{ instrument: instrument, expiries: [expiry] }]);
+        await this.synfV3.instrumentModule.updateInstrument([{ instrument: instrument, expiries: [expiry] }]);
         const resp = await this.synfV3.contracts.observer.getAcc(instrument, expiry, target, overrides ?? {});
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const pair: PairModel = this.synfV3.cacheModule.instrumentMap.get(instrument)!.getPairModel(expiry);
