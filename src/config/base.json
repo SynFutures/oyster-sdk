@@ -162,7 +162,7 @@
       "tradingFeeRatio": 3,
       "stabilityFeeRatioParam": "14415916854096691200",
       "protocolFeeRatio": 6,
-      "qtype": 2,
+      "qtype": 1,
       "minMarginAmount": "10000000000000000000",
       "tip": "20000000000000000"
     },
@@ -170,7 +170,7 @@
       "tradingFeeRatio": 3,
       "stabilityFeeRatioParam": "14415916854096691200",
       "protocolFeeRatio": 6,
-      "qtype": 2,
+      "qtype": 1,
       "minMarginAmount": "10000000000000000000",
       "tip": "20000000000000000"
     }
