@@ -803,6 +803,30 @@ const _abi = [
     type: "function",
   },
   {
+    inputs: [
+      {
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+    ],
+    name: "getOwedQuote",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "netValue",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "commissionFee",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [],
     name: "getPortfolioValue",
     outputs: [

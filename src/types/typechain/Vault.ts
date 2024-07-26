@@ -133,6 +133,7 @@ export interface VaultInterface extends utils.Interface {
     "gate()": FunctionFragment;
     "getConfiguration()": FunctionFragment;
     "getInvolvedPairs()": FunctionFragment;
+    "getOwedQuote(address)": FunctionFragment;
     "getPortfolioValue()": FunctionFragment;
     "getStake(address)": FunctionFragment;
     "initialize(address,string,address,(uint8,address,uint8,uint8,uint8,uint8,uint16,uint128,uint128))": FunctionFragment;
@@ -173,6 +174,7 @@ export interface VaultInterface extends utils.Interface {
       | "gate"
       | "getConfiguration"
       | "getInvolvedPairs"
+      | "getOwedQuote"
       | "getPortfolioValue"
       | "getStake"
       | "initialize"
@@ -261,6 +263,10 @@ export interface VaultInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "getInvolvedPairs",
     values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getOwedQuote",
+    values: [PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
     functionFragment: "getPortfolioValue",
@@ -398,6 +404,10 @@ export interface VaultInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "getInvolvedPairs",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getOwedQuote",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -720,6 +730,13 @@ export interface Vault extends BaseContract {
       [string[], number[]] & { instruments: string[]; expiries: number[] }
     >;
 
+    getOwedQuote(
+      user: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber] & { netValue: BigNumber; commissionFee: BigNumber }
+    >;
+
     getPortfolioValue(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     getStake(
@@ -910,6 +927,13 @@ export interface Vault extends BaseContract {
     overrides?: CallOverrides
   ): Promise<
     [string[], number[]] & { instruments: string[]; expiries: number[] }
+  >;
+
+  getOwedQuote(
+    user: PromiseOrValue<string>,
+    overrides?: CallOverrides
+  ): Promise<
+    [BigNumber, BigNumber] & { netValue: BigNumber; commissionFee: BigNumber }
   >;
 
   getPortfolioValue(overrides?: CallOverrides): Promise<BigNumber>;
@@ -1113,6 +1137,13 @@ export interface Vault extends BaseContract {
       overrides?: CallOverrides
     ): Promise<
       [string[], number[]] & { instruments: string[]; expiries: number[] }
+    >;
+
+    getOwedQuote(
+      user: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber] & { netValue: BigNumber; commissionFee: BigNumber }
     >;
 
     getPortfolioValue(overrides?: CallOverrides): Promise<BigNumber>;
@@ -1408,6 +1439,11 @@ export interface Vault extends BaseContract {
 
     getInvolvedPairs(overrides?: CallOverrides): Promise<BigNumber>;
 
+    getOwedQuote(
+      user: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     getPortfolioValue(overrides?: CallOverrides): Promise<BigNumber>;
 
     getStake(
@@ -1588,6 +1624,11 @@ export interface Vault extends BaseContract {
     getConfiguration(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     getInvolvedPairs(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    getOwedQuote(
+      user: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
 
     getPortfolioValue(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 

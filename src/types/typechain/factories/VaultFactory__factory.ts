@@ -11,11 +11,6 @@ const _abi = [
     inputs: [
       {
         internalType: "address",
-        name: "_gate",
-        type: "address",
-      },
-      {
-        internalType: "address",
         name: "_config",
         type: "address",
       },
@@ -26,7 +21,7 @@ const _abi = [
       },
       {
         internalType: "address",
-        name: "_weth",
+        name: "_vaultBeacon",
         type: "address",
       },
     ],
