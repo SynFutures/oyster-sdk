@@ -1,4 +1,4 @@
-import { BlockInfo, ChainContext, ContractParser, formatUnits, ONE, TokenInfo, ZERO } from '@derivation-tech/web3-core';
+import { BlockInfo, ChainContext, ContractParser, formatUnits, ONE, TokenInfo } from '@derivation-tech/web3-core';
 import { Gate, Gate__factory, VaultFactory } from '../types/typechain/';
 import { VAULT_FACTORY_ADDRESSES } from './constants';
 import {
@@ -213,13 +213,11 @@ export class VaultClient {
         return await this.vault.getStake(user);
     }
 
-    async getUserArrear(user: string): Promise<BigNumber> {
-        const [owedShare, portfolioValue, totalShare] = await Promise.all([
-            this.vault.owedShareOf(user),
-            this.vault.getPortfolioValue(),
-            this.vault.totalShare(),
-        ]);
-        return totalShare.eq(ZERO) ? ZERO : owedShare.mul(portfolioValue).div(totalShare);
+    async getOwedQuote(user: string): Promise<{
+        netValue: BigNumber;
+        commissionFee: BigNumber;
+    }> {
+        return await this.vault.getOwedQuote(user);
     }
 
     async inquireWithdrawal(
@@ -227,8 +225,8 @@ export class VaultClient {
         quoteAmount: BigNumber,
     ): Promise<{
         availableNow: boolean;
-        netValue: ethers.BigNumber;
-        commissionFee: ethers.BigNumber;
+        netValue: BigNumber;
+        commissionFee: BigNumber;
     }> {
         try {
             const [totalValue, totalShares] = await Promise.all([
