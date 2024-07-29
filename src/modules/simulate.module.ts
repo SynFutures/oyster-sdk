@@ -292,7 +292,7 @@ export class SimulateModule {
             baseSize: baseSize,
             balance: margin,
             leverageWad: leverageWad,
-            marginToDepositWad: this.synfV3.marginToDepositWad(
+            marginToDepositWad: this.marginToDepositWad(
                 pairAccountModel.traderAddr,
                 pairModel.rootInstrument.info.quote,
                 margin,
@@ -365,7 +365,7 @@ export class SimulateModule {
         const pairModel = pairAccountModel.rootPair;
         return {
             orders,
-            marginToDepositWad: this.synfV3.marginToDepositWad(
+            marginToDepositWad: this.marginToDepositWad(
                 pairAccountModel.traderAddr,
                 pairModel.rootInstrument.info.quote,
                 orders.reduce((acc, order) => acc.add(order.balance), ZERO),
@@ -566,7 +566,7 @@ export class SimulateModule {
             priceImpactWad: priceImpactWad,
             simulationMainPosition: simulationMainPosition,
             realized: realized,
-            marginToDepositWad: this.synfV3.marginToDepositWad(
+            marginToDepositWad: this.marginToDepositWad(
                 pairAccountModel.traderAddr,
                 pairAccountModel.rootPair.rootInstrument.info.quote,
                 margin,
@@ -600,7 +600,7 @@ export class SimulateModule {
         let marginToDepositWad: BigNumber = ZERO;
 
         if (!transferAmount && leverageWad) {
-            transferAmount = this.synfV3.inquireTransferAmountFromTargetLeverage(position, leverageWad);
+            transferAmount = this.inquireTransferAmountFromTargetLeverage(position, leverageWad);
             if (transferAmount.gt(vaultBalanceWad)) marginToDepositWad = transferAmount.sub(vaultBalanceWad);
         } else if (!leverageWad && transferAmount) {
             if (transferAmount.gt(vaultBalanceWad)) marginToDepositWad = transferAmount.sub(vaultBalanceWad);
@@ -789,7 +789,7 @@ export class SimulateModule {
             upperLeverageWad: upperPositionModel.size.mul(upperPrice).div(upperPositionModel.balance).abs(),
             sqrtStrikeLowerPX96: basedPX96.sub(wmulDown(basedPX96, r2w(slippage))),
             sqrtStrikeUpperPX96: basedPX96.add(wmulDown(basedPX96, r2w(slippage))),
-            marginToDepositWad: this.synfV3.marginToDepositWad(targetAddress, quoteInfo, margin),
+            marginToDepositWad: this.marginToDepositWad(targetAddress, quoteInfo, margin),
             minMargin: minMargin,
             minEffectiveQuoteAmount: instrument.minRangeValue,
             equivalentAlphaLower: tickDeltaToAlphaWad(~~(upperTick - amm.tick)),
@@ -889,5 +889,29 @@ export class SimulateModule {
         ratios[ratios.length - 1] =
             RATIO_BASE - ratios.slice(0, ratios.length - 1).reduce((acc, ratio) => acc + ratio, 0);
         return ratios;
+    }
+
+    // @param baseAmount: decimal 18 units, always positive for both long or short. e.g. 3e18 means 3 BASE
+    // @param slippage: 0 ~ 10000. e.g. 500 means 5%
+    public marginToDepositWad(
+        traderAddress: string,
+        quoteInfo: TokenInfo,
+        marginNeedWad: BigNumber,
+        balanceInVaultWadOverride?: BigNumber,
+    ): BigNumber {
+        let balanceInVaultWad;
+        if (balanceInVaultWadOverride) {
+            balanceInVaultWad = balanceInVaultWadOverride;
+        } else {
+            balanceInVaultWad = NumericConverter.scaleQuoteAmount(
+                this.synfV3.cacheModule.getCachedVaultBalance(quoteInfo.address, traderAddress),
+                quoteInfo.decimals,
+            );
+        }
+        if (marginNeedWad.gt(balanceInVaultWad)) {
+            return marginNeedWad.sub(balanceInVaultWad);
+        } else {
+            return ZERO;
+        }
     }
 }

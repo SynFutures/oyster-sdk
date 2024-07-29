@@ -239,7 +239,7 @@ export class SynFuturesV3Front {
         referralCode: string,
         overrides?: Overrides,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        return this.core.trade(signer, instrumentAddr, param, overrides, referralCode);
+        return this.core.opModule.trade(signer, instrumentAddr, param, overrides, referralCode);
     }
 
     async addWithReferral(
@@ -249,7 +249,7 @@ export class SynFuturesV3Front {
         referralCode: string,
         overrides?: Overrides,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        return this.core.add(signer, instrumentAddr, param, overrides, referralCode);
+        return this.core.opModule.add(signer, instrumentAddr, param, overrides, referralCode);
     }
 
     async placeWithReferral(
@@ -259,7 +259,7 @@ export class SynFuturesV3Front {
         referralCode: string,
         overrides?: Overrides,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        return this.core.place(signer, instrumentAddr, param, overrides, referralCode);
+        return this.core.opModule.place(signer, instrumentAddr, param, overrides, referralCode);
     }
 
     async addLiquidityWithAsymmetricRangeWithReferral(
@@ -275,7 +275,7 @@ export class SynFuturesV3Front {
         referralCode: string,
         overrides?: PayableOverrides,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        return this.core.addLiquidityWithAsymmetricRange(
+        return this.core.wrappedOpModule.addLiquidityWithAsymmetricRange(
             signer,
             instrumentIdentifier,
             expiry,
@@ -302,7 +302,7 @@ export class SynFuturesV3Front {
         referralCode: string,
         overrides?: PayableOverrides,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        return this.core.addLiquidity(
+        return this.core.wrappedOpModule.addLiquidity(
             signer,
             instrumentIdentifier,
             expiry,
@@ -329,7 +329,7 @@ export class SynFuturesV3Front {
 
         overrides?: PayableOverrides,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        return this.core.intuitiveTrade(
+        return this.core.wrappedOpModule.intuitiveTrade(
             signer,
             pair,
             side,

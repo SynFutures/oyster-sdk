@@ -3,6 +3,14 @@ import { Amm } from '../types';
 import { frac, sqrtX96ToWad, wdiv, wmul } from './basic';
 import { BigNumber } from 'ethers';
 
+export function getLatestFundingIndex(
+    amm: Amm,
+    markPrice: BigNumber,
+    timestamp: number,
+): { longFundingIndex: BigNumber; shortFundingIndex: BigNumber } {
+    return updateFundingIndex(amm, markPrice, timestamp);
+}
+
 export function updateFundingIndex(
     amm: Amm,
     mark: BigNumber,
