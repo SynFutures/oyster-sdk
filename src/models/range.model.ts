@@ -1,8 +1,9 @@
-import { Amm, PairModel, Position, Range, rangeToPosition, tally } from '../types';
+import { Amm, Position, Range, rangeToPosition, tally } from '../types';
 import { BigNumber } from 'ethers';
 import { parseTicks, rangeKey } from '../common';
 import { TickMath, wmulDown } from '../math';
 import { PositionModel } from './position.model';
+import { PairModel } from './pair.model';
 
 export class RangeModel {
     public readonly rootPair: PairModel;

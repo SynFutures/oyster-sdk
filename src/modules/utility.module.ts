@@ -8,7 +8,6 @@ import {
     entryDelta,
     fillOrderToPosition,
     FundFlow,
-    PairModel,
     Pending,
     Position,
     Quotation,
@@ -18,7 +17,7 @@ import {
 } from '../types';
 import { BlockInfo } from '@derivation-tech/web3-core';
 import { alphaWadToTickDelta, fromWad, trimObj } from '../common';
-import { PairLevelAccountModel, PositionModel } from '../models';
+import { PairLevelAccountModel, PairModel, PositionModel } from '../models';
 import { RANGE_SPACING } from '../constants';
 
 export class UtilityModule {

@@ -2,19 +2,11 @@ import { BigNumber, Overrides, PayableOverrides, Signer, ethers } from 'ethers';
 import { SynFuturesV3 } from './synfuturesV3Core';
 import { ChainContext, CHAIN_ID, ZERO } from '@derivation-tech/web3-core';
 import { Q96, TickMath, WAD, r2w, wadToSqrtX96, wmul } from './math';
-import {
-    AddParam,
-    InstrumentIdentifier,
-    InstrumentPointConfigParam,
-    PairModel,
-    PlaceParam,
-    Side,
-    TradeParam,
-} from './types';
+import { AddParam, InstrumentIdentifier, InstrumentPointConfigParam, PlaceParam, Side, TradeParam } from './types';
 import { INITIAL_MARGIN_RATIO } from './constants';
 import { formatEther, parseEther } from 'ethers/lib/utils';
 import { tickDeltaToAlphaWad } from './common';
-import { InstrumentLevelAccountModel } from './models';
+import { InstrumentLevelAccountModel, PairModel } from './models';
 
 export class SynFuturesV3Front {
     private static instances = new Map<number, SynFuturesV3Front>();

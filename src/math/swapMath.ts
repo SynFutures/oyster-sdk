@@ -2,9 +2,9 @@
 import { BigNumber } from 'ethers';
 import { ZERO } from './constants';
 import { SqrtPriceMath } from './sqrtPriceMath';
-import { PairState } from '../types';
 import { TickMath } from './tickMath';
 import { neg } from './basic';
+import { PairState } from '../models';
 
 export interface SwapImpact {
     sqrtPostPX96: BigNumber;

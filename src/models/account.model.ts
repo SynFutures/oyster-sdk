@@ -3,8 +3,6 @@ import {
     combine,
     EMPTY_POSITION,
     Order,
-    PairModel,
-    PairState,
     Portfolio,
     Position,
     positionEquity,
@@ -39,6 +37,7 @@ import { InstrumentModel } from './instrument.model';
 import { RangeModel } from './range.model';
 import { PositionModel } from './position.model';
 import { OrderModel } from './order.model';
+import { PairModel, PairState } from './pair.model';
 
 export class AccountState {
     onumber = 0;

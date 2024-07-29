@@ -1,6 +1,6 @@
 import { SynFuturesV3 } from '../synfuturesV3Core';
 import { BigNumber, ethers, PayableOverrides, Signer } from 'ethers';
-import { AddParam, InstrumentIdentifier, NumericConverter, PairModel, Side, signOfSide } from '../types';
+import { AddParam, InstrumentIdentifier, NumericConverter, Side, signOfSide } from '../types';
 import { DEFAULT_REFERRAL_CODE, MAX_CANCEL_ORDER_COUNT, NATIVE_TOKEN_ADDRESS } from '../constants';
 import { TickMath } from '../math';
 import {
@@ -14,7 +14,7 @@ import {
     encodeWithdrawParam,
     InstrumentParser,
 } from '../common';
-import { OrderModel, PairLevelAccountModel, RangeModel } from '../models';
+import { OrderModel, PairLevelAccountModel, PairModel, RangeModel } from '../models';
 
 export class WrappedOpModule {
     synfV3: SynFuturesV3;

@@ -9,13 +9,10 @@ import {
     InstrumentMarket,
     InstrumentSetting,
     MarketType,
-    PairModel,
-    PairState,
-    ParsedEvent,
     QuoteParam,
 } from '../types';
 import { BlockInfo } from '@derivation-tech/web3-core';
-import { BigNumber, ethers } from 'ethers';
+import { BigNumber } from 'ethers';
 import { deserializeSimpleObject, mustParseNumber, serializeSimpleObject } from '../common';
 import {
     INITIAL_MARGIN_RATIO,
@@ -27,6 +24,7 @@ import {
 } from '../constants';
 import { r2w, WAD, wdiv, wmulDown, ZERO } from '../math';
 import { AccountState } from './account.model';
+import { PairModel, PairState } from './pair.model';
 
 export class InstrumentState {
     condition: InstrumentCondition;
@@ -35,10 +33,6 @@ export class InstrumentState {
     setting: InstrumentSetting;
 
     blockInfo?: BlockInfo;
-
-    // handlers used for processing business logic outside of InstrumnetState, key: event name => value: handler function, eg:
-    // UpdateFundingIndex => increase fundingPayInsurance, to support invariant test
-    postHandlers: { [key: string]: (event: ParsedEvent<any>, log: ethers.providers.Log) => void } = {};
 
     constructor(
         condition: InstrumentCondition,

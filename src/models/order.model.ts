@@ -1,8 +1,9 @@
-import { Order, PairModel, Side } from '../types';
+import { Order, Side } from '../types';
 import { BigNumber } from 'ethers';
 import { orderKey, parseOrderTickNonce } from '../common';
 import { TickMath, wdiv, wmul, ZERO } from '../math';
 import { PositionModel } from './position.model';
+import { PairModel } from './pair.model';
 
 export class OrderModel implements Order {
     public readonly rootPair: PairModel;

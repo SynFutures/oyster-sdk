@@ -5,3 +5,4 @@ export * from './account.model';
 export * from './position.model';
 export * from './range.model';
 export * from './order.model';
+export * from './pair.model';

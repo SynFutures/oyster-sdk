@@ -1,8 +1,9 @@
 import { BigNumber } from 'ethers';
 import { frac, oppositeSigns, wdivDown, wdivUp, weightedAverage, wmulUp, wmulInt, r2w, wmulDown, wmul } from '../math';
 import { ZERO, ONE } from '../math';
-import { Amm, PairState } from './pair';
+import { Amm } from './pair';
 import { MAX_POSITION_NUM, PERP_EXPIRY } from '../constants';
+import { PairState } from '../models';
 
 export interface Position {
     balance: BigNumber;

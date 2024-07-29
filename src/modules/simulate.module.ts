@@ -9,7 +9,6 @@ import {
     InstrumentIdentifier,
     InstrumentSetting,
     NumericConverter,
-    PairModel,
     Quotation,
     Side,
     signOfSide,
@@ -53,7 +52,7 @@ import {
     tickDeltaToAlphaWad,
     withinOrderLimit,
 } from '../common';
-import { InstrumentModel, PairLevelAccountModel, PositionModel, RangeModel } from '../models';
+import { InstrumentModel, PairLevelAccountModel, PairModel, PositionModel, RangeModel } from '../models';
 
 export class SimulateModule {
     synfV3: SynFuturesV3;
