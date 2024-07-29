@@ -21,7 +21,7 @@ import { alphaWadToTickDelta, fromWad, trimObj } from '../common';
 import { PairLevelAccountModel, PositionModel } from '../models';
 import { RANGE_SPACING } from '../constants';
 
-export class CommonModule {
+export class UtilityModule {
     synfV3: SynFuturesV3;
 
     constructor(synfV3: SynFuturesV3) {
@@ -224,10 +224,6 @@ export class CommonModule {
         // leverage is 18 decimal
         return wdiv(value, newEquity);
     }
-
-    //////////////////////////////////////////////////////////
-    // Frontend Transaction API
-    //////////////////////////////////////////////////////////
 
     async getPositionIfSettle(traderAccount: PairLevelAccountModel): Promise<Position> {
         let finalPic: Position = Object.assign({}, EMPTY_POSITION);

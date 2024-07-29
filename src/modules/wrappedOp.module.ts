@@ -12,8 +12,8 @@ import {
     encodeRemoveParam,
     encodeTradeWithReferralParam,
     encodeWithdrawParam,
+    InstrumentParser,
 } from '../common';
-import { InstrumentParser } from '../common/parser';
 import { OrderModel, PairLevelAccountModel, RangeModel } from '../models';
 
 export class WrappedOpModule {

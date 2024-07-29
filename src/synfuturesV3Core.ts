@@ -25,7 +25,7 @@ import { ChainContext } from '@derivation-tech/web3-core';
 import { getTokenInfo } from './common';
 import { InstrumentIdentifier, TokenInfo } from './types';
 import { cexMarket, MarketType } from './types';
-import { CexMarketParser, ConfigParser, DexV2MarketParser, GateParser, GuardianParser } from './common/parser';
+import { CexMarketParser, ConfigParser, DexV2MarketParser, GateParser, GuardianParser } from './common';
 import {
     CacheModule,
     InstrumentModule,
@@ -34,7 +34,7 @@ import {
     PriceModule,
     OpModule,
     WrappedOpModule,
-    CommonModule,
+    UtilityModule,
 } from './modules';
 
 export class SynFuturesV3 {
@@ -51,7 +51,7 @@ export class SynFuturesV3 {
     priceModule!: PriceModule;
     opModule!: OpModule;
     wrappedOpModule!: WrappedOpModule;
-    commonModule!: CommonModule;
+    utilityModule!: UtilityModule;
 
     protected constructor(ctx: ChainContext) {
         this.ctx = ctx;
@@ -77,7 +77,7 @@ export class SynFuturesV3 {
         this.priceModule = new PriceModule(this);
         this.opModule = new OpModule(this);
         this.wrappedOpModule = new WrappedOpModule(this);
-        this.commonModule = new CommonModule(this);
+        this.utilityModule = new UtilityModule(this);
     }
 
     private _init(config: SynfConfig): void {

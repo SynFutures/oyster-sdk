@@ -18,7 +18,7 @@ import {
     Quotation,
     QuoteParam,
 } from '../types';
-import { InstrumentParser } from '../common/parser';
+import { InstrumentParser } from '../common';
 import { getTokenSymbol, normalizeTick, trimObj } from '../common';
 import { BigNumber, CallOverrides, ethers, Signer } from 'ethers';
 import { InstrumentModel, InstrumentState } from '../models';

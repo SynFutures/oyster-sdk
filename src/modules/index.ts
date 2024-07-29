@@ -5,4 +5,4 @@ export * from './simulate.module';
 export * from './price.module';
 export * from './wrappedOp.module';
 export * from './op.module';
-export * from './common.module';
+export * from './utility.module';

@@ -5,7 +5,6 @@ export * from './types';
 export * from './math';
 export * from './config';
 export * from './constants';
-export * from './event';
 export * from './common';
 export * from './abis';
 export * from './models';
