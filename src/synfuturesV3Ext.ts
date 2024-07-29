@@ -9,7 +9,7 @@ import {
     PriceFeeder,
     SetChainlinkFeederParam,
 } from './types';
-import { encodeAddParam } from './common';
+import { encodeAddParam, getTokenInfo } from './common';
 import { PERP_EXPIRY, NULL_DDL } from './constants';
 import { ZERO, TICK_DELTA_MAX, ANY_PRICE_TICK } from './math';
 
@@ -50,7 +50,9 @@ export class SynFuturesV3Ext {
         const feeders: PriceFeeder[] = [];
         for (let i = 0; i < params.length; i++) {
             const param = params[i];
-            instrumentAddress.push(await this.core.computeInstrumentAddress(marketType, param.base, param.quote));
+            instrumentAddress.push(
+                await this.core.instrumentModule.computeInstrumentAddress(marketType, param.base, param.quote),
+            );
             feeders.push({
                 ftype: param.ftype,
                 aggregator0: param.aggregator0,
@@ -202,13 +204,13 @@ export class SynFuturesV3Ext {
         param: InstrumentIdentifier,
         overrides?: Overrides,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const { quoteTokenInfo } = await this.core.getTokenInfo(param);
+        const { quoteTokenInfo } = await getTokenInfo(param, this.core.ctx);
         const quoteAddress = quoteTokenInfo.address;
         const quote = ERC20__factory.connect(quoteAddress, signer);
         // should prepare enough quote token outside sdk
         // await quote.mint(await signer.getAddress(), ethers.utils.parseEther('10000000'));
         await quote.connect(signer).approve(this.core.contracts.gate.address, ethers.constants.MaxUint256);
-        const instrumentAddress = await this.core.computeInstrumentAddress(
+        const instrumentAddress = await this.core.instrumentModule.computeInstrumentAddress(
             MarketType.LINK,
             param.baseSymbol,
             param.quoteSymbol,

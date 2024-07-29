@@ -47,6 +47,8 @@ import {
     DexV2Feeder,
     PriceFeeder,
     BatchPlaceParam,
+    TokenInfo,
+    InstrumentIdentifier,
 } from '../types';
 import * as moment from 'moment';
 import { Interface, Result, hexZeroPad } from 'ethers/lib/utils';
@@ -1116,4 +1118,35 @@ export async function batchQuery(
             });
         })
         .flat(1);
+}
+
+export function getTokenSymbol(
+    base: string | TokenInfo,
+    quote: string | TokenInfo,
+): {
+    baseSymbol: string;
+    quoteSymbol: string;
+} {
+    const baseSymbol = typeof base === 'string' ? base : base.symbol;
+    const quoteSymbol = typeof quote === 'string' ? quote : quote.symbol;
+    return { baseSymbol, quoteSymbol };
+}
+
+export async function getTokenInfo(
+    instrumentIdentifier: InstrumentIdentifier,
+    ctx: ChainContext,
+): Promise<{
+    baseTokenInfo: TokenInfo;
+    quoteTokenInfo: TokenInfo;
+}> {
+    const call1 =
+        typeof instrumentIdentifier.baseSymbol === 'string'
+            ? ctx.getTokenInfo(instrumentIdentifier.baseSymbol)
+            : (instrumentIdentifier.baseSymbol as TokenInfo);
+    const call2 =
+        typeof instrumentIdentifier.quoteSymbol === 'string'
+            ? ctx.getTokenInfo(instrumentIdentifier.quoteSymbol)
+            : (instrumentIdentifier.quoteSymbol as TokenInfo);
+    const [baseTokenInfo, quoteTokenInfo] = await Promise.all([call1, call2]);
+    return { baseTokenInfo, quoteTokenInfo };
 }

@@ -6,6 +6,8 @@ import {
     cexMarket,
     DexV2Feeder,
     FetchInstrumentParam,
+    Instrument,
+    Instrument__factory,
     InstrumentCondition,
     InstrumentInfo,
     InstrumentMarket,
@@ -13,23 +15,30 @@ import {
     MarketInfo,
     MarketType,
     PriceFeeder,
+    Quotation,
     QuoteParam,
 } from '../types';
 import { InstrumentParser } from '../common/parser';
-import { trimObj } from '../common';
-import { CallOverrides, ethers } from 'ethers';
+import { getTokenSymbol, normalizeTick, trimObj } from '../common';
+import { BigNumber, CallOverrides, ethers, Signer } from 'ethers';
 import { InstrumentModel, InstrumentState } from '../models';
+import { SdkError } from '../errors/sdk.error';
+import { Provider } from '@ethersproject/providers';
+import { TickMath } from '../math';
+import { PEARL_SPACING } from '../constants';
 
 export class InstrumentModule {
     synfV3: SynFuturesV3;
+    // quote symbol => quote token info
+    quoteSymbolToInfo: Map<string, TokenInfo> = new Map();
 
     constructor(synfV3: SynFuturesV3) {
         this.synfV3 = synfV3;
     }
 
     async initInstruments(symbolToInfo?: Map<string, TokenInfo>): Promise<InstrumentModel[]> {
-        this.synfV3.quoteSymbolToInfo = symbolToInfo ?? new Map();
-        for (const [, info] of this.synfV3.quoteSymbolToInfo) {
+        this.quoteSymbolToInfo = symbolToInfo ?? new Map();
+        for (const [, info] of this.quoteSymbolToInfo) {
             this.synfV3.registerQuoteInfo(info);
         }
         const list = await this.getAllInstruments();
@@ -84,7 +93,7 @@ export class InstrumentModule {
         const instrumentModels: InstrumentModel[] = [];
         for (const rawInstrument of rawList) {
             const [baseSymbol, quoteSymbol, marketType] = rawInstrument.symbol.split('-');
-            const quoteTokenInfo = await this.synfV3.getQuoteTokenInfo(quoteSymbol, rawInstrument.instrumentAddr);
+            const quoteTokenInfo = await this.getQuoteTokenInfo(quoteSymbol, rawInstrument.instrumentAddr);
             let baseInfo: TokenInfo = { symbol: baseSymbol, address: ethers.constants.AddressZero, decimals: 0 };
             if (!cexMarket(marketType as MarketType)) {
                 // fetch base token info from ctx
@@ -164,5 +173,101 @@ export class InstrumentModule {
                 this.synfV3.cacheModule.instrumentMap.set(instrument, instrumentModels[i]);
             }
         }
+    }
+
+    async computeInstrumentAddress(
+        mType: string,
+        base: string | TokenInfo,
+        quote: string | TokenInfo,
+    ): Promise<string> {
+        const gateAddress = this.synfV3.config.contractAddress.gate;
+        const marketType = mType as MarketType;
+        const beaconAddress = this.synfV3.config.contractAddress.market[marketType]!.beacon;
+        const instrumentProxyByteCode = this.synfV3.config.instrumentProxyByteCode;
+        let salt: string;
+
+        const { baseSymbol, quoteSymbol } = getTokenSymbol(base, quote);
+        let quoteAddress: string;
+        try {
+            quoteAddress =
+                typeof quote !== 'string'
+                    ? (quote as TokenInfo).address
+                    : await this.synfV3.ctx.getAddress(quoteSymbol);
+        } catch {
+            //todo beore fetch from graph
+            throw new SdkError('Get quote address failed');
+        }
+        if (cexMarket(marketType)) {
+            salt = ethers.utils.defaultAbiCoder.encode(
+                ['string', 'string', 'address'],
+                [marketType, baseSymbol, quoteAddress],
+            );
+        } else {
+            //DEXV2
+            const baseAddress =
+                typeof base !== 'string' ? (base as TokenInfo).address : await this.synfV3.ctx.getAddress(baseSymbol);
+            salt = ethers.utils.defaultAbiCoder.encode(
+                ['string', 'address', 'address'],
+                [marketType, baseAddress, quoteAddress],
+            );
+        }
+
+        return ethers.utils.getCreate2Address(
+            gateAddress,
+            ethers.utils.keccak256(salt),
+            ethers.utils.keccak256(
+                ethers.utils.solidityPack(
+                    ['bytes', 'bytes32'],
+                    [instrumentProxyByteCode, ethers.utils.hexZeroPad(beaconAddress, 32)],
+                ),
+            ),
+        );
+    }
+
+    getInstrumentContract(address: string, signerOrProvider?: Signer | Provider): Instrument {
+        return Instrument__factory.connect(address, signerOrProvider ?? this.synfV3.ctx.provider);
+    }
+
+    // leverage is wad, margin is wad
+    async getOrderMarginByLeverage(
+        instrumentAddr: string,
+        expiry: number,
+        tick: number,
+        size: BigNumber,
+        leverage: number,
+    ): Promise<BigNumber> {
+        const limit = TickMath.getWadAtTick(tick);
+        const instrument = this.getInstrumentContract(instrumentAddr);
+        const swapInfo = await instrument.callStatic.inquire(expiry, 0);
+        const mark = swapInfo.mark;
+        const anchor = mark.gt(limit) ? mark : limit;
+        return anchor.mul(size.abs()).div(ethers.utils.parseEther(leverage.toString())).add(1);
+    }
+
+    async getTick(instrumentAddr: string, expiry: number): Promise<number> {
+        const swapInfo = await this.getInstrumentContract(instrumentAddr).callStatic.inquire(expiry, 0);
+        return normalizeTick(swapInfo.tick, PEARL_SPACING);
+    }
+
+    async getSqrtFairPX96(instrumentAddr: string, expiry: number): Promise<BigNumber> {
+        const swapInfo = await this.getInstrumentContract(instrumentAddr).callStatic.inquire(expiry, 0);
+        return swapInfo.sqrtFairPX96;
+    }
+
+    async inquire(instrumentAddr: string, expiry: number, size: BigNumber): Promise<Quotation> {
+        const instrument = this.getInstrumentContract(instrumentAddr);
+        return trimObj(await instrument.callStatic.inquire(expiry, size));
+    }
+
+    async getQuoteTokenInfo(quoteSymbol: string, instrumentAddr: string): Promise<TokenInfo> {
+        return (
+            this.quoteSymbolToInfo.get(quoteSymbol) ??
+            (await this.synfV3.ctx.getTokenInfo(quoteSymbol)) ??
+            (await this.synfV3.ctx.getTokenInfo(
+                (
+                    await this.synfV3.contracts.observer.getSetting(instrumentAddr)
+                ).quote,
+            ))
+        );
     }
 }

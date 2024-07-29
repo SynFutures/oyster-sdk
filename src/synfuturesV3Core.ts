@@ -9,17 +9,14 @@ import {
 } from './config';
 import { BigNumber, CallOverrides, Overrides, PayableOverrides, Signer, ethers } from 'ethers';
 import { Provider } from '@ethersproject/providers';
-import { BlockInfo, CHAIN_ID, ContractParser, ZERO_ADDRESS } from '@derivation-tech/web3-core';
+import { BlockInfo, CHAIN_ID, ContractParser } from '@derivation-tech/web3-core';
 import {
-    Instrument__factory,
     Observer__factory,
     DexV2Market__factory,
-    Instrument,
     Config__factory,
     Gate__factory,
     CexMarket__factory,
     Beacon__factory,
-    CexMarket,
     Guardian__factory,
     PythFeederFactory__factory,
     EmergingFeederFactory__factory,
@@ -27,14 +24,12 @@ import {
 import { ChainContext } from '@derivation-tech/web3-core';
 import {
     alphaWadToTickDelta,
-    calcBenchmarkPrice,
     encodeRemoveParam,
     encodeFillParam,
     encodeCancelParam,
     encodeDepositParam,
     encodeWithdrawParam,
     fromWad,
-    normalizeTick,
     trimObj,
     encodeTradeWithReferralParam,
     encodeAddWithReferralParam,
@@ -42,6 +37,7 @@ import {
     encodeAdjustWithReferralParam,
     encodeTradeWithRiskParam,
     encodeBatchPlaceWithReferralParam,
+    getTokenInfo,
 } from './common';
 import {
     AddParam,
@@ -50,11 +46,9 @@ import {
     CancelParam,
     InstrumentIdentifier,
     FillParam,
-    LiquidateParam,
     PlaceParam,
     PairModel,
     RemoveParam,
-    SweepParam,
     TradeParam,
     Quotation,
     NumericConverter,
@@ -69,15 +63,8 @@ import {
     BatchPlaceParam,
 } from './types';
 import { calcMaxWithdrawable, TickMath, wdiv, wmul, ZERO } from './math';
-import { BatchOrderSizeDistribution, cexMarket, FeederType, MarketType, QuoteType, Side, signOfSide } from './types';
-import {
-    DEFAULT_REFERRAL_CODE,
-    MAX_CANCEL_ORDER_COUNT,
-    NATIVE_TOKEN_ADDRESS,
-    PEARL_SPACING,
-    RANGE_SPACING,
-    RATIO_BASE,
-} from './constants';
+import { cexMarket, MarketType, Side, signOfSide } from './types';
+import { DEFAULT_REFERRAL_CODE, MAX_CANCEL_ORDER_COUNT, NATIVE_TOKEN_ADDRESS, RANGE_SPACING } from './constants';
 import {
     CexMarketParser,
     ConfigParser,
@@ -88,8 +75,7 @@ import {
 } from './common/parser';
 import { FundFlow, Pending } from './types';
 import { updateFundingIndex } from './math/funding';
-import { SdkError } from './errors/sdk.error';
-import { CacheModule, InstrumentModule, AccountModule, SimulateModule } from './modules';
+import { CacheModule, InstrumentModule, AccountModule, SimulateModule, PriceModule } from './modules';
 import { OrderModel, PairLevelAccountModel, PositionModel, RangeModel } from './models';
 
 export class SynFuturesV3 {
@@ -98,13 +84,12 @@ export class SynFuturesV3 {
     config!: SynfConfig;
     // this is not initialized in constructor, but in _init().
     contracts!: SynFuturesV3Contracts;
-    // quote symbol => quote token info
-    quoteSymbolToInfo: Map<string, TokenInfo> = new Map();
 
     cacheModule!: CacheModule;
     instrumentModule!: InstrumentModule;
     accountModule!: AccountModule;
     simulateModule!: SimulateModule;
+    priceModule!: PriceModule;
 
     protected constructor(ctx: ChainContext) {
         this.ctx = ctx;
@@ -127,6 +112,7 @@ export class SynFuturesV3 {
         this.instrumentModule = new InstrumentModule(this);
         this.accountModule = new AccountModule(this);
         this.simulateModule = new SimulateModule(this);
+        this.priceModule = new PriceModule(this);
     }
 
     private _init(config: SynfConfig): void {
@@ -229,6 +215,12 @@ export class SynFuturesV3 {
         };
     }
 
+    registerQuoteInfo(tokenInfo: TokenInfo): void {
+        this.ctx.tokenInfo.set(tokenInfo.symbol.toLowerCase(), tokenInfo);
+        this.ctx.tokenInfo.set(tokenInfo.address.toLowerCase(), tokenInfo);
+        this.ctx.registerAddress(tokenInfo.address, tokenInfo.symbol);
+    }
+
     public setProvider(provider: Provider, isOpSdkCompatible = false): void {
         if (!isOpSdkCompatible) this.ctx.info.isOpSdkCompatible = false;
         this.ctx.setProvider(provider);
@@ -236,7 +228,7 @@ export class SynFuturesV3 {
     }
 
     async computeInitData(instrumentIdentifier: InstrumentIdentifier): Promise<string> {
-        const { baseTokenInfo, quoteTokenInfo } = await this.getTokenInfo(instrumentIdentifier);
+        const { baseTokenInfo, quoteTokenInfo } = await getTokenInfo(instrumentIdentifier, this.ctx);
 
         const quoteAddress = quoteTokenInfo.address;
 
@@ -254,53 +246,6 @@ export class SynFuturesV3 {
         return data;
     }
 
-    async computeInstrumentAddress(
-        mType: string,
-        base: string | TokenInfo,
-        quote: string | TokenInfo,
-    ): Promise<string> {
-        const gateAddress = this.config.contractAddress.gate;
-        const marketType = mType as MarketType;
-        const beaconAddress = this.config.contractAddress.market[marketType]!.beacon;
-        const instrumentProxyByteCode = this.config.instrumentProxyByteCode;
-        let salt: string;
-
-        const { baseSymbol, quoteSymbol } = this.getTokenSymbol(base, quote);
-        let quoteAddress: string;
-        try {
-            quoteAddress =
-                typeof quote !== 'string' ? (quote as TokenInfo).address : await this.ctx.getAddress(quoteSymbol);
-        } catch {
-            //todo beore fetch from graph
-            throw new SdkError('Get quote address failed');
-        }
-        if (cexMarket(marketType)) {
-            salt = ethers.utils.defaultAbiCoder.encode(
-                ['string', 'string', 'address'],
-                [marketType, baseSymbol, quoteAddress],
-            );
-        } else {
-            //DEXV2
-            const baseAddress =
-                typeof base !== 'string' ? (base as TokenInfo).address : await this.ctx.getAddress(baseSymbol);
-            salt = ethers.utils.defaultAbiCoder.encode(
-                ['string', 'address', 'address'],
-                [marketType, baseAddress, quoteAddress],
-            );
-        }
-
-        return ethers.utils.getCreate2Address(
-            gateAddress,
-            ethers.utils.keccak256(salt),
-            ethers.utils.keccak256(
-                ethers.utils.solidityPack(
-                    ['bytes', 'bytes32'],
-                    [instrumentProxyByteCode, ethers.utils.hexZeroPad(beaconAddress, 32)],
-                ),
-            ),
-        );
-    }
-
     async init(): Promise<void> {
         const list = await this.instrumentModule.initInstruments();
         await this.cacheModule.initGateState(list);
@@ -315,10 +260,6 @@ export class SynFuturesV3 {
         return updateFundingIndex(amm, markPrice, timestamp);
     }
 
-    getInstrumentContract(address: string, signerOrProvider?: Signer | Provider): Instrument {
-        return Instrument__factory.connect(address, signerOrProvider ?? this.ctx.provider);
-    }
-
     async getNextInitializedTickOutside(
         instrumentAddr: string,
         expiry: number,
@@ -329,41 +270,10 @@ export class SynFuturesV3 {
         return await TickMath.getNextInitializedTickOutside(observer, instrumentAddr, expiry, tick, right);
     }
 
-    // leverage is wad, margin is wad
-    async getOrderMarginByLeverage(
-        instrumentAddr: string,
-        expiry: number,
-        tick: number,
-        size: BigNumber,
-        leverage: number,
-    ): Promise<BigNumber> {
-        const limit = TickMath.getWadAtTick(tick);
-        const instrument = this.getInstrumentContract(instrumentAddr);
-        const swapInfo = await instrument.callStatic.inquire(expiry, 0);
-        const mark = swapInfo.mark;
-        const anchor = mark.gt(limit) ? mark : limit;
-        return anchor.mul(size.abs()).div(ethers.utils.parseEther(leverage.toString())).add(1);
-    }
-
     // trade size needed to move AMM price to target tick
     async getSizeToTargetTick(instrumentAddr: string, expiry: number, targetTick: number): Promise<BigNumber> {
         const observer = this.contracts.observer;
         return await TickMath.getSizeToTargetTick(observer, instrumentAddr, expiry, targetTick);
-    }
-
-    async getTick(instrumentAddr: string, expiry: number): Promise<number> {
-        const swapInfo = await this.getInstrumentContract(instrumentAddr).callStatic.inquire(expiry, 0);
-        return normalizeTick(swapInfo.tick, PEARL_SPACING);
-    }
-
-    async getSqrtFairPX96(instrumentAddr: string, expiry: number): Promise<BigNumber> {
-        const swapInfo = await this.getInstrumentContract(instrumentAddr).callStatic.inquire(expiry, 0);
-        return swapInfo.sqrtFairPX96;
-    }
-
-    async inquire(instrumentAddr: string, expiry: number, size: BigNumber): Promise<Quotation> {
-        const instrument = this.getInstrumentContract(instrumentAddr);
-        return trimObj(await instrument.callStatic.inquire(expiry, size));
     }
 
     async openLp(quoteAddr?: string, overrides?: CallOverrides): Promise<boolean> {
@@ -455,7 +365,7 @@ export class SynFuturesV3 {
         overrides?: Overrides,
         referralCode = DEFAULT_REFERRAL_CODE,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const instrument = this.getInstrumentContract(instrumentAddr, signer);
+        const instrument = this.instrumentModule.getInstrumentContract(instrumentAddr, signer);
         const unsignedTx = await instrument.populateTransaction.trade(
             encodeAdjustWithReferralParam(param.expiry, param.net, param.deadline, referralCode),
             overrides ?? {},
@@ -470,7 +380,7 @@ export class SynFuturesV3 {
         overrides?: Overrides,
         referralCode = DEFAULT_REFERRAL_CODE,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const instrument = this.getInstrumentContract(instrumentAddr, signer);
+        const instrument = this.instrumentModule.getInstrumentContract(instrumentAddr, signer);
         const unsignedTx = await instrument.populateTransaction.add(
             encodeAddWithReferralParam(param, referralCode),
             overrides ?? {},
@@ -484,7 +394,7 @@ export class SynFuturesV3 {
         param: RemoveParam,
         overrides?: Overrides,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const instrument = this.getInstrumentContract(instrumentAddr, signer);
+        const instrument = this.instrumentModule.getInstrumentContract(instrumentAddr, signer);
         const unsignedTx = await instrument.populateTransaction.remove(encodeRemoveParam(param), overrides ?? {});
         return this.ctx.sendTx(signer, unsignedTx);
     }
@@ -496,7 +406,7 @@ export class SynFuturesV3 {
         overrides?: Overrides,
         referralCode = DEFAULT_REFERRAL_CODE,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const instrument = this.getInstrumentContract(instrumentAddr, signer);
+        const instrument = this.instrumentModule.getInstrumentContract(instrumentAddr, signer);
         const unsignedTx = await instrument.populateTransaction.trade(
             encodeTradeWithReferralParam(
                 param.expiry,
@@ -520,7 +430,7 @@ export class SynFuturesV3 {
         overrides?: Overrides,
         referralCode = DEFAULT_REFERRAL_CODE,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const instrument = this.getInstrumentContract(instrumentAddr, signer);
+        const instrument = this.instrumentModule.getInstrumentContract(instrumentAddr, signer);
         const unsignedTx = await instrument.populateTransaction.trade(
             encodeTradeWithRiskParam(
                 param.expiry,
@@ -543,7 +453,7 @@ export class SynFuturesV3 {
         overrides?: Overrides,
         referralCode = DEFAULT_REFERRAL_CODE,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const instrument = this.getInstrumentContract(instrumentAddr, signer);
+        const instrument = this.instrumentModule.getInstrumentContract(instrumentAddr, signer);
         const unsignedTx = await instrument.populateTransaction.place(
             encodePlaceWithReferralParam(
                 param.expiry,
@@ -565,7 +475,7 @@ export class SynFuturesV3 {
         overrides?: Overrides,
         referralCode = DEFAULT_REFERRAL_CODE,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const instrument = this.getInstrumentContract(instrumentAddr, signer);
+        const instrument = this.instrumentModule.getInstrumentContract(instrumentAddr, signer);
         const unsignedTx = await instrument.populateTransaction.batchPlace(
             encodeBatchPlaceWithReferralParam(
                 params.expiry,
@@ -587,7 +497,7 @@ export class SynFuturesV3 {
         param: FillParam,
         overrides?: Overrides,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const instrument = this.getInstrumentContract(instrumentAddr, signer);
+        const instrument = this.instrumentModule.getInstrumentContract(instrumentAddr, signer);
         const unsignedTx = await instrument.populateTransaction.fill(
             encodeFillParam(param.expiry, param.target, param.tick, param.nonce),
             overrides ?? {},
@@ -601,67 +511,11 @@ export class SynFuturesV3 {
         param: CancelParam,
         overrides?: Overrides,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const instrument = this.getInstrumentContract(instrumentAddr, signer);
+        const instrument = this.instrumentModule.getInstrumentContract(instrumentAddr, signer);
         const unsignedTx = await instrument.populateTransaction.cancel(
             encodeCancelParam(param.expiry, [param.tick], param.deadline),
             overrides ?? {},
         );
-        return this.ctx.sendTx(signer, unsignedTx);
-    }
-
-    async sweep(
-        signer: Signer,
-        instrumentAddr: string,
-        param: SweepParam,
-        overrides?: Overrides,
-    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const instrument = this.getInstrumentContract(instrumentAddr, signer);
-        const unsignedTx = await instrument.populateTransaction.sweep(
-            param.expiry,
-            param.target,
-            param.size,
-            overrides ?? {},
-        );
-        return this.ctx.sendTx(signer, unsignedTx);
-    }
-
-    async liquidate(
-        signer: Signer,
-        instrumentAddr: string,
-        param: LiquidateParam,
-        overrides?: Overrides,
-    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const instrument = this.getInstrumentContract(instrumentAddr, signer);
-        const unsignedTx = await instrument.populateTransaction.liquidate(
-            param.expiry,
-            param.target,
-            param.size,
-            param.amount,
-            overrides ?? {},
-        );
-        return this.ctx.sendTx(signer, unsignedTx);
-    }
-
-    async update(
-        signer: Signer,
-        instrumentAddr: string,
-        expiry: number,
-        overrides?: Overrides,
-    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const instrument = this.getInstrumentContract(instrumentAddr, signer);
-        const unsignedTx = await instrument.populateTransaction.update(expiry, overrides ?? {});
-        return this.ctx.sendTx(signer, unsignedTx);
-    }
-
-    async settle(
-        signer: Signer,
-        instrumentAddr: string,
-        expiry: number,
-        target: string,
-        overrides?: Overrides,
-    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const instrument = this.getInstrumentContract(instrumentAddr, signer);
-        const unsignedTx = await instrument.populateTransaction.settle(expiry, target, overrides ?? {});
         return this.ctx.sendTx(signer, unsignedTx);
     }
 
@@ -672,29 +526,8 @@ export class SynFuturesV3 {
         amount: BigNumber,
         overrides?: Overrides,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const instrument = this.getInstrumentContract(instrumentAddr, signer);
+        const instrument = this.instrumentModule.getInstrumentContract(instrumentAddr, signer);
         const unsignedTx = await instrument.populateTransaction.donateInsuranceFund(expiry, amount, overrides ?? {});
-        return this.ctx.sendTx(signer, unsignedTx);
-    }
-
-    async claimProtocolFee(
-        signer: Signer,
-        instrumentAddr: string,
-        expiry: number,
-        overrides?: Overrides,
-    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const instrument = this.getInstrumentContract(instrumentAddr, signer);
-        const unsignedTx = await instrument.populateTransaction.claimProtocolFee(expiry, overrides ?? {});
-        return this.ctx.sendTx(signer, unsignedTx);
-    }
-
-    async release(
-        signer: Signer,
-        quote: string,
-        trader: string,
-        overrides?: Overrides,
-    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const unsignedTx = await this.contracts.gate.populateTransaction.release(quote, trader, overrides ?? {});
         return this.ctx.sendTx(signer, unsignedTx);
     }
 
@@ -826,7 +659,10 @@ export class SynFuturesV3 {
         baseAmount: BigNumber,
         overrides?: CallOverrides,
     ): Promise<{ quoteAmount: BigNumber; quotation: Quotation }> {
-        const instrument = this.getInstrumentContract(pair.rootInstrument.info.addr, this.ctx.provider);
+        const instrument = this.instrumentModule.getInstrumentContract(
+            pair.rootInstrument.info.addr,
+            this.ctx.provider,
+        );
         const expiry = pair.amm.expiry;
         const sign = signOfSide(side);
         const size = baseAmount.mul(sign);
@@ -876,77 +712,6 @@ export class SynFuturesV3 {
         return wdiv(value, newEquity);
     }
 
-    // @param targetLeverage: decimal 18 units
-    // @return transferAmount: decimal 18 units, positive means transferIn, negative means transferOut
-    public inquireTransferAmountFromTargetLeverage(position: PositionModel, targetLeverage: BigNumber): BigNumber {
-        const value = wmul(position.rootPair.markPrice, position.size.abs());
-        const targetEquity = wdiv(value, targetLeverage);
-        const currentEquity = position.getEquity();
-        return targetEquity.sub(currentEquity);
-    }
-
-    // given size distribution, return the ratios for batch orders
-    getBatchOrderRatios(sizeDistribution: BatchOrderSizeDistribution, orderCount: number): number[] {
-        let ratios: number[] = [];
-        switch (sizeDistribution) {
-            case BatchOrderSizeDistribution.FLAT: {
-                ratios = Array(orderCount).fill(Math.floor(RATIO_BASE / orderCount));
-                break;
-            }
-            case BatchOrderSizeDistribution.UPPER: {
-                // first order is 1, second order is 2, ..., last order is orderCount pieces
-                const sum = Array.from({ length: orderCount }, (_, i) => i + 1).reduce((acc, i) => acc + i, 0);
-                ratios = Array.from({ length: orderCount }, (_, i) => Math.floor((i + 1) * (RATIO_BASE / sum)));
-                break;
-            }
-            case BatchOrderSizeDistribution.LOWER: {
-                // first order is orderCount, second order is orderCount - 1, ..., last order is 1 piece
-                const sum = Array.from({ length: orderCount }, (_, i) => orderCount - i).reduce((acc, i) => acc + i, 0);
-                ratios = Array.from({ length: orderCount }, (_, i) =>
-                    Math.floor((orderCount - i) * (RATIO_BASE / sum)),
-                );
-                break;
-            }
-            case BatchOrderSizeDistribution.RANDOM: {
-                // Generate initial ratios within a target range
-                let totalRatio = 0;
-                const averageRatio = RATIO_BASE / orderCount;
-                const minRatio = Math.ceil(averageRatio * 0.95);
-                const maxRatio = Math.floor(averageRatio * 1.05);
-
-                // Generate initial ratios
-                for (let i = 0; i < orderCount; i++) {
-                    let ratio = Math.floor(averageRatio * (1 - 0.05 + Math.random() * 0.1));
-                    ratio = Math.max(minRatio, Math.min(maxRatio, ratio));
-                    ratios.push(ratio);
-                    totalRatio += ratio;
-                }
-
-                // Adjust the ratios to ensure the sum is RATIO_BASE
-                let adjustment = RATIO_BASE - totalRatio;
-                const increment = adjustment > 0 ? 1 : -1;
-
-                // Randomly adjust each ratio slightly to balance to RATIO_BASE
-                while (adjustment !== 0) {
-                    for (let i = 0; i < orderCount && adjustment !== 0; i++) {
-                        const newRatio = ratios[i] + increment;
-                        if (newRatio >= minRatio && newRatio <= maxRatio) {
-                            ratios[i] = newRatio;
-                            adjustment -= increment;
-                        }
-                    }
-                }
-                break;
-            }
-            default:
-                throw new Error('Invalid size distribution');
-        }
-        // make sure the sum of ratios is 10000
-        ratios[ratios.length - 1] =
-            RATIO_BASE - ratios.slice(0, ratios.length - 1).reduce((acc, ratio) => acc + ratio, 0);
-        return ratios;
-    }
-
     //////////////////////////////////////////////////////////
     // Frontend Transaction API
     //////////////////////////////////////////////////////////
@@ -970,7 +735,7 @@ export class SynFuturesV3 {
         }
         const sign = signOfSide(side);
         const limitTick = TickMath.getLimitTick(tradePrice, slippage, side);
-        const instrument = this.getInstrumentContract(pair.rootInstrument.info.addr, signer);
+        const instrument = this.instrumentModule.getInstrumentContract(pair.rootInstrument.info.addr, signer);
 
         const unsignedTx = await instrument.populateTransaction.trade(
             encodeTradeWithReferralParam(pair.amm.expiry, base.mul(sign), margin, limitTick, deadline, referralCode),
@@ -991,7 +756,7 @@ export class SynFuturesV3 {
         referralCode = DEFAULT_REFERRAL_CODE,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
         const sign: number = transferIn ? 1 : -1;
-        const instrument = this.getInstrumentContract(pair.rootInstrument.info.addr, signer);
+        const instrument = this.instrumentModule.getInstrumentContract(pair.rootInstrument.info.addr, signer);
 
         const unsignedTx = await instrument.populateTransaction.trade(
             encodeAdjustWithReferralParam(pair.amm.expiry, margin.mul(sign), deadline, referralCode),
@@ -1019,7 +784,7 @@ export class SynFuturesV3 {
         if (currentTick === tickNumber) throw new Error('Invalid price');
         if (isLong !== (side === Side.LONG)) throw new Error('Invalid price');
         const sign = isLong ? 1 : -1;
-        const instrument = this.getInstrumentContract(pair.rootInstrument.info.addr, signer);
+        const instrument = this.instrumentModule.getInstrumentContract(pair.rootInstrument.info.addr, signer);
 
         const unsignedTx = await instrument.populateTransaction.place(
             encodePlaceWithReferralParam(
@@ -1089,7 +854,7 @@ export class SynFuturesV3 {
         referralCode: string,
         overrides?: PayableOverrides,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const instrumentAddress = await this.computeInstrumentAddress(
+        const instrumentAddress = await this.instrumentModule.computeInstrumentAddress(
             instrumentIdentifier.marketType,
             instrumentIdentifier.baseSymbol,
             instrumentIdentifier.quoteSymbol,
@@ -1116,7 +881,7 @@ export class SynFuturesV3 {
                 overrides ?? {},
             );
         } else {
-            const instrument = this.getInstrumentContract(instrumentAddress, signer);
+            const instrument = this.instrumentModule.getInstrumentContract(instrumentAddress, signer);
             unsignedTx = await instrument.populateTransaction.add(
                 encodeAddWithReferralParam(addParam, referralCode),
                 overrides ?? {},
@@ -1136,7 +901,7 @@ export class SynFuturesV3 {
         deadline: number,
         overrides?: PayableOverrides,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const instrument = this.getInstrumentContract(pairModel.rootInstrument.info.addr, signer);
+        const instrument = this.instrumentModule.getInstrumentContract(pairModel.rootInstrument.info.addr, signer);
 
         const calldata = [];
         calldata.push(
@@ -1173,7 +938,10 @@ export class SynFuturesV3 {
         overrides?: PayableOverrides,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
         const expiry = account.rootPair.amm.expiry;
-        const instrument = this.getInstrumentContract(account.rootPair.rootInstrument.info.addr, signer);
+        const instrument = this.instrumentModule.getInstrumentContract(
+            account.rootPair.rootInstrument.info.addr,
+            signer,
+        );
 
         const ticks = ordersToCancel.map((order) => order.tick);
 
@@ -1239,100 +1007,6 @@ export class SynFuturesV3 {
         } else {
             return ZERO;
         }
-    }
-
-    public async inspectDexV2MarketBenchmarkPrice(
-        instrumentIdentifier: InstrumentIdentifier,
-        expiry: number,
-    ): Promise<BigNumber> {
-        const { baseSymbol, quoteSymbol } = this.getTokenSymbol(
-            instrumentIdentifier.baseSymbol,
-            instrumentIdentifier.quoteSymbol,
-        );
-        const baseParam = this.config.quotesParam[baseSymbol];
-        const quoteParam = this.config.quotesParam[quoteSymbol];
-
-        const baseStable = baseParam && baseParam.qtype === QuoteType.STABLE;
-        const quoteStable = quoteParam && quoteParam.qtype === QuoteType.STABLE;
-
-        const feederType: FeederType = ((baseStable ? 2 : 0) + (quoteStable ? 1 : 0)) as FeederType;
-
-        const rawSpotPrice = await this.getDexV2RawSpotPrice(instrumentIdentifier);
-
-        return calcBenchmarkPrice(expiry, rawSpotPrice, feederType, this.config.marketConfig.DEXV2!.dailyInterestRate);
-    }
-
-    public async inspectCexMarketBenchmarkPrice(
-        instrumentIdentifier: InstrumentIdentifier,
-        expiry: number,
-    ): Promise<BigNumber> {
-        const instrumentAddress = await this.computeInstrumentAddress(
-            instrumentIdentifier.marketType,
-            instrumentIdentifier.baseSymbol,
-            instrumentIdentifier.quoteSymbol,
-        );
-        const market = this.contracts.marketContracts[instrumentIdentifier.marketType]?.market as CexMarket;
-        let benchmarkPrice;
-        try {
-            benchmarkPrice = await market.getBenchmarkPrice(instrumentAddress, expiry);
-        } catch (e) {
-            console.error('fetch chainlink market price error', e);
-            benchmarkPrice = ZERO;
-        }
-        return benchmarkPrice;
-    }
-
-    async getRawSpotPrice(identifier: InstrumentIdentifier): Promise<BigNumber> {
-        if (identifier.marketType === MarketType.DEXV2) {
-            return this.getDexV2RawSpotPrice(identifier);
-        } else if (cexMarket(identifier.marketType)) {
-            return this.getCexRawSpotPrice(identifier);
-        } else {
-            throw new Error('Unsupported market type');
-        }
-    }
-
-    async getDexV2RawSpotPrice(identifier: InstrumentIdentifier): Promise<BigNumber> {
-        const { baseTokenInfo, quoteTokenInfo } = await this.getTokenInfo(identifier);
-
-        const baseScaler = BigNumber.from(10).pow(18 - baseTokenInfo.decimals);
-        const quoteScaler = BigNumber.from(10).pow(18 - quoteTokenInfo.decimals);
-
-        const isToken0Quote = BigNumber.from(baseTokenInfo.address).gt(BigNumber.from(quoteTokenInfo.address));
-
-        const dexV2PairInfo = await this.contracts.observer.inspectMaxReserveDexV2Pair(
-            baseTokenInfo.address,
-            quoteTokenInfo.address,
-        );
-        if (
-            dexV2PairInfo.maxReservePair === ZERO_ADDRESS ||
-            dexV2PairInfo.reserve0.isZero() ||
-            dexV2PairInfo.reserve1.isZero()
-        ) {
-            // no liquidity
-            return ZERO;
-        }
-
-        return isToken0Quote
-            ? wdiv(dexV2PairInfo.reserve0.mul(quoteScaler), dexV2PairInfo.reserve1.mul(baseScaler))
-            : wdiv(dexV2PairInfo.reserve1.mul(quoteScaler), dexV2PairInfo.reserve0.mul(baseScaler));
-    }
-
-    async getCexRawSpotPrice(instrumentIdentifier: InstrumentIdentifier): Promise<BigNumber> {
-        const instrumentAddress = await this.computeInstrumentAddress(
-            instrumentIdentifier.marketType,
-            instrumentIdentifier.baseSymbol,
-            instrumentIdentifier.quoteSymbol,
-        );
-        const market = this.contracts.marketContracts[instrumentIdentifier.marketType]?.market as CexMarket;
-        let rawSpotPrice;
-        try {
-            rawSpotPrice = await market.getRawPrice(instrumentAddress);
-        } catch (e) {
-            console.error('fetch chainlink spot price error', e);
-            rawSpotPrice = ZERO;
-        }
-        return rawSpotPrice;
     }
 
     async getPositionIfSettle(traderAccount: PairLevelAccountModel): Promise<Position> {
@@ -1418,47 +1092,5 @@ export class SynFuturesV3 {
         const apyWad: BigNumber = wdiv(assumed24HrFee.mul(365), assumeAddMargin);
 
         return fromWad(apyWad);
-    }
-
-    async getTokenInfo(instrumentIdentifier: InstrumentIdentifier): Promise<{
-        baseTokenInfo: TokenInfo;
-        quoteTokenInfo: TokenInfo;
-    }> {
-        const call1 =
-            typeof instrumentIdentifier.baseSymbol === 'string'
-                ? this.ctx.getTokenInfo(instrumentIdentifier.baseSymbol)
-                : (instrumentIdentifier.baseSymbol as TokenInfo);
-        const call2 =
-            typeof instrumentIdentifier.quoteSymbol === 'string'
-                ? this.ctx.getTokenInfo(instrumentIdentifier.quoteSymbol)
-                : (instrumentIdentifier.quoteSymbol as TokenInfo);
-        const [baseTokenInfo, quoteTokenInfo] = await Promise.all([call1, call2]);
-        return { baseTokenInfo, quoteTokenInfo };
-    }
-
-    getTokenSymbol(
-        base: string | TokenInfo,
-        quote: string | TokenInfo,
-    ): {
-        baseSymbol: string;
-        quoteSymbol: string;
-    } {
-        const baseSymbol = typeof base === 'string' ? base : base.symbol;
-        const quoteSymbol = typeof quote === 'string' ? quote : quote.symbol;
-        return { baseSymbol, quoteSymbol };
-    }
-
-    async getQuoteTokenInfo(quoteSymbol: string, instrumentAddr: string): Promise<TokenInfo> {
-        return (
-            this.quoteSymbolToInfo.get(quoteSymbol) ??
-            (await this.ctx.getTokenInfo(quoteSymbol)) ??
-            (await this.ctx.getTokenInfo((await this.contracts.observer.getSetting(instrumentAddr)).quote))
-        );
-    }
-
-    registerQuoteInfo(tinfo: TokenInfo): void {
-        this.ctx.tokenInfo.set(tinfo.symbol.toLowerCase(), tinfo);
-        this.ctx.tokenInfo.set(tinfo.address.toLowerCase(), tinfo);
-        this.ctx.registerAddress(tinfo.address, tinfo.symbol);
     }
 }

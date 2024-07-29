@@ -117,7 +117,7 @@ export class SynFuturesV3Front {
         quotePriceWad: BigNumber,
         isStable = false,
     ): Promise<BigNumber> {
-        const instrumentAddress = await this.core.computeInstrumentAddress(
+        const instrumentAddress = await this.core.instrumentModule.computeInstrumentAddress(
             instrumentIdentifier.marketType,
             instrumentIdentifier.baseSymbol,
             instrumentIdentifier.quoteSymbol,
