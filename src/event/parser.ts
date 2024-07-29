@@ -46,7 +46,7 @@ async function _parse(synfv3: SynFuturesV3, event: TransactionEvent): Promise<Pa
     if (!eventMapping[event.name]) {
         return event;
     }
-    const instrumentInfo = await synfv3.getInstrumentInfo(event.address);
+    const instrumentInfo = await synfv3.instrumentModule.getInstrumentInfo(event.address);
 
     const symbol = instrumentInfo.symbol;
     const quote = instrumentInfo.quote.symbol;

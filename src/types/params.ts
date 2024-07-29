@@ -1,8 +1,9 @@
 import { BigNumber } from 'ethers';
-import { Position, PositionModel } from './index';
+import { Position } from './index';
 import { FeederType, MarketType, QuoteType } from './enum';
-import { ZERO } from '../math/constants';
+import { ZERO } from '../math';
 import { TokenInfo } from '@derivation-tech/web3-core';
+import { PositionModel } from '../models';
 
 // sdk interface
 export interface SetChainlinkFeederParam {

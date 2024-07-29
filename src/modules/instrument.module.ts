@@ -9,8 +9,6 @@ import {
     InstrumentCondition,
     InstrumentInfo,
     InstrumentMarket,
-    InstrumentModel,
-    InstrumentState,
     MarketConfig,
     MarketInfo,
     MarketType,
@@ -20,6 +18,7 @@ import {
 import { InstrumentParser } from '../common/parser';
 import { trimObj } from '../common';
 import { CallOverrides, ethers } from 'ethers';
+import { InstrumentModel, InstrumentState } from '../models';
 
 export class InstrumentModule {
     synfV3: SynFuturesV3;

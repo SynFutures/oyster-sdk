@@ -8,3 +8,5 @@ export * from './constants';
 export * from './event';
 export * from './common';
 export * from './abis';
+export * from './models';
+export * from './modules';

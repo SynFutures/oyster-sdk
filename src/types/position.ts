@@ -1,6 +1,6 @@
 import { BigNumber } from 'ethers';
 import { frac, oppositeSigns, wdivDown, wdivUp, weightedAverage, wmulUp, wmulInt, r2w, wmulDown, wmul } from '../math';
-import { ZERO, ONE } from '../math/constants';
+import { ZERO, ONE } from '../math';
 import { Amm, PairState } from './pair';
 import { MAX_POSITION_NUM, PERP_EXPIRY } from '../constants';
 
@@ -112,8 +112,7 @@ export function calculatePriceFromPnl(amm: Amm, position: Position, pnl: BigNumb
         ? pnl.add(socialLoss).add(position.entryNotional).sub(fundingFee)
         : position.entryNotional.sub(socialLoss).sub(pnl).add(fundingFee);
 
-    const price = position.size.gt(ZERO) ? wdivUp(value, position.size.abs()) : wdivDown(value, position.size.abs());
-    return price;
+    return position.size.gt(ZERO) ? wdivUp(value, position.size.abs()) : wdivDown(value, position.size.abs());
 }
 
 export function calcFundingFee(amm: Amm, position: Position): BigNumber {

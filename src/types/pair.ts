@@ -20,7 +20,6 @@ import {
     wmul,
     wmulDown,
 } from '../math';
-import { InstrumentModel } from './instrument';
 import {
     asInt128,
     decompose,
@@ -31,7 +30,7 @@ import {
     parseTicks,
     serializeSimpleObject,
     withinOrderLimit,
-} from '../common/util';
+} from '../common';
 import { Pearl } from './pearl';
 import { ContractRecord, Order, cancelOrderToPosition, fillOrderToPosition } from './order';
 import { ORDER_SPACING, PEARL_SPACING, PERP_EXPIRY } from '../constants';
@@ -42,11 +41,11 @@ import {
     RemoveEventObject,
     UpdateAmmStatusEventObject,
     UpdateFundingIndexEventObject,
-} from '../types/typechain/Instrument';
+} from './typechain/Instrument';
 import { Range, rangeToPosition } from './range';
 import { EMPTY_POSITION, Position, combine, tally } from './position';
-import { AccountState } from './account';
 import { PositionStructOutput } from './typechain/Observer';
+import { AccountState, InstrumentModel } from '../models';
 
 export interface Amm {
     expiry: number; // timestamp of the specified expiry

@@ -1,14 +1,8 @@
 import { CHAIN_ID } from '@derivation-tech/web3-core';
 import { SynFuturesV3 } from '../synfuturesV3Core';
-import {
-    GateState,
-    ConfigState,
-    InstrumentModel,
-    PairLevelAccountModel,
-    EMPTY_QUOTE_PARAM,
-    MarketType,
-} from '../types';
+import { EMPTY_QUOTE_PARAM, MarketType } from '../types';
 import { BigNumber } from 'ethers';
+import { ConfigState, GateState, InstrumentModel, PairLevelAccountModel } from '../models';
 
 export class CacheModule {
     synfV3: SynFuturesV3;

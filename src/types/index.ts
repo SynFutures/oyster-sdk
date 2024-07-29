@@ -11,5 +11,4 @@ export * from './instrument';
 export * from './typechain';
 export * from './enum';
 export * from './gate';
-export * from './config';
 export * from './common';

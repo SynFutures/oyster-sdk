@@ -23,7 +23,7 @@ import {
     Guardian__factory,
     PythFeederFactory__factory,
     EmergingFeederFactory__factory,
-} from './types/typechain';
+} from './types';
 import { ChainContext } from '@derivation-tech/web3-core';
 import {
     alphaWadToTickDelta,
@@ -42,7 +42,7 @@ import {
     encodeAdjustWithReferralParam,
     encodeTradeWithRiskParam,
     encodeBatchPlaceWithReferralParam,
-} from './common/util';
+} from './common';
 import {
     AddParam,
     AdjustParam,
@@ -56,13 +56,9 @@ import {
     RemoveParam,
     SweepParam,
     TradeParam,
-    PairLevelAccountModel,
     Quotation,
     NumericConverter,
-    PositionModel,
-    OrderModel,
     entryDelta,
-    RangeModel,
     combine,
     TokenInfo,
     EMPTY_POSITION,
@@ -73,15 +69,7 @@ import {
     BatchPlaceParam,
 } from './types';
 import { calcMaxWithdrawable, TickMath, wdiv, wmul, ZERO } from './math';
-import {
-    BatchOrderSizeDistribution,
-    cexMarket,
-    FeederType,
-    MarketType,
-    QuoteType,
-    Side,
-    signOfSide,
-} from './types/enum';
+import { BatchOrderSizeDistribution, cexMarket, FeederType, MarketType, QuoteType, Side, signOfSide } from './types';
 import {
     DEFAULT_REFERRAL_CODE,
     MAX_CANCEL_ORDER_COUNT,
@@ -98,13 +86,11 @@ import {
     GuardianParser,
     InstrumentParser,
 } from './common/parser';
-import { FundFlow, Pending } from './types/gate';
+import { FundFlow, Pending } from './types';
 import { updateFundingIndex } from './math/funding';
 import { SdkError } from './errors/sdk.error';
-import { CacheModule } from './modules/cache.module';
-import { InstrumentModule } from './modules/instrument.module';
-import { AccountModule } from './modules/account.module';
-import { SimulateModule } from './modules/simulate.module';
+import { CacheModule, InstrumentModule, AccountModule, SimulateModule } from './modules';
+import { OrderModel, PairLevelAccountModel, PositionModel, RangeModel } from './models';
 
 export class SynFuturesV3 {
     private static instances = new Map<number, SynFuturesV3>();
@@ -896,8 +882,7 @@ export class SynFuturesV3 {
         const value = wmul(position.rootPair.markPrice, position.size.abs());
         const targetEquity = wdiv(value, targetLeverage);
         const currentEquity = position.getEquity();
-        const transferAmount = targetEquity.sub(currentEquity);
-        return transferAmount;
+        return targetEquity.sub(currentEquity);
     }
 
     // given size distribution, return the ratios for batch orders

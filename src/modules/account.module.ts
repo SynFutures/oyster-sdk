@@ -1,14 +1,8 @@
 import { SynFuturesV3 } from '../synfuturesV3Core';
 import { CallOverrides } from 'ethers';
-import {
-    InstrumentIdentifier,
-    InstrumentLevelAccountModel,
-    MarketType,
-    PairLevelAccountModel,
-    PairModel,
-    Portfolio,
-} from '../types';
+import { InstrumentIdentifier, MarketType, PairModel, Portfolio } from '../types';
 import { trimObj } from '../common';
+import { InstrumentLevelAccountModel, PairLevelAccountModel } from '../models';
 
 export class AccountModule {
     synfV3: SynFuturesV3;

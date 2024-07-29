@@ -1,26 +1,8 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { ethers } from 'ethers';
-import { deserializeSimpleObject, serializeSimpleObject } from '../common/util';
-import { ParsedEvent } from './common';
-import { MarketType } from './enum';
-import { MarketInfo } from './market';
-import { EMPTY_QUOTE_PARAM, QuoteParam } from './params';
-import {
-    DisableLiquidatorWhitelistEventObject,
-    DisableLpWhitelistEventObject,
-    EnableLpWhitelistForQuoteEventObject,
-    SetLiquidatorWhitelistEventObject,
-    SetLpWhitelistEventObject,
-    SetLpWhitelistForQuoteEventObject,
-    SetMarketInfoEventObject,
-    SetQuoteParamEventObject,
-} from './typechain/Config';
+import { EMPTY_QUOTE_PARAM, MarketInfo, MarketType, QuoteParam } from '../types';
 import { BlockInfo } from '@derivation-tech/web3-core';
-import { EventHandler } from './eventHandler';
+import { deserializeSimpleObject, serializeSimpleObject } from '../common';
 
-export class ConfigState extends EventHandler {
+export class ConfigState {
     quotesParam = new Map<string, QuoteParam>(); // address => QuoteParam
     marketsInfo = new Map<MarketType, MarketInfo>();
     lpWhitelist = new Map<string, boolean>();
@@ -36,7 +18,6 @@ export class ConfigState extends EventHandler {
     blockInfo?: BlockInfo;
 
     constructor(blockInfo?: BlockInfo) {
-        super();
         this.blockInfo = blockInfo;
     }
 
@@ -195,66 +176,5 @@ export class ConfigState extends EventHandler {
             this.quotesParam.set(quote, EMPTY_QUOTE_PARAM);
         }
         return this.quotesParam.get(quote)!;
-    }
-
-    handleSetQuoteParam(event: ParsedEvent<SetQuoteParamEventObject>, log: ethers.providers.Log): void {
-        void log;
-        this.quotesParam.set(event.args.quote.toLowerCase(), event.args.param);
-    }
-
-    handleSetMarketInfo(event: ParsedEvent<SetMarketInfoEventObject>, log: ethers.providers.Log): void {
-        void log;
-        this.marketsInfo.set(event.args.mtype as MarketType, {
-            addr: event.args.market,
-            type: event.args.mtype,
-            beacon: event.args.beacon,
-        });
-    }
-
-    handleDisableLpWhitelist(event: ParsedEvent<DisableLpWhitelistEventObject>, log: ethers.providers.Log): void {
-        void event;
-        void log;
-        this.openLp = true;
-    }
-
-    handleEnableLpWhitelistForQuote(
-        event: ParsedEvent<EnableLpWhitelistForQuoteEventObject>,
-        log: ethers.providers.Log,
-    ): void {
-        void log;
-        this.restrictLp.set(event.args.quote, event.args.restricted);
-    }
-
-    handleDisableLiquidatorWhitelist(
-        event: ParsedEvent<DisableLiquidatorWhitelistEventObject>,
-        log: ethers.providers.Log,
-    ): void {
-        void event;
-        void log;
-        this.openLiquidator = true;
-    }
-
-    handleSetLpWhitelist(event: ParsedEvent<SetLpWhitelistEventObject>, log: ethers.providers.Log): void {
-        void log;
-        this.lpWhitelist.set(event.args.user, event.args.authorized);
-    }
-
-    handleSetLpWhitelistForQuote(
-        event: ParsedEvent<SetLpWhitelistForQuoteEventObject>,
-        log: ethers.providers.Log,
-    ): void {
-        void log;
-        if (!this.lpWhitelistPerQuote.has(event.args.quote)) {
-            this.lpWhitelistPerQuote.set(event.args.quote, new Map());
-        }
-        this.lpWhitelistPerQuote.get(event.args.quote)!.set(event.args.user, event.args.authorized);
-    }
-
-    handleSetLiquidatorWhitelist(
-        event: ParsedEvent<SetLiquidatorWhitelistEventObject>,
-        log: ethers.providers.Log,
-    ): void {
-        void log;
-        this.liquidatorWhitelist.set(event.args.user, event.args.authorized);
     }
 }

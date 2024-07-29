@@ -7,14 +7,10 @@ import {
     entryDelta,
     getMarginFromLiquidity,
     InstrumentIdentifier,
-    InstrumentModel,
     InstrumentSetting,
     NumericConverter,
-    PairLevelAccountModel,
     PairModel,
-    PositionModel,
     Quotation,
-    RangeModel,
     Side,
     signOfSide,
     SimulateOrderResult,
@@ -56,6 +52,7 @@ import {
     tickDeltaToAlphaWad,
     withinOrderLimit,
 } from '../common';
+import { InstrumentModel, PairLevelAccountModel, PositionModel, RangeModel } from '../models';
 
 export class SimulateModule {
     synfV3: SynFuturesV3;

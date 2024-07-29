@@ -5,7 +5,6 @@ import { Q96, TickMath, WAD, r2w, wadToSqrtX96, wmul } from './math';
 import {
     AddParam,
     InstrumentIdentifier,
-    InstrumentLevelAccountModel,
     InstrumentPointConfigParam,
     PairModel,
     PlaceParam,
@@ -15,6 +14,7 @@ import {
 import { INITIAL_MARGIN_RATIO } from './constants';
 import { formatEther, parseEther } from 'ethers/lib/utils';
 import { tickDeltaToAlphaWad } from './common';
+import { InstrumentLevelAccountModel } from './models';
 
 export class SynFuturesV3Front {
     private static instances = new Map<number, SynFuturesV3Front>();
@@ -40,7 +40,7 @@ export class SynFuturesV3Front {
     }
 
     async init(): Promise<void> {
-        await this.core.instrumentModel.initInstruments();
+        await this.core.instrumentModule.initInstruments();
     }
 
     capAlphaWad(alphaWad: BigNumber): BigNumber {
