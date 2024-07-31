@@ -4,8 +4,9 @@ import { calcBenchmarkPrice, getTokenInfo, getTokenSymbol } from '../common';
 import { wdiv, ZERO } from '../math';
 import { ZERO_ADDRESS } from '@derivation-tech/web3-core';
 import { SynFuturesV3 } from '../synfuturesV3Core';
+import type { Module } from '../common';
 
-export class PriceModule {
+export class PriceModule implements Module {
     synfV3: SynFuturesV3;
 
     constructor(synfV3: SynFuturesV3) {

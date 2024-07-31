@@ -15,8 +15,9 @@ import {
     InstrumentParser,
 } from '../common';
 import { OrderModel, PairLevelAccountModel, PairModel, RangeModel } from '../models';
+import type { Module } from '../common';
 
-export class WrappedOpModule {
+export class WrappedOpModule implements Module {
     synfV3: SynFuturesV3;
 
     constructor(synfV3: SynFuturesV3) {

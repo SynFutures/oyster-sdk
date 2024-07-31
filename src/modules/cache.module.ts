@@ -3,8 +3,9 @@ import { SynFuturesV3 } from '../synfuturesV3Core';
 import { EMPTY_QUOTE_PARAM, MarketType } from '../types';
 import { BigNumber } from 'ethers';
 import { ConfigState, GateState, InstrumentModel, PairLevelAccountModel } from '../models';
+import type { Module } from '../common';
 
-export class CacheModule {
+export class CacheModule implements Module {
     synfV3: SynFuturesV3;
 
     gateState: GateState;

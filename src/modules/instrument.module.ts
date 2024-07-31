@@ -26,8 +26,9 @@ import { SdkError } from '../errors/sdk.error';
 import { Provider } from '@ethersproject/providers';
 import { TickMath } from '../math';
 import { PEARL_SPACING } from '../constants';
+import type { Module } from '../common';
 
-export class InstrumentModule {
+export class InstrumentModule implements Module {
     synfV3: SynFuturesV3;
     // quote symbol => quote token info
     quoteSymbolToInfo: Map<string, TokenInfo> = new Map();

@@ -53,8 +53,9 @@ import {
     withinOrderLimit,
 } from '../common';
 import { InstrumentModel, PairLevelAccountModel, PairModel, PositionModel, RangeModel } from '../models';
+import type { Module } from '../common';
 
-export class SimulateModule {
+export class SimulateModule implements Module {
     synfV3: SynFuturesV3;
     constructor(v3Sdk: SynFuturesV3) {
         this.synfV3 = v3Sdk;

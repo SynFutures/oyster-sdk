@@ -19,8 +19,9 @@ import { BlockInfo } from '@derivation-tech/web3-core';
 import { alphaWadToTickDelta, fromWad, trimObj } from '../common';
 import { PairLevelAccountModel, PairModel, PositionModel } from '../models';
 import { RANGE_SPACING } from '../constants';
+import type { Module } from '../common';
 
-export class UtilityModule {
+export class UtilityModule implements Module {
     synfV3: SynFuturesV3;
 
     constructor(synfV3: SynFuturesV3) {

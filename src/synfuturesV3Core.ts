@@ -25,7 +25,7 @@ import { ChainContext } from '@derivation-tech/web3-core';
 import { getTokenInfo } from './common';
 import { InstrumentIdentifier, TokenInfo } from './types';
 import { cexMarket, MarketType } from './types';
-import { CexMarketParser, ConfigParser, DexV2MarketParser, GateParser, GuardianParser } from './common';
+import { CexMarketParser, ConfigParser, DexV2MarketParser, GateParser, GuardianParser, mount } from './common';
 import {
     CacheModule,
     InstrumentModule,
@@ -36,6 +36,17 @@ import {
     WrappedOpModule,
     UtilityModule,
 } from './modules';
+
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export declare interface SynFuturesV3
+    extends Omit<CacheModule, 'synfV3'>,
+        Omit<InstrumentModule, 'synfV3'>,
+        Omit<AccountModule, 'synfV3'>,
+        Omit<SimulateModule, 'synfV3'>,
+        Omit<PriceModule, 'synfV3'>,
+        Omit<OpModule, 'synfV3'>,
+        Omit<WrappedOpModule, 'synfV3'>,
+        Omit<UtilityModule, 'synfV3'> {}
 
 export class SynFuturesV3 {
     private static instances = new Map<number, SynFuturesV3>();
@@ -70,14 +81,14 @@ export class SynFuturesV3 {
     }
 
     private _initModules(): void {
-        this.cacheModule = new CacheModule(this);
-        this.instrumentModule = new InstrumentModule(this);
-        this.accountModule = new AccountModule(this);
-        this.simulateModule = new SimulateModule(this);
-        this.priceModule = new PriceModule(this);
-        this.opModule = new OpModule(this);
-        this.wrappedOpModule = new WrappedOpModule(this);
-        this.utilityModule = new UtilityModule(this);
+        this.cacheModule = mount(this, CacheModule);
+        this.instrumentModule = mount(this, InstrumentModule);
+        this.accountModule = mount(this, AccountModule);
+        this.simulateModule = mount(this, SimulateModule);
+        this.priceModule = mount(this, PriceModule);
+        this.opModule = mount(this, OpModule);
+        this.wrappedOpModule = mount(this, WrappedOpModule);
+        this.utilityModule = mount(this, UtilityModule);
     }
 
     private _init(config: SynfConfig): void {

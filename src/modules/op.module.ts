@@ -24,8 +24,9 @@ import {
     TradeParam,
 } from '../types';
 import { DEFAULT_REFERRAL_CODE } from '../constants';
+import type { Module } from '../common';
 
-export class OpModule {
+export class OpModule implements Module {
     synfV3: SynFuturesV3;
 
     constructor(synfV3: SynFuturesV3) {
