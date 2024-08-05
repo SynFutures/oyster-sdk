@@ -30,16 +30,14 @@ import type { Module } from '../common';
 
 export class InstrumentModule implements Module {
     synfV3: SynFuturesV3;
-    // quote symbol => quote token info
-    quoteSymbolToInfo: Map<string, TokenInfo> = new Map();
 
     constructor(synfV3: SynFuturesV3) {
         this.synfV3 = synfV3;
     }
 
     async initInstruments(symbolToInfo?: Map<string, TokenInfo>): Promise<InstrumentModel[]> {
-        this.quoteSymbolToInfo = symbolToInfo ?? new Map();
-        for (const [, info] of this.quoteSymbolToInfo) {
+        this.synfV3.cacheModule.quoteSymbolToInfo = symbolToInfo ?? new Map();
+        for (const [, info] of this.synfV3.cacheModule.quoteSymbolToInfo) {
             this.synfV3.registerQuoteInfo(info);
         }
         const list = await this.getAllInstruments();
@@ -246,12 +244,12 @@ export class InstrumentModule implements Module {
     }
 
     async getTick(instrumentAddr: string, expiry: number): Promise<number> {
-        const swapInfo = await this.getInstrumentContract(instrumentAddr).callStatic.inquire(expiry, 0);
+        const swapInfo = await this.inquire(instrumentAddr, expiry, BigNumber.from(0));
         return normalizeTick(swapInfo.tick, PEARL_SPACING);
     }
 
     async getSqrtFairPX96(instrumentAddr: string, expiry: number): Promise<BigNumber> {
-        const swapInfo = await this.getInstrumentContract(instrumentAddr).callStatic.inquire(expiry, 0);
+        const swapInfo = await this.inquire(instrumentAddr, expiry, BigNumber.from(0));
         return swapInfo.sqrtFairPX96;
     }
 
@@ -262,7 +260,7 @@ export class InstrumentModule implements Module {
 
     async getQuoteTokenInfo(quoteSymbol: string, instrumentAddr: string): Promise<TokenInfo> {
         return (
-            this.quoteSymbolToInfo.get(quoteSymbol) ??
+            this.synfV3.cacheModule.quoteSymbolToInfo.get(quoteSymbol) ??
             (await this.synfV3.ctx.getTokenInfo(quoteSymbol)) ??
             (await this.synfV3.ctx.getTokenInfo(
                 (

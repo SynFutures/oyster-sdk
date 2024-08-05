@@ -274,13 +274,13 @@ export class WrappedOpModule implements Module {
         }
     }
 
-    public async vaultOperation(
+    public async gateOperation(
         signer: Signer,
         quoteAddress: string,
         amountWad: BigNumber,
         deposit: boolean,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const vault = this.synfV3.contracts.gate;
+        const gate = this.synfV3.contracts.gate;
         const usingNative = quoteAddress.toLowerCase() === NATIVE_TOKEN_ADDRESS.toLowerCase();
         const quoteInfo = usingNative
             ? this.synfV3.ctx.wrappedNativeToken
@@ -290,9 +290,9 @@ export class WrappedOpModule implements Module {
         let unsignedTx;
         if (deposit) {
             const overrides = usingNative ? { value: amount } : {};
-            unsignedTx = await vault.populateTransaction.deposit(encodeDepositParam(quoteAddress, amount), overrides);
+            unsignedTx = await gate.populateTransaction.deposit(encodeDepositParam(quoteAddress, amount), overrides);
         } else {
-            unsignedTx = await vault.populateTransaction.withdraw(encodeWithdrawParam(quoteAddress, amount));
+            unsignedTx = await gate.populateTransaction.withdraw(encodeWithdrawParam(quoteAddress, amount));
         }
 
         return this.synfV3.ctx.sendTx(signer, unsignedTx);

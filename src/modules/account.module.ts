@@ -26,10 +26,11 @@ export class AccountModule implements Module {
                 ),
             ),
         );
-        await this.synfV3.cacheModule.syncVaultCache(target, quotes);
+        await this.synfV3.cacheModule.syncGateCache(target, quotes);
 
         const observerInterface = this.synfV3.contracts.observer.interface;
         const calls = [];
+        //todo optimise by observer
         for (const instrument of allInstrumentAddr) {
             calls.push({
                 target: this.synfV3.contracts.observer.address,

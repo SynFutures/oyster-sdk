@@ -183,7 +183,7 @@ export class SimulateModule implements Module {
         const minOrderSize = wdivUp(minOrderValue, targetTickPrice);
         const quoteInfo = pair.rootInstrument.info.quote;
         const balanceInVaultWad = NumericConverter.scaleQuoteAmount(
-            this.synfV3.cacheModule.getCachedVaultBalance(quoteInfo.address, pairAccountModel.traderAddr),
+            this.synfV3.cacheModule.getCachedGateBalance(quoteInfo.address, pairAccountModel.traderAddr),
             quoteInfo.decimals,
         );
         function getBalanceInVaultWadOverride(
@@ -590,7 +590,7 @@ export class SimulateModule implements Module {
         leverageWad: BigNumber;
     } {
         const position = PositionModel.fromRawPosition(pairAccountModel.rootPair, pairAccountModel.getMainPosition());
-        const vaultBalance = this.synfV3.cacheModule.getCachedVaultBalance(
+        const vaultBalance = this.synfV3.cacheModule.getCachedGateBalance(
             pairAccountModel.rootPair.rootInstrument.info.quote.address,
             pairAccountModel.traderAddr,
         );
@@ -904,7 +904,7 @@ export class SimulateModule implements Module {
             balanceInVaultWad = balanceInVaultWadOverride;
         } else {
             balanceInVaultWad = NumericConverter.scaleQuoteAmount(
-                this.synfV3.cacheModule.getCachedVaultBalance(quoteInfo.address, traderAddress),
+                this.synfV3.cacheModule.getCachedGateBalance(quoteInfo.address, traderAddress),
                 quoteInfo.decimals,
             );
         }

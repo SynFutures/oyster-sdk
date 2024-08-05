@@ -290,6 +290,7 @@ export class UtilityModule implements Module {
         return finalPic;
     }
 
+    //todo move to api
     estimateAPY(pairModel: PairModel, poolFee24h: BigNumber, alphaWad: BigNumber): number {
         if (pairModel.amm.liquidity.eq(ZERO)) return 0;
         const assumeAddMargin = pairModel.rootInstrument.minRangeValue;

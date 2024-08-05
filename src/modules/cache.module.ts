@@ -1,4 +1,4 @@
-import { CHAIN_ID } from '@derivation-tech/web3-core';
+import { CHAIN_ID, TokenInfo } from '@derivation-tech/web3-core';
 import { SynFuturesV3 } from '../synfuturesV3Core';
 import { EMPTY_QUOTE_PARAM, MarketType } from '../types';
 import { BigNumber } from 'ethers';
@@ -14,6 +14,8 @@ export class CacheModule implements Module {
     instrumentMap: Map<string, InstrumentModel> = new Map(); // lowercase address => instrument
     // lowercase address user => lowercase instrument address => expiry => PairLevelAccountModel
     accountCache: Map<string, Map<string, Map<number, PairLevelAccountModel>>> = new Map();
+    // quote symbol => quote token info
+    quoteSymbolToInfo: Map<string, TokenInfo> = new Map();
 
     constructor(synfV3: SynFuturesV3) {
         this.synfV3 = synfV3;
@@ -67,7 +69,7 @@ export class CacheModule implements Module {
         for (const symbol in quoteParamConfig) {
             quoteAddresses.push(await this.synfV3.ctx.getAddress(symbol));
         }
-        await this.syncVaultCache(target, quoteAddresses);
+        await this.syncGateCache(target, quoteAddresses);
     }
 
     public getCachedGateBalance(quoteAddress: string, userAddress: string): BigNumber {
@@ -79,30 +81,10 @@ export class CacheModule implements Module {
             if (balance) {
                 return balance;
             } else {
-                throw new Error(`Not cached: vault balance for quote ${quote} of user ${user}`);
+                throw new Error(`Not cached: gate balance for quote ${quote} of user ${user}`);
             }
         } else {
-            throw new Error(`Not cached: vault for quote ${quote}`);
+            throw new Error(`Not cached: gate for quote ${quote}`);
         }
-    }
-
-    /**
-     * @deprecated The method should not be used since it's name is misleading.
-     */
-    public async syncVaultCache(target: string, quotes: string[]): Promise<void> {
-        await this.syncGateCache(target, quotes);
-    }
-
-    /**
-     * @deprecated The method should not be used since it's name is misleading.
-     */
-    public getCachedVaultBalance(quoteAddress: string, userAddress: string): BigNumber {
-        return this.getCachedGateBalance(quoteAddress, userAddress);
-    }
-    /**
-     * @deprecated The method should not be used since it's name is misleading.
-     */
-    public async syncVaultCacheWithAllQuotes(target: string): Promise<void> {
-        return this.syncGateCacheWithAllQuotes(target);
     }
 }
