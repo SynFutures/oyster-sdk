@@ -334,13 +334,14 @@ export class InstrumentModule implements InstrumentInterface {
         }
         const sign = signOfSide(side);
         const limitTick = TickMath.getLimitTick(tradePrice, slippage, side);
-        const instrument = this.synfV3.cache.getInstrumentContract(pair.rootInstrument.info.addr, signer);
-
-        const unsignedTx = await instrument.populateTransaction.trade(
-            encodeTradeWithReferralParam(pair.amm.expiry, base.mul(sign), margin, limitTick, deadline, referralCode),
-            overrides ?? {},
-        );
-        return this.synfV3.tx.sendTx(signer, unsignedTx);
+        const param: TradeParam = {
+            expiry: pair.amm.expiry,
+            size: base.mul(sign),
+            amount: margin,
+            limitTick: limitTick,
+            deadline: deadline,
+        };
+        return this.trade(signer, pair.rootInstrument.info.addr, param, overrides, referralCode);
     }
 
     async limitOrder(
@@ -359,20 +360,14 @@ export class InstrumentModule implements InstrumentInterface {
         if (currentTick === tickNumber) throw new Error('Invalid price');
         if (isLong !== (side === Side.LONG)) throw new Error('Invalid price');
         const sign = isLong ? 1 : -1;
-        const instrument = this.synfV3.cache.getInstrumentContract(pair.rootInstrument.info.addr, signer);
-
-        const unsignedTx = await instrument.populateTransaction.place(
-            encodePlaceWithReferralParam(
-                pair.amm.expiry,
-                baseWad.mul(sign),
-                balanceWad,
-                tickNumber,
-                deadline,
-                referralCode,
-            ),
-            overrides ?? {},
-        );
-        return this.synfV3.tx.sendTx(signer, unsignedTx);
+        const param: PlaceParam = {
+            expiry: pair.amm.expiry,
+            size: baseWad.mul(sign),
+            amount: balanceWad,
+            tick: tickNumber,
+            deadline: deadline,
+        };
+        return this.place(signer, pair.rootInstrument.info.addr, param, overrides, referralCode);
     }
 
     async place(
@@ -418,33 +413,15 @@ export class InstrumentModule implements InstrumentInterface {
         deadline: number,
         overrides?: PayableOverrides,
     ): Promise<ContractTransaction | ethers.providers.TransactionReceipt> {
-        const instrument = this.synfV3.cache.getInstrumentContract(pairModel.rootInstrument.info.addr, signer);
-
-        const calldata = [];
-        calldata.push(
-            instrument.interface.encodeFunctionData('remove', [
-                encodeRemoveParam({
-                    expiry: pairModel.amm.expiry,
-                    target: targetAddress,
-                    tickLower: rangeModel.tickLower,
-                    tickUpper: rangeModel.tickUpper,
-                    limitTicks: TickMath.encodeLimitTicks(sqrtStrikeLowerPX96, sqrtStrikeUpperPX96),
-                    deadline: deadline,
-                }),
-            ]),
-        );
-        const unsignedTx = await instrument.populateTransaction.remove(
-            encodeRemoveParam({
-                expiry: pairModel.amm.expiry,
-                target: targetAddress,
-                tickLower: rangeModel.tickLower,
-                tickUpper: rangeModel.tickUpper,
-                limitTicks: TickMath.encodeLimitTicks(sqrtStrikeLowerPX96, sqrtStrikeUpperPX96),
-                deadline: deadline,
-            }),
-            overrides ?? {},
-        );
-        return this.synfV3.tx.sendTx(signer, unsignedTx);
+        const param = {
+            expiry: pairModel.amm.expiry,
+            target: targetAddress,
+            tickLower: rangeModel.tickLower,
+            tickUpper: rangeModel.tickUpper,
+            limitTicks: TickMath.encodeLimitTicks(sqrtStrikeLowerPX96, sqrtStrikeUpperPX96),
+            deadline: deadline,
+        };
+        return this.remove(signer, pairModel.rootInstrument.info.addr, param, overrides);
     }
 
     async trade(
