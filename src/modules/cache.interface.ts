@@ -1,9 +1,16 @@
 import { ConfigState, GateState, InstrumentModel, PairLevelAccountModel } from '../models';
-import { TokenInfo } from '@derivation-tech/web3-core';
-import { BigNumber, CallOverrides } from 'ethers';
-import { FetchInstrumentParam, InstrumentInfo } from '../types';
+import { ChainContext, TokenInfo } from '@derivation-tech/web3-core';
+import { BigNumber, CallOverrides, Signer } from 'ethers';
+import { FetchInstrumentParam, Instrument, InstrumentIdentifier, InstrumentInfo } from '../types';
+import { SynfConfig, SynFuturesV3Contracts } from '../config';
+import { Provider } from '@ethersproject/providers';
+import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
+import { BaseInterFace } from './index';
 
-export interface CacheInterface {
+export interface CacheInterface extends BaseInterFace {
+    ctx: ChainContext;
+    config: SynfConfig;
+    contracts: SynFuturesV3Contracts;
     gateState: GateState;
     configState: ConfigState;
     // update <-- new block info
@@ -18,7 +25,7 @@ export interface CacheInterface {
      * 1: init gate state
      * 2: init config state
      */
-    initCache(): Promise<void>;
+    init(): Promise<void>;
 
     /**
      * Init instruments
@@ -26,6 +33,13 @@ export interface CacheInterface {
      */
     initInstruments(symbolToInfo?: Map<string, TokenInfo>): Promise<InstrumentModel[]>;
 
+    setProvider(provider: Provider, isOpSdkCompatible?: boolean): void;
+
+    registerQuoteInfo(tokenInfo: TokenInfo): void;
+
+    computeInitData(instrumentIdentifier: InstrumentIdentifier): Promise<string>;
+
+    getInstrumentContract(address: string, signerOrProvider?: Signer | Provider): Instrument;
     /**
      *Get instrument info from cache
      * @param instrumentAddress
@@ -60,4 +74,33 @@ export interface CacheInterface {
      * @param target the target address
      */
     getCachedGateBalance(quote: string, target: string): BigNumber;
+}
+
+export function createNullCacheModule(): CacheInterface {
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+    const errorHandler = () => {
+        throw new InterfaceImplementationMissingError('CacheInterface', 'cache');
+    };
+    return {
+        synfV3: null as never,
+        ctx: null as never,
+        accountCache: null as never,
+        config: null as never,
+        configState: null as never,
+        contracts: null as never,
+        gateState: null as never,
+        instrumentMap: null as never,
+        quoteSymbolToInfo: null as never,
+        computeInitData: errorHandler,
+        getCachedGateBalance: errorHandler,
+        getInstrumentContract: errorHandler,
+        getInstrumentInfo: errorHandler,
+        init: errorHandler,
+        initInstruments: errorHandler,
+        registerQuoteInfo: errorHandler,
+        setProvider: errorHandler,
+        syncGateCache: errorHandler,
+        syncGateCacheWithAllQuotes: errorHandler,
+        updateInstrument: errorHandler,
+    };
 }

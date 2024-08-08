@@ -1,4 +1,4 @@
-import { SynFuturesV3 } from '../synfuturesV3Core';
+import { SynFuturesV3Ctx } from '../synfuturesV3Core';
 import {
     alignRangeTick,
     BatchOrderSizeDistribution,
@@ -47,17 +47,19 @@ import {
     alphaWadToTickDelta,
     encodePlaceWithReferralParam,
     encodeTradeWithReferralParam,
+    getBatchOrderRatios,
     getTokenInfo,
+    inquireTransferAmountFromTargetLeverage,
     rangeKey,
     tickDeltaToAlphaWad,
     withinOrderLimit,
 } from '../common';
 import { InstrumentModel, PairLevelAccountModel, PairModel, PositionModel, RangeModel } from '../models';
-import type { Module } from '../common';
+import { SimulateInterface } from './simulate.interface';
 
-export class SimulateModule implements Module {
-    synfV3: SynFuturesV3;
-    constructor(v3Sdk: SynFuturesV3) {
+export class SimulateModule implements SimulateInterface {
+    synfV3: SynFuturesV3Ctx;
+    constructor(v3Sdk: SynFuturesV3Ctx) {
         this.synfV3 = v3Sdk;
     }
 
@@ -97,7 +99,7 @@ export class SimulateModule implements Module {
         overrides?: PayableOverrides,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
         const sign = signOfSide(side);
-        const instrument = this.synfV3.instrumentModule.getInstrumentContract(pair.rootInstrument.info.addr);
+        const instrument = this.synfV3.cache.getInstrumentContract(pair.rootInstrument.info.addr);
         const swapLimitTick = TickMath.getLimitTick(swapTradePrice, slippage, side);
         const callData = [];
         callData.push(
@@ -126,7 +128,7 @@ export class SimulateModule implements Module {
             ]),
         );
         const tx = await instrument.populateTransaction.multicall(callData, overrides ?? {});
-        return await this.synfV3.ctx.sendTx(signer, tx);
+        return await this.synfV3.cache.ctx.sendTx(signer, tx);
     }
 
     async simulateCrossMarketOrder(
@@ -151,14 +153,14 @@ export class SimulateModule implements Module {
         if ((long && targetTick <= currentTick) || (!long && targetTick >= currentTick))
             throw Error('please place normal order');
         let swapToTick = long ? targetTick + 1 : targetTick - 1;
-        let { size: swapSize, quotation: quotation } = await this.synfV3.contracts.observer.inquireByTick(
+        let { size: swapSize, quotation: quotation } = await this.synfV3.cache.contracts.observer.inquireByTick(
             pair.rootInstrument.info.addr,
             pair.amm.expiry,
             swapToTick,
         );
         if ((long && quotation.postTick <= targetTick) || (!long && quotation.postTick >= targetTick)) {
             swapToTick = long ? swapToTick + 1 : swapToTick - 1;
-            const retry = await this.synfV3.contracts.observer.inquireByTick(
+            const retry = await this.synfV3.cache.contracts.observer.inquireByTick(
                 pair.rootInstrument.info.addr,
                 pair.amm.expiry,
                 swapToTick,
@@ -183,7 +185,7 @@ export class SimulateModule implements Module {
         const minOrderSize = wdivUp(minOrderValue, targetTickPrice);
         const quoteInfo = pair.rootInstrument.info.quote;
         const balanceInVaultWad = NumericConverter.scaleQuoteAmount(
-            this.synfV3.cacheModule.getCachedGateBalance(quoteInfo.address, pairAccountModel.traderAddr),
+            this.synfV3.cache.getCachedGateBalance(quoteInfo.address, pairAccountModel.traderAddr),
             quoteInfo.decimals,
         );
         function getBalanceInVaultWadOverride(
@@ -400,7 +402,7 @@ export class SimulateModule implements Module {
         if (orderCount < MIN_BATCH_ORDER_COUNT || orderCount > MAX_BATCH_ORDER_COUNT)
             throw new Error(`order count should be between ${MIN_BATCH_ORDER_COUNT} and ${MAX_BATCH_ORDER_COUNT}`);
         const targetTicks = this.getBatchOrderTicks(lowerTick, upperTick, orderCount);
-        let ratios = this.getBatchOrderRatios(sizeDistribution, orderCount);
+        let ratios = getBatchOrderRatios(sizeDistribution, orderCount);
         // if sizeDistribution is random, we need to adjust the ratios to make sure orderValue meet minOrderValue with best effort
         const minOrderValue = pairAccountModel.rootPair.rootInstrument.minOrderValue;
         const minSizes = targetTicks.map((tick) => wdivUp(minOrderValue, TickMath.getWadAtTick(tick)));
@@ -415,7 +417,7 @@ export class SimulateModule implements Module {
             }
             // only adjust sizes if possible
             if (needNewRatios && minSizes.reduce((acc, minSize) => acc.add(minSize), ZERO).lt(baseSize)) {
-                ratios = this.getBatchOrderRatios(BatchOrderSizeDistribution.FLAT, orderCount);
+                ratios = getBatchOrderRatios(BatchOrderSizeDistribution.FLAT, orderCount);
             }
         }
 
@@ -590,7 +592,7 @@ export class SimulateModule implements Module {
         leverageWad: BigNumber;
     } {
         const position = PositionModel.fromRawPosition(pairAccountModel.rootPair, pairAccountModel.getMainPosition());
-        const vaultBalance = this.synfV3.cacheModule.getCachedGateBalance(
+        const vaultBalance = this.synfV3.cache.getCachedGateBalance(
             pairAccountModel.rootPair.rootInstrument.info.quote.address,
             pairAccountModel.traderAddr,
         );
@@ -600,7 +602,7 @@ export class SimulateModule implements Module {
         let marginToDepositWad: BigNumber = ZERO;
 
         if (!transferAmount && leverageWad) {
-            transferAmount = this.inquireTransferAmountFromTargetLeverage(position, leverageWad);
+            transferAmount = inquireTransferAmountFromTargetLeverage(position, leverageWad);
             if (transferAmount.gt(vaultBalanceWad)) marginToDepositWad = transferAmount.sub(vaultBalanceWad);
         } else if (!leverageWad && transferAmount) {
             if (transferAmount.gt(vaultBalanceWad)) marginToDepositWad = transferAmount.sub(vaultBalanceWad);
@@ -626,12 +628,9 @@ export class SimulateModule implements Module {
     async simulateBenchmarkPrice(instrumentIdentifier: InstrumentIdentifier, expiry: number): Promise<BigNumber> {
         let benchmarkPrice;
         if (cexMarket(instrumentIdentifier.marketType)) {
-            benchmarkPrice = await this.synfV3.priceModule.inspectCexMarketBenchmarkPrice(instrumentIdentifier, expiry);
+            benchmarkPrice = await this.synfV3.observer.inspectCexMarketBenchmarkPrice(instrumentIdentifier, expiry);
         } else {
-            benchmarkPrice = await this.synfV3.priceModule.inspectDexV2MarketBenchmarkPrice(
-                instrumentIdentifier,
-                expiry,
-            );
+            benchmarkPrice = await this.synfV3.observer.inspectDexV2MarketBenchmarkPrice(instrumentIdentifier, expiry);
         }
         return benchmarkPrice;
     }
@@ -713,7 +712,7 @@ export class SimulateModule implements Module {
         equivalentAlphaLower: BigNumber;
         equivalentAlphaUpper: BigNumber;
     }> {
-        const instrumentAddress = await this.synfV3.instrumentModule.computeInstrumentAddress(
+        const instrumentAddress = await this.synfV3.instrument.computeInstrumentAddress(
             instrumentIdentifier.marketType,
             instrumentIdentifier.baseSymbol,
             instrumentIdentifier.quoteSymbol,
@@ -722,16 +721,16 @@ export class SimulateModule implements Module {
         let pairModel: PairModel;
         let setting: InstrumentSetting;
         // see if this instrument is created
-        let instrument = this.synfV3.cacheModule.instrumentMap.get(instrumentAddress.toLowerCase());
+        let instrument = this.synfV3.cache.instrumentMap.get(instrumentAddress.toLowerCase());
         if (!instrument || !instrument.state.pairStates.has(expiry)) {
             // need uncreated instrument
             const benchmarkPrice = await this.simulateBenchmarkPrice(instrumentIdentifier, expiry);
-            const { quoteTokenInfo } = await getTokenInfo(instrumentIdentifier, this.synfV3.ctx);
+            const { quoteTokenInfo } = await getTokenInfo(instrumentIdentifier, this.synfV3.cache.ctx);
             quoteInfo = quoteTokenInfo;
             if (instrument) {
                 setting = instrument.setting;
             } else {
-                const quoteParam = this.synfV3.config.quotesParam[quoteInfo.symbol]!;
+                const quoteParam = this.synfV3.cache.config.quotesParam[quoteInfo.symbol]!;
                 instrument = InstrumentModel.minimumInstrumentWithParam(quoteParam);
                 setting = instrument.setting;
             }
@@ -820,77 +819,6 @@ export class SimulateModule implements Module {
         };
     }
 
-    // @param targetLeverage: decimal 18 units
-    // @return transferAmount: decimal 18 units, positive means transferIn, negative means transferOut
-    public inquireTransferAmountFromTargetLeverage(position: PositionModel, targetLeverage: BigNumber): BigNumber {
-        const value = wmul(position.rootPair.markPrice, position.size.abs());
-        const targetEquity = wdiv(value, targetLeverage);
-        const currentEquity = position.getEquity();
-        return targetEquity.sub(currentEquity);
-    }
-
-    // given size distribution, return the ratios for batch orders
-    getBatchOrderRatios(sizeDistribution: BatchOrderSizeDistribution, orderCount: number): number[] {
-        let ratios: number[] = [];
-        switch (sizeDistribution) {
-            case BatchOrderSizeDistribution.FLAT: {
-                ratios = Array(orderCount).fill(Math.floor(RATIO_BASE / orderCount));
-                break;
-            }
-            case BatchOrderSizeDistribution.UPPER: {
-                // first order is 1, second order is 2, ..., last order is orderCount pieces
-                const sum = Array.from({ length: orderCount }, (_, i) => i + 1).reduce((acc, i) => acc + i, 0);
-                ratios = Array.from({ length: orderCount }, (_, i) => Math.floor((i + 1) * (RATIO_BASE / sum)));
-                break;
-            }
-            case BatchOrderSizeDistribution.LOWER: {
-                // first order is orderCount, second order is orderCount - 1, ..., last order is 1 piece
-                const sum = Array.from({ length: orderCount }, (_, i) => orderCount - i).reduce((acc, i) => acc + i, 0);
-                ratios = Array.from({ length: orderCount }, (_, i) =>
-                    Math.floor((orderCount - i) * (RATIO_BASE / sum)),
-                );
-                break;
-            }
-            case BatchOrderSizeDistribution.RANDOM: {
-                // Generate initial ratios within a target range
-                let totalRatio = 0;
-                const averageRatio = RATIO_BASE / orderCount;
-                const minRatio = Math.ceil(averageRatio * 0.95);
-                const maxRatio = Math.floor(averageRatio * 1.05);
-
-                // Generate initial ratios
-                for (let i = 0; i < orderCount; i++) {
-                    let ratio = Math.floor(averageRatio * (1 - 0.05 + Math.random() * 0.1));
-                    ratio = Math.max(minRatio, Math.min(maxRatio, ratio));
-                    ratios.push(ratio);
-                    totalRatio += ratio;
-                }
-
-                // Adjust the ratios to ensure the sum is RATIO_BASE
-                let adjustment = RATIO_BASE - totalRatio;
-                const increment = adjustment > 0 ? 1 : -1;
-
-                // Randomly adjust each ratio slightly to balance to RATIO_BASE
-                while (adjustment !== 0) {
-                    for (let i = 0; i < orderCount && adjustment !== 0; i++) {
-                        const newRatio = ratios[i] + increment;
-                        if (newRatio >= minRatio && newRatio <= maxRatio) {
-                            ratios[i] = newRatio;
-                            adjustment -= increment;
-                        }
-                    }
-                }
-                break;
-            }
-            default:
-                throw new Error('Invalid size distribution');
-        }
-        // make sure the sum of ratios is 10000
-        ratios[ratios.length - 1] =
-            RATIO_BASE - ratios.slice(0, ratios.length - 1).reduce((acc, ratio) => acc + ratio, 0);
-        return ratios;
-    }
-
     // @param baseAmount: decimal 18 units, always positive for both long or short. e.g. 3e18 means 3 BASE
     // @param slippage: 0 ~ 10000. e.g. 500 means 5%
     public marginToDepositWad(
@@ -904,7 +832,7 @@ export class SimulateModule implements Module {
             balanceInVaultWad = balanceInVaultWadOverride;
         } else {
             balanceInVaultWad = NumericConverter.scaleQuoteAmount(
-                this.synfV3.cacheModule.getCachedGateBalance(quoteInfo.address, traderAddress),
+                this.synfV3.cache.getCachedGateBalance(quoteInfo.address, traderAddress),
                 quoteInfo.decimals,
             );
         }

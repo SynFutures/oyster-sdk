@@ -1,5 +1,4 @@
 import { BigNumber } from 'ethers';
-// import { getAddress, hexDataSlice, keccak256, toUtf8Bytes } from 'ethers/lib/utils';
 
 export const WAD_DECIMALS = 18;
 export const RATIO_DECIMALS = 4;
@@ -16,7 +15,7 @@ export const INT24_MIN = -8388608;
 export const INT24_MAX = 8388607;
 
 export const PEARL_SPACING = 5;
-export const ORDER_SPACING = PEARL_SPACING * 1;
+export const ORDER_SPACING = PEARL_SPACING;
 export const RANGE_SPACING = PEARL_SPACING * 10;
 
 export const RATIO_BASE = 10000;
@@ -48,12 +47,3 @@ export const MAX_BATCH_ORDER_COUNT = 9;
 export const MIN_BATCH_ORDER_COUNT = 2;
 
 export const MAX_CANCEL_ORDER_COUNT = 8;
-
-// getAddress(
-//     hexDataSlice(
-//         BigNumber.from(keccak256(toUtf8Bytes('SYNFUTURES-NATIVE')))
-//             .sub(1)
-//             .toHexString(),
-//         12,
-//     ),
-// );

@@ -1,6 +1,8 @@
-import { BigNumber, ethers, Overrides, Signer } from 'ethers';
+import { BigNumber, CallOverrides, ethers, Overrides, Signer } from 'ethers';
+import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
+import { BaseInterFace } from './index';
 
-export interface GateInterface {
+export interface GateInterface extends BaseInterFace {
     /**
      *Deposit to Gate
      * @param signer custom signer
@@ -28,4 +30,42 @@ export interface GateInterface {
         amount: BigNumber,
         overrides?: Overrides,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt>;
+
+    /**
+     *Gate operation,deposit or withdraw
+     * @param signer custom signer
+     * @param quoteAddress the quote address
+     * @param amountWad the amount,decimal 18 units, always positive
+     * @param deposit true:deposit false:withdraw
+     */
+    gateOperation(
+        signer: Signer,
+        quoteAddress: string,
+        amountWad: BigNumber,
+        deposit: boolean,
+    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt>;
+
+    /**
+     *Get pending params
+     * @param quotes the quotes address list
+     * @param overrides CallOverrides with ethers
+     */
+    getPendingParams(
+        quotes: string[],
+        overrides?: CallOverrides,
+    ): Promise<{ pendingDuration: BigNumber; thresholds: BigNumber[] }>;
+}
+
+export function createNullGateModule(): GateInterface {
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+    const errorHandler = () => {
+        throw new InterfaceImplementationMissingError('GateInterface', 'gate');
+    };
+    return {
+        synfV3: null as never,
+        deposit: errorHandler,
+        withdraw: errorHandler,
+        gateOperation: errorHandler,
+        getPendingParams: errorHandler,
+    };
 }

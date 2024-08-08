@@ -1,9 +1,11 @@
 import { BigNumber, CallOverrides } from 'ethers';
-import { InstrumentLevelAccountModel, InstrumentModel, PairLevelAccountModel } from '../models';
-import { FetchInstrumentParam, InstrumentIdentifier } from '../types';
-import { TokenInfo } from '@derivation-tech/web3-core';
+import { InstrumentLevelAccountModel, InstrumentModel, PairLevelAccountModel, PairModel } from '../models';
+import { FetchInstrumentParam, FundFlow, InstrumentIdentifier, Pending, Position, Quotation, Side } from '../types';
+import { BlockInfo, TokenInfo } from '@derivation-tech/web3-core';
+import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
+import { BaseInterFace } from './index';
 
-export interface ObserverInterface {
+export interface ObserverInterface extends BaseInterFace {
     /**
      *Get instrument level accounts infos
      *given single trader address, return multiple instrument level account which have been involved
@@ -31,7 +33,7 @@ export interface ObserverInterface {
      * @param batchSize the batch size,default value is 10
      * @param overrides overrides with ethers types
      */
-    getAllInstruments(batchSize: number, overrides?: CallOverrides): Promise<InstrumentModel[]>;
+    getAllInstruments(batchSize?: number, overrides?: CallOverrides): Promise<InstrumentModel[]>;
 
     /**
      *Fetch instrument batch by given params
@@ -66,4 +68,118 @@ export interface ObserverInterface {
      * @param identifier the instrument identifier
      */
     getRawSpotPrice(identifier: InstrumentIdentifier): Promise<BigNumber>;
+
+    /**
+     * Get next initialized tick outside
+     * @param instrumentAddr the instrument address
+     * @param expiry the expiry
+     * @param tick the tick
+     * @param right
+     */
+    getNextInitializedTickOutside(
+        instrumentAddr: string,
+        expiry: number,
+        tick: number,
+        right: boolean,
+    ): Promise<number>;
+
+    /**
+     * Get trade size needed to move AMM price to target tick
+     * @param instrumentAddr the instrument address
+     * @param expiry the expiry
+     * @param targetTick the target tick
+     */
+    getSizeToTargetTick(instrumentAddr: string, expiry: number, targetTick: number): Promise<BigNumber>;
+
+    /**
+     * Get fund flows
+     * @param quoteAddrs the quote addresses
+     * @param trader the trader address
+     * @param overrides CallOverrides with ethers types
+     */
+    getFundFlows(
+        quoteAddrs: string[],
+        trader: string,
+        overrides?: CallOverrides,
+    ): Promise<{ fundFlows: FundFlow[]; blockInfo: BlockInfo }>;
+
+    /**
+     * Get user pendings
+     * @param quotes the quote addresses
+     * @param trader the trader address
+     * @param overrides CallOverrides with ethers types
+     */
+    getUserPendings(
+        quotes: string[],
+        trader: string,
+        overrides?: CallOverrides,
+    ): Promise<{ pendings: { maxWithdrawable: BigNumber; pending: Pending }[]; blockInfo: BlockInfo }>;
+
+    /**
+     *Inquire by base
+     * @param pair the pair
+     * @param side the side
+     * @param baseAmount the base amount
+     * @param overrides CallOverrides with ethers types
+     */
+    inquireByBase(
+        pair: PairModel,
+        side: Side,
+        baseAmount: BigNumber,
+        overrides?: CallOverrides,
+    ): Promise<{ quoteAmount: BigNumber; quotation: Quotation }>;
+
+    /**
+     *Inquire by quote
+     * @param pair the pair
+     * @param side the side
+     * @param quoteAmount the quote amount
+     * @param overrides CallOverrides with ethers types
+     */
+    inquireByQuote(
+        pair: PairModel,
+        side: Side,
+        quoteAmount: BigNumber,
+        overrides?: CallOverrides,
+    ): Promise<{ baseAmount: BigNumber; quotation: Quotation }>;
+
+    /**
+     * Get position if settle
+     * @param traderAccount the trader account
+     */
+    getPositionIfSettle(traderAccount: PairLevelAccountModel): Promise<Position>;
+
+    /**
+     * Estimate APY
+     * @param pairModel the pair
+     * @param poolFee24h the pool fee
+     * @param alphaWad the alpha
+     */
+    estimateAPY(pairModel: PairModel, poolFee24h: BigNumber, alphaWad: BigNumber): number;
+}
+
+export function createNullObserverModule(): ObserverInterface {
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+    const errorHandler = () => {
+        throw new InterfaceImplementationMissingError('ObserverInterface', 'observer');
+    };
+    return {
+        synfV3: null as never,
+        fetchInstrumentBatch: errorHandler,
+        getAllInstruments: errorHandler,
+        getInstrumentLevelAccounts: errorHandler,
+        getPairLevelAccount: errorHandler,
+        getQuoteTokenInfo: errorHandler,
+        inspectDexV2MarketBenchmarkPrice: errorHandler,
+        inspectCexMarketBenchmarkPrice: errorHandler,
+        getRawSpotPrice: errorHandler,
+        getNextInitializedTickOutside: errorHandler,
+        getSizeToTargetTick: errorHandler,
+        getFundFlows: errorHandler,
+        getUserPendings: errorHandler,
+        inquireByBase: errorHandler,
+        inquireByQuote: errorHandler,
+        getPositionIfSettle: errorHandler,
+        estimateAPY: errorHandler,
+    };
 }

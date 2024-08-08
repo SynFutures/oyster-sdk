@@ -11,49 +11,57 @@ import {
     RATIO_DECIMALS,
 } from '../constants';
 import {
-    MAX_UINT_128,
-    ONE,
-    ZERO,
-    TickMath,
-    wadToTick,
-    WAD,
-    MAX_INT_24,
-    MAX_UINT_16,
-    wdiv,
-    s2w,
     EMPTY_TICK,
+    MAX_INT_24,
+    MAX_UINT_128,
+    MAX_UINT_16,
+    ONE,
+    r2w,
+    s2w,
+    sqrt,
+    sqrtX96ToWad,
+    TickMath,
+    WAD,
+    wadToTick,
+    wdiv,
+    wmul,
+    wmulDown,
+    ZERO,
 } from '../math';
-import { sqrt, sqrtX96ToWad, wmulDown, r2w } from '../math';
 import {
     ADDR_BATCH_SIZE,
     ChainContext,
-    SECS_PER_DAY,
-    SECS_PER_HOUR,
     chunk,
     formatWad,
     now,
+    SECS_PER_DAY,
+    SECS_PER_HOUR,
 } from '@derivation-tech/web3-core';
 import {
     AddParam,
+    BatchOrderSizeDistribution,
+    BatchPlaceParam,
+    DexV2Feeder,
     FeederType,
-    Leverage,
-    RemoveParam,
-    TradeParam,
-    PlaceParam,
     FillParam,
+    InstrumentCondition,
+    InstrumentIdentifier,
+    Leverage,
+    MarketType,
+    PlaceParam,
+    Portfolio,
+    PriceFeeder,
     QuoteParam,
     QuoteType,
-    InstrumentCondition,
-    DexV2Feeder,
-    PriceFeeder,
-    BatchPlaceParam,
+    RemoveParam,
     TokenInfo,
-    InstrumentIdentifier,
+    TradeParam,
 } from '../types';
 import * as moment from 'moment';
-import { Interface, Result, hexZeroPad } from 'ethers/lib/utils';
+import { hexZeroPad, Interface, Result } from 'ethers/lib/utils';
 import { EmaParamStruct } from '../types/typechain/CexMarket';
 import { CallOverrides } from 'ethers/lib/ethers';
+import { PositionModel } from '../models';
 
 const nonceLength = 24;
 const tickLength = 24;
@@ -186,12 +194,11 @@ export function getHexReferral(referral: string): string {
     const platform = referral.charCodeAt(0);
     const wallet = referral.charCodeAt(1);
     const channel = referral.slice(2);
-    const hexReferral = ethers.utils.hexConcat([
+    return ethers.utils.hexConcat([
         BigNumber.from(platform).toHexString(),
         BigNumber.from(wallet).toHexString(),
         ethers.utils.hexlify(ethers.utils.toUtf8Bytes(channel)),
     ]);
-    return hexReferral;
 }
 
 /// encode deposit param to contract input format (bytes32)
@@ -570,8 +577,7 @@ export function decodeCancelParam(arg: string): { expiry: number; ticks: number[
 }
 
 export function alignExpiry(): number {
-    const alignedExpiry = Math.floor((Date.now() / 1000 + 259200) / 604800) * 604800 + 345600 + 28800 - 259200;
-    return alignedExpiry;
+    return Math.floor((Date.now() / 1000 + 259200) / 604800) * 604800 + 345600 + 28800 - 259200;
 }
 
 export function alignTick(tick: number, tickSpacing: number): number {
@@ -1149,4 +1155,105 @@ export async function getTokenInfo(
             : (instrumentIdentifier.quoteSymbol as TokenInfo);
     const [baseTokenInfo, quoteTokenInfo] = await Promise.all([call1, call2]);
     return { baseTokenInfo, quoteTokenInfo };
+}
+
+export function parseInstrumentSymbol(symbol: string): InstrumentIdentifier {
+    const [prefix, baseSymbol, quoteSymbol, marketType] = symbol.split('-');
+    if (prefix !== 'SynFuturesV3') {
+        throw new Error('Technically the instrument symbol should start with SynFuturesV3');
+    }
+    return {
+        marketType: marketType as MarketType,
+        baseSymbol: baseSymbol,
+        quoteSymbol: quoteSymbol,
+    };
+}
+
+export function isEmptyPortfolio(portfolio: Portfolio): boolean {
+    return portfolio.oids.length === 0 && portfolio.rids.length === 0 && portfolio.position.size.isZero();
+}
+
+// @param transferAmount: decimal 18 units, always positive
+// @param transferIn: true if in, false if out
+// @return leverageWad: decimal 18 units
+export function inquireLeverageFromTransferAmount(
+    position: PositionModel,
+    transferIn: boolean,
+    transferAmount: BigNumber,
+): BigNumber {
+    const sign: number = transferIn ? 1 : -1;
+    const value = wmul(position.rootPair.markPrice, position.size.abs());
+    const oldEquity = position.getEquity();
+    const Amount = transferAmount.mul(sign);
+    const newEquity = oldEquity.add(Amount);
+    // leverage is 18 decimal
+    return wdiv(value, newEquity);
+}
+
+// @param targetLeverage: decimal 18 units
+// @return transferAmount: decimal 18 units, positive means transferIn, negative means transferOut
+export function inquireTransferAmountFromTargetLeverage(position: PositionModel, targetLeverage: BigNumber): BigNumber {
+    const value = wmul(position.rootPair.markPrice, position.size.abs());
+    const targetEquity = wdiv(value, targetLeverage);
+    const currentEquity = position.getEquity();
+    return targetEquity.sub(currentEquity);
+}
+
+// given size distribution, return the ratios for batch orders
+export function getBatchOrderRatios(sizeDistribution: BatchOrderSizeDistribution, orderCount: number): number[] {
+    let ratios: number[] = [];
+    switch (sizeDistribution) {
+        case BatchOrderSizeDistribution.FLAT: {
+            ratios = Array(orderCount).fill(Math.floor(RATIO_BASE / orderCount));
+            break;
+        }
+        case BatchOrderSizeDistribution.UPPER: {
+            // first order is 1, second order is 2, ..., last order is orderCount pieces
+            const sum = Array.from({ length: orderCount }, (_, i) => i + 1).reduce((acc, i) => acc + i, 0);
+            ratios = Array.from({ length: orderCount }, (_, i) => Math.floor((i + 1) * (RATIO_BASE / sum)));
+            break;
+        }
+        case BatchOrderSizeDistribution.LOWER: {
+            // first order is orderCount, second order is orderCount - 1, ..., last order is 1 piece
+            const sum = Array.from({ length: orderCount }, (_, i) => orderCount - i).reduce((acc, i) => acc + i, 0);
+            ratios = Array.from({ length: orderCount }, (_, i) => Math.floor((orderCount - i) * (RATIO_BASE / sum)));
+            break;
+        }
+        case BatchOrderSizeDistribution.RANDOM: {
+            // Generate initial ratios within a target range
+            let totalRatio = 0;
+            const averageRatio = RATIO_BASE / orderCount;
+            const minRatio = Math.ceil(averageRatio * 0.95);
+            const maxRatio = Math.floor(averageRatio * 1.05);
+
+            // Generate initial ratios
+            for (let i = 0; i < orderCount; i++) {
+                let ratio = Math.floor(averageRatio * (1 - 0.05 + Math.random() * 0.1));
+                ratio = Math.max(minRatio, Math.min(maxRatio, ratio));
+                ratios.push(ratio);
+                totalRatio += ratio;
+            }
+
+            // Adjust the ratios to ensure the sum is RATIO_BASE
+            let adjustment = RATIO_BASE - totalRatio;
+            const increment = adjustment > 0 ? 1 : -1;
+
+            // Randomly adjust each ratio slightly to balance to RATIO_BASE
+            while (adjustment !== 0) {
+                for (let i = 0; i < orderCount && adjustment !== 0; i++) {
+                    const newRatio = ratios[i] + increment;
+                    if (newRatio >= minRatio && newRatio <= maxRatio) {
+                        ratios[i] = newRatio;
+                        adjustment -= increment;
+                    }
+                }
+            }
+            break;
+        }
+        default:
+            throw new Error('Invalid size distribution');
+    }
+    // make sure the sum of ratios is 10000
+    ratios[ratios.length - 1] = RATIO_BASE - ratios.slice(0, ratios.length - 1).reduce((acc, ratio) => acc + ratio, 0);
+    return ratios;
 }

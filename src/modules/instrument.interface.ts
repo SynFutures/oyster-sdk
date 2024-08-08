@@ -1,18 +1,26 @@
-import { BigNumber, ethers, Overrides, Signer } from 'ethers';
+import { BigNumber, ethers, Overrides, PayableOverrides, Signer } from 'ethers';
 import {
     AddParam,
     AdjustParam,
     BatchPlaceParam,
     CancelParam,
     FillParam,
+    InstrumentIdentifier,
     PlaceParam,
     Quotation,
     RemoveParam,
+    Side,
     TradeParam,
 } from '../types';
 import { TokenInfo } from '@derivation-tech/web3-core';
+import { OrderModel, PairLevelAccountModel, PairModel, RangeModel } from '../models';
+import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
+import { BaseInterFace } from './index';
 
-export interface InstrumentInterface {
+export interface InstrumentInterface extends BaseInterFace {
+    //////////////////////////////////////////////////////////
+    // Low level Api
+    //////////////////////////////////////////////////////////
     /**
      *Add liquidity
      * @param signer custom signer
@@ -25,8 +33,8 @@ export interface InstrumentInterface {
         signer: Signer,
         instrumentAddr: string,
         param: AddParam,
-        referralCode: string,
         overrides?: Overrides,
+        referralCode?: string,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt>;
 
     /**
@@ -55,8 +63,8 @@ export interface InstrumentInterface {
         signer: Signer,
         instrumentAddr: string,
         param: TradeParam,
-        referralCode: string,
         overrides?: Overrides,
+        referralCode?: string,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt>;
 
     /**
@@ -74,8 +82,8 @@ export interface InstrumentInterface {
         instrumentAddr: string,
         param: TradeParam,
         limitStabilityFeeRatio: number,
-        referralCode: string,
         overrides?: Overrides,
+        referralCode?: string,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt>;
 
     /**
@@ -90,8 +98,8 @@ export interface InstrumentInterface {
         signer: Signer,
         instrumentAddr: string,
         param: PlaceParam,
-        referralCode: string,
         overrides?: Overrides,
+        referralCode?: string,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt>;
 
     /**
@@ -106,8 +114,8 @@ export interface InstrumentInterface {
         signer: Signer,
         instrumentAddr: string,
         params: BatchPlaceParam,
-        referralCode: string,
         overrides?: Overrides,
+        referralCode?: string,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt>;
 
     /**
@@ -122,8 +130,8 @@ export interface InstrumentInterface {
         signer: Signer,
         instrumentAddr: string,
         param: AdjustParam,
-        referralCode: string,
         overrides?: Overrides,
+        referralCode?: string,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt>;
 
     /**
@@ -170,6 +178,174 @@ export interface InstrumentInterface {
         overrides?: Overrides,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt>;
 
+    //////////////////////////////////////////////////////////
+    // High level Api
+    //////////////////////////////////////////////////////////
+    /**
+     * Intuitive trade
+     * @param signer custom signer
+     * @param pair the pair
+     * @param side the side
+     * @param base the base amount
+     * @param margin the margin,decimal 18 units, always positive
+     * @param tradePrice the trade price
+     * @param slippage the slippage
+     * @param deadline the deadline,seconds
+     * @param overrides overrides
+     * @param referralCode the referral code,default value is DEFAULT_REFERRAL_CODE(\xff\xff\x00\x00\x00\x00\x00\x00)
+     */
+    intuitiveTrade(
+        signer: Signer,
+        pair: PairModel,
+        side: Side,
+        base: BigNumber,
+        margin: BigNumber,
+        tradePrice: BigNumber,
+        slippage: number,
+        deadline: number,
+        overrides?: PayableOverrides,
+        referralCode?: string,
+    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt>;
+
+    /**
+     * Adjust margin
+     * @param signer custom signer
+     * @param pair the pair
+     * @param transferIn true if transferIn, false if transferOut
+     * @param margin the margin,decimal 18 units, always positive
+     * @param deadline the deadline,seconds
+     * @param overrides overrides
+     * @param referralCode the referral code,default value is DEFAULT_REFERRAL_CODE(\xff\xff\x00\x00\x00\x00\x00\x00)
+     */
+    adjustMargin(
+        signer: Signer,
+        pair: PairModel,
+        transferIn: boolean,
+        margin: BigNumber,
+        deadline: number,
+        overrides?: PayableOverrides,
+        referralCode?: string,
+    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt>;
+
+    /**
+     * Limit order
+     * @param signer custom signer
+     * @param pair the pair
+     * @param tickNumber the tick
+     * @param baseWad the base amount
+     * @param balanceWad the balance,decimal 18 units, always positive for both long or short. e.g. 3e18 means 3 BASE
+     * @param side the side
+     * @param deadline the deadline,seconds
+     * @param overrides overrides
+     * @param referralCode the referral code,default value is DEFAULT_REFERRAL_CODE(\xff\xff\x00\x00\x00\x00\x00\x00)
+     */
+    limitOrder(
+        signer: Signer,
+        pair: PairModel,
+        tickNumber: number,
+        baseWad: BigNumber,
+        balanceWad: BigNumber,
+        side: Side,
+        deadline: number,
+        overrides?: PayableOverrides,
+        referralCode?: string,
+    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt>;
+
+    /**
+     * Add liquidity with asymmetric range
+     * @param signer custom signer
+     * @param instrumentIdentifier the instrument
+     * @param expiry the expiry
+     * @param tickDeltaLower the tick lower
+     * @param tickDeltaUpper the tick upper
+     * @param marginWad the margin,decimal 18 units, always positive
+     * @param sqrtStrikeLowerPX96  sqrtStrikeLowerPX96
+     * @param sqrtStrikeUpperPX96 sqrtStrikeUpperPX96
+     * @param deadline the deadline,seconds
+     * @param overrides overrides
+     * @param referralCode the referral code,default value is DEFAULT_REFERRAL_CODE(\xff\xff\x00\x00\x00\x00\x00\x00)
+     */
+    addLiquidityWithAsymmetricRange(
+        signer: Signer,
+        instrumentIdentifier: InstrumentIdentifier,
+        expiry: number,
+        tickDeltaLower: number,
+        tickDeltaUpper: number,
+        marginWad: BigNumber,
+        sqrtStrikeLowerPX96: BigNumber,
+        sqrtStrikeUpperPX96: BigNumber,
+        deadline: number,
+        overrides?: PayableOverrides,
+        referralCode?: string,
+    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt>;
+
+    /**
+     * Add liquidity
+     * @param signer custom signer
+     * @param instrumentIdentifier the instrument
+     * @param expiry the expiry
+     * @param tickDelta the tick delta
+     * @param marginWad the margin,decimal 18 units, always positive
+     * @param sqrtStrikeLowerPX96  sqrtStrikeLowerPX96
+     * @param sqrtStrikeUpperPX96 sqrtStrikeUpperPX96
+     * @param deadline the deadline,seconds
+     * @param overrides overrides
+     * @param referralCode the referral code,default value is DEFAULT_REFERRAL_CODE(\xff\xff\x00\x00\x00\x00\x00\x00)
+     */
+    addLiquidity(
+        signer: Signer,
+        instrumentIdentifier: InstrumentIdentifier,
+        expiry: number,
+        tickDelta: number,
+        marginWad: BigNumber,
+        sqrtStrikeLowerPX96: BigNumber,
+        sqrtStrikeUpperPX96: BigNumber,
+        deadline: number,
+        overrides?: PayableOverrides,
+        referralCode?: string,
+    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt>;
+
+    /**
+     * Remove liquidity
+     * @param signer custom signer
+     * @param pairModel the pair
+     * @param targetAddress the target address
+     * @param rangeModel the range model
+     * @param sqrtStrikeLowerPX96 sqrtStrikeLowerPX96
+     * @param sqrtStrikeUpperPX96 sqrtStrikeUpperPX96
+     * @param deadline the deadline,seconds
+     * @param overrides overrides
+     */
+    removeLiquidity(
+        signer: Signer,
+        pairModel: PairModel,
+        targetAddress: string,
+        rangeModel: RangeModel,
+        sqrtStrikeLowerPX96: BigNumber,
+        sqrtStrikeUpperPX96: BigNumber,
+        deadline: number,
+        overrides?: PayableOverrides,
+    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt>;
+
+    /**
+     * Batch cancel order
+     * @param signer custom signer
+     * @param account the account model
+     * @param ordersToCancel the orders
+     * @param deadline the deadline,seconds
+     * @param overrides overrides
+     */
+    batchCancelOrder(
+        signer: Signer,
+        account: PairLevelAccountModel,
+        ordersToCancel: OrderModel[],
+        deadline: number,
+        overrides?: PayableOverrides,
+    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt>;
+
+    //////////////////////////////////////////////////////////
+    // Utility Api
+    //////////////////////////////////////////////////////////
     /**
      * Compute instrument address
      * the instrument address is created by Create2
@@ -216,4 +392,36 @@ export interface InstrumentInterface {
      * @param size the order size
      */
     inquire(instrumentAddr: string, expiry: number, size: BigNumber): Promise<Quotation>;
+}
+
+export function createNullInstrumentModule(): InstrumentInterface {
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+    const errorHandler = () => {
+        throw new InterfaceImplementationMissingError('InstrumentInterface', 'instrument');
+    };
+    return {
+        synfV3: null as never,
+        addLiquidity: errorHandler,
+        removeLiquidity: errorHandler,
+        batchCancelOrder: errorHandler,
+        computeInstrumentAddress: errorHandler,
+        getOrderMarginByLeverage: errorHandler,
+        getTick: errorHandler,
+        getSqrtFairPX96: errorHandler,
+        inquire: errorHandler,
+        fill: errorHandler,
+        cancel: errorHandler,
+        adjust: errorHandler,
+        add: errorHandler,
+        addLiquidityWithAsymmetricRange: errorHandler,
+        adjustMargin: errorHandler,
+        batchPlace: errorHandler,
+        donateInsuranceFund: errorHandler,
+        intuitiveTrade: errorHandler,
+        limitOrder: errorHandler,
+        place: errorHandler,
+        remove: errorHandler,
+        trade: errorHandler,
+        tradeWithRisk: errorHandler,
+    };
 }
