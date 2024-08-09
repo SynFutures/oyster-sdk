@@ -1,7 +1,7 @@
 import { SynFuturesV3Ctx } from '../synfuturesV3Core';
 
 export interface BaseInterFace {
-    synfV3: SynFuturesV3Ctx;
+    get synfV3(): SynFuturesV3Ctx;
 }
 
 export * from './cache.interface';
