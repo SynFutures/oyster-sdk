@@ -8,17 +8,17 @@ import { InterfaceImplementationMissingError } from '../errors/interfaceImplemen
 import { BaseInterFace } from './index';
 
 export interface CacheInterface extends BaseInterFace {
-    ctx: ChainContext;
-    config: SynfConfig;
-    contracts: SynFuturesV3Contracts;
-    gateState: GateState;
-    configState: ConfigState;
+    get ctx(): ChainContext;
+    get config(): SynfConfig;
+    get contracts(): SynFuturesV3Contracts;
+    get gateState(): GateState;
+    get configState(): ConfigState;
     // update <-- new block info
-    instrumentMap: Map<string, InstrumentModel>; // lowercase address => instrument
+    get instrumentMap(): Map<string, InstrumentModel>; // lowercase address => instrument
     // lowercase address user => lowercase instrument address => expiry => PairLevelAccountModel
-    accountCache: Map<string, Map<string, Map<number, PairLevelAccountModel>>>;
+    get accountCache(): Map<string, Map<string, Map<number, PairLevelAccountModel>>>;
     // quote symbol => quote token info
-    quoteSymbolToInfo: Map<string, TokenInfo>;
+    get quoteSymbolToInfo(): Map<string, TokenInfo>;
 
     /**
      *Init local cache
