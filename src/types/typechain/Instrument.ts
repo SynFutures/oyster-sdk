@@ -436,6 +436,7 @@ export interface InstrumentInterface extends utils.Interface {
     "UpdateParam(tuple)": EventFragment;
     "UpdatePosition(uint32,address,tuple)": EventFragment;
     "UpdateSocialLossInsuranceFund(uint32,uint128,uint128,uint128)": EventFragment;
+    "WithdrawRangeFee(uint32,address,uint48,uint256,address,tuple)": EventFragment;
     "AdminChanged(address,address)": EventFragment;
     "BeaconUpgraded(address)": EventFragment;
     "Upgraded(address)": EventFragment;
@@ -467,6 +468,7 @@ export interface InstrumentInterface extends utils.Interface {
   getEvent(
     nameOrSignatureOrTopic: "UpdateSocialLossInsuranceFund"
   ): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "WithdrawRangeFee"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "AdminChanged"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "BeaconUpgraded"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Upgraded"): EventFragment;
@@ -824,6 +826,22 @@ export type UpdateSocialLossInsuranceFundEvent = TypedEvent<
 
 export type UpdateSocialLossInsuranceFundEventFilter =
   TypedEventFilter<UpdateSocialLossInsuranceFundEvent>;
+
+export interface WithdrawRangeFeeEventObject {
+  expiry: number;
+  trader: string;
+  rid: number;
+  fee: BigNumber;
+  operator: string;
+  range: RangeStructOutput;
+}
+export type WithdrawRangeFeeEvent = TypedEvent<
+  [number, string, number, BigNumber, string, RangeStructOutput],
+  WithdrawRangeFeeEventObject
+>;
+
+export type WithdrawRangeFeeEventFilter =
+  TypedEventFilter<WithdrawRangeFeeEvent>;
 
 export interface AdminChangedEventObject {
   previousAdmin: string;
@@ -1714,6 +1732,23 @@ export interface Instrument extends BaseContract {
       shortSocialLossIndex?: null,
       insuranceFund?: null
     ): UpdateSocialLossInsuranceFundEventFilter;
+
+    "WithdrawRangeFee(uint32,address,uint48,uint256,address,tuple)"(
+      expiry?: PromiseOrValue<BigNumberish> | null,
+      trader?: PromiseOrValue<string> | null,
+      rid?: null,
+      fee?: null,
+      operator?: null,
+      range?: null
+    ): WithdrawRangeFeeEventFilter;
+    WithdrawRangeFee(
+      expiry?: PromiseOrValue<BigNumberish> | null,
+      trader?: PromiseOrValue<string> | null,
+      rid?: null,
+      fee?: null,
+      operator?: null,
+      range?: null
+    ): WithdrawRangeFeeEventFilter;
 
     "AdminChanged(address,address)"(
       previousAdmin?: null,
