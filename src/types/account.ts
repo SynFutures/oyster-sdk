@@ -99,8 +99,10 @@ export class PositionModel implements Position {
     }
 
     public getMaxWithdrawableMargin(): BigNumber {
-        const unrealizedPnl = this.unrealizedPnl;
-        const unrealizedLoss = unrealizedPnl.gt(ZERO) ? ZERO : unrealizedPnl;
+        const { pnl, socialLoss } = tally(this.rootPair.amm, this, this.rootPair.markPrice);
+        const funding = calcFundingFee(this.rootPair.amm, this);
+        const purePnl = pnl.add(socialLoss).sub(funding);
+        const unrealizedLoss = (purePnl.gt(ZERO) ? ZERO : purePnl).sub(socialLoss);
 
         const value = wmulUp(this.rootPair.markPrice, this.size.abs());
         const imRequirement = wmulUp(value, r2w(this.rootPair.rootInstrument.setting.initialMarginRatio));
