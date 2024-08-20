@@ -69,4 +69,3 @@ export async function getTradeRecords(network: Network, signer: string) {
         fs.appendFileSync(outputFile, line);
     });
 }
-

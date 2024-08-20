@@ -35,7 +35,7 @@ export async function getFundingRecords(network: Network, signer: string) {
         fs.mkdirSync(path.join(__dirname, 'data'));
     }
 
-    const outputFile = path.join(__dirname, 'data', `${network}_${signer}_liquidity.csv`);
+    const outputFile = path.join(__dirname, 'data', `${network}_${signer}_funding.csv`);
     const header = 'timestamp,trader,instrumentAddr,action,amount\n';
     fs.writeFileSync(outputFile, header);
     outputs.forEach((data) => {

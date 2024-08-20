@@ -38,8 +38,8 @@ export async function getTradeRecords(network: Network) {
 
     const trades = await subgraph.getVirtualTrades({
         instrumentAddr: '0xec6c44e704eb1932ec5fe1e4aba58db6fee71460',
-        startTs: 1721433600,
-        endTs: 1721606400,
+        startTs: 1721779200,
+        endTs: 1721865600,
     });
 
     const outputs = trades.map((trade) => {

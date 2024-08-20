@@ -22,6 +22,7 @@ export async function getLiquidityRecords(network: Network, signer: string) {
     const trades = await subgraph.getTransactionEvents({
         traders: [signer],
         eventNames: ['Add', 'Remove'],
+        startTs: 1721260800,
     });
 
     const outputs = trades.map((trade) => {
