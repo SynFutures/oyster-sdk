@@ -88,8 +88,11 @@ export interface UserOrder {
     timestamp: number; // timestamp of the last update
     status: OrderStatus;
     placeTxHash: string;
+    placeTxLogIndex: number;
     fillTxHash?: string;
+    fillTxLogIndex?: number;
     cancelTxHash?: string;
+    cancelTxLogIndex?: number;
     referralCode?: string;
 }
 
@@ -696,16 +699,19 @@ export class Subgraph extends Graph {
                 trader
                 timestamp
                 placeEvent {
+                    logIndex
                     transaction {
                         id
                     }
                 }
                 fillEvent {
+                    logIndex
                     transaction {
                         id
                     }
                 }
                 cancelEvent {
+                    logIndex
                     transaction {
                         id
                     }
@@ -729,8 +735,11 @@ export class Subgraph extends Graph {
                 timestamp: Number(order.timestamp),
                 status: order.status as OrderStatus,
                 placeTxHash: order.placeEvent.transaction.id,
+                placeTxLogIndex: order.placeEvent.logIndex,
                 fillTxHash: order.fillEvent?.transaction.id,
+                fillTxLogIndex: order.fillEvent?.logIndex,
                 cancelTxHash: order.cancelEvent?.transaction.id,
+                cancelTxLogIndex: order.cancelEvent?.logIndex,
                 referralCode: order.referralCode,
             });
         }
