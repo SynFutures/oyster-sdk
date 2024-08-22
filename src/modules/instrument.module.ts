@@ -503,14 +503,9 @@ export class InstrumentModule implements InstrumentInterface {
                 encodeAddWithReferralParam(addParam, referralCode),
                 overrides ?? {},
             );
+            return this.synfV3.tx.sendTx(signer, unsignedTx);
         } else {
-            const instrument = this.synfV3.cache.getInstrumentContract(instrumentAddress, signer);
-            unsignedTx = await instrument.populateTransaction.add(
-                encodeAddWithReferralParam(addParam, referralCode),
-                overrides ?? {},
-            );
+            return this.add(signer, instrumentAddress, addParam, overrides, referralCode);
         }
-
-        return this.synfV3.tx.sendTx(signer, unsignedTx);
     }
 }
