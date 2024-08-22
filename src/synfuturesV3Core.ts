@@ -1635,8 +1635,20 @@ export class SynFuturesV3 {
             throw new Error('Insufficient margin to open position');
         }
 
+        // limit price and mark price absDiff in 2 * imr
         if (!withinOrderLimit(targetPrice, pairModel.markPrice, pairModel.rootInstrument.setting.initialMarginRatio)) {
             throw new Error('Limit order price is too far away from mark price');
+        }
+
+        // fair and mark price absDiff in imr, `withinOrderLimit` would multiply by 2
+        if (
+            !withinOrderLimit(
+                pairAccountModel.rootPair.fairPriceWad,
+                pairModel.markPrice,
+                pairModel.rootInstrument.setting.initialMarginRatio / 2,
+            )
+        ) {
+            throw new Error('fair price is too far away from mark price');
         }
 
         return this._simulateOrder(pairAccountModel, targetTick, baseSize, leverageWad);
