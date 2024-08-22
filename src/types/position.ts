@@ -147,19 +147,14 @@ export function realizeFundingIncome(amm: Amm, pos: Position): Position {
     return realizeFundingWithPnl(amm, pos).position;
 }
 
-export function realizeSocialLossWithPnl(amm: Amm, pos: Position): { position: Position; pnl: BigNumber } {
+export function realizeSocialLoss(amm: Amm, pos: Position): { position: Position; socialLoss: BigNumber } {
     const long = pos.size.gt(ZERO);
     const usize = pos.size.abs();
     const socialLossIndex = long ? amm.longSocialLossIndex : amm.shortSocialLossIndex;
     const socialLoss = wmulUp(socialLossIndex.sub(pos.entrySocialLossIndex), usize);
-    const pnl = socialLoss.mul(-1);
     pos.balance = pos.balance.sub(socialLoss);
     pos.entrySocialLossIndex = socialLossIndex;
-    return { position: pos, pnl };
-}
-
-export function realizeSocialLoss(amm: Amm, pos: Position): Position {
-    return realizeSocialLossWithPnl(amm, pos).position;
+    return { position: pos, socialLoss };
 }
 
 export function combine(
@@ -180,12 +175,12 @@ export function combine(
         realized = realized.add(realizedPnl2);
     }
 
-    const { position: realizedPosition1, pnl: realizedPnl1 } = realizeSocialLossWithPnl(amm, position1);
-    const { position: realizedPosition2, pnl: realizedPnl2 } = realizeSocialLossWithPnl(amm, position2);
+    const { position: realizedPosition1, socialLoss: socialLoss1 } = realizeSocialLoss(amm, position1);
+    const { position: realizedPosition2, socialLoss: socialLoss2 } = realizeSocialLoss(amm, position2);
     position1 = realizedPosition1;
     position2 = realizedPosition2;
-    realized = realized.add(realizedPnl1);
-    realized = realized.add(realizedPnl2);
+    realized = realized.sub(socialLoss1);
+    realized = realized.sub(socialLoss2);
 
     let pic: Position = {
         balance: ZERO,
