@@ -17,7 +17,7 @@ export interface RangeData {
 }
 
 export class RangeModel {
-    constructor(private readonly data: RangeData) {}
+    constructor(protected readonly data: RangeData) {}
 
     public static fromRawRange(rootPair: PairModel, range: Range, rid: number): RangeModel {
         const { tickLower, tickUpper } = parseTicks(rid);
@@ -60,7 +60,7 @@ export class RangeModel {
         return this.data.tickUpper;
     }
 
-    get wrapped(): WrappedRangeModel {
+    get wrap(): WrappedRangeModel {
         return new WrappedRangeModel(this.data);
     }
 
@@ -127,6 +127,14 @@ export class RangeModel {
 }
 
 export class WrappedRangeModel extends RangeModel {
+    get warp(): WrappedRangeModel {
+        throw new Error('invalid wrap');
+    }
+
+    get unwrap(): RangeModel {
+        return new RangeModel(this.data);
+    }
+
     get tickLower(): number {
         return this.isInverse ? super.tickUpper : super.tickLower;
     }
