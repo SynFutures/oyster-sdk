@@ -4,6 +4,7 @@ import { BaseInfo, TokenInfo } from './token';
 import { Amm } from './pair';
 import { BigNumber } from 'ethers';
 import { QuoteParam } from './params';
+import { CHAIN_ID } from '@derivation-tech/web3-core';
 
 export interface AssembledInstrumentData {
     instrumentAddr: string;
@@ -23,6 +24,7 @@ export interface AssembledInstrumentData {
 }
 
 export interface InstrumentInfo {
+    chainId: CHAIN_ID;
     addr: string;
     symbol: string;
     base: BaseInfo;
