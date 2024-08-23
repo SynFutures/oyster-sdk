@@ -42,14 +42,14 @@ export class OrderModel implements Order {
     }
 
     public toPositionModel(): PositionModel {
-        return new PositionModel(
-            this.rootPair,
-            this.balance,
-            this.size,
-            wmul(this.limitPrice, this.size.abs()),
-            BigNumber.from(0),
-            BigNumber.from(0),
-        );
+        return new PositionModel({
+            rootPair: this.rootPair,
+            balance: this.balance,
+            size: this.size,
+            entryNotional: wmul(this.limitPrice, this.size.abs()),
+            entrySocialLossIndex: BigNumber.from(0),
+            entryFundingIndex: BigNumber.from(0),
+        });
     }
 
     get equity(): BigNumber {

@@ -47,6 +47,10 @@ export class PositionModel implements Position {
         return this.data.balance;
     }
 
+    set balance(value: BigNumber) {
+        this.data.balance = value;
+    }
+
     get size(): BigNumber {
         return this.data.size;
     }
