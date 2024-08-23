@@ -1,55 +1,69 @@
 import { BigNumber } from 'ethers';
 import { Order, Side } from '../types';
 import { orderKey, parseOrderTickNonce } from '../common';
-import { TickMath, wdiv, wmul, ZERO } from '../math';
+import { TickMath, wdiv, wmul, ZERO, ONE } from '../math';
 
 import { PositionModel } from './position.model';
 import { PairModel } from './pair.model';
 
-export class OrderModel implements Order {
-    public readonly rootPair: PairModel;
-
+export interface OrderData {
+    rootPair: PairModel;
     balance: BigNumber;
     size: BigNumber;
-
     taken: BigNumber;
     tick: number;
     nonce: number;
+}
 
-    constructor(
-        rootPair: PairModel,
-        balance: BigNumber,
-        size: BigNumber,
-        taken: BigNumber,
-        tick: number,
-        nonce: number,
-    ) {
-        this.rootPair = rootPair;
-        this.balance = balance;
-        this.size = size;
-        this.taken = taken;
-        this.tick = tick;
-        this.nonce = nonce;
+export class OrderModel implements Order {
+    constructor(protected readonly data: OrderData) {}
+
+    static fromRawOrder(rootPair: PairModel, order: Order, taken: BigNumber, oid: number): OrderModel {
+        const { tick, nonce } = parseOrderTickNonce(oid);
+        return new OrderModel({
+            rootPair,
+            balance: order.balance,
+            size: order.size,
+            taken: taken,
+            tick,
+            nonce,
+        });
     }
 
-    public static fromRawOrder(rootPair: PairModel, order: Order, taken: BigNumber, oid: number): OrderModel {
-        const { tick, nonce } = parseOrderTickNonce(oid);
-        return new OrderModel(rootPair, order.balance, order.size, taken, tick, nonce);
+    get rootPair(): PairModel {
+        return this.data.rootPair;
+    }
+
+    get balance(): BigNumber {
+        return this.data.balance;
+    }
+
+    get size(): BigNumber {
+        return this.data.size;
+    }
+
+    get taken(): BigNumber {
+        return this.data.taken;
+    }
+
+    get tick(): number {
+        return this.data.tick;
+    }
+
+    get nonce(): number {
+        return this.data.nonce;
+    }
+
+    get wrap(): WrappedOrderModel {
+        return new WrappedOrderModel(this.data);
+    }
+
+    get isInverse(): boolean {
+        return this.rootPair.isInverse;
     }
 
     get limitPrice(): BigNumber {
         return TickMath.getWadAtTick(this.tick);
-    }
-
-    public toPositionModel(): PositionModel {
-        return new PositionModel(
-            this.rootPair,
-            this.balance,
-            this.size,
-            wmul(this.limitPrice, this.size.abs()),
-            BigNumber.from(0),
-            BigNumber.from(0),
-        );
     }
 
     get equity(): BigNumber {
@@ -74,5 +88,50 @@ export class OrderModel implements Order {
         const px = this.taken.eq(ZERO) ? this.limitPrice : this.rootPair.markPrice;
         const value = wmul(px, this.size.abs());
         return wdiv(value, this.balance);
+    }
+
+    toPositionModel(): PositionModel {
+        return new PositionModel({
+            rootPair: this.rootPair,
+            balance: this.balance,
+            size: this.size,
+            entryNotional: wmul(this.limitPrice, this.size.abs()),
+            entrySocialLossIndex: BigNumber.from(0),
+            entryFundingIndex: BigNumber.from(0),
+        });
+    }
+}
+
+export class WrappedOrderModel extends OrderModel {
+    get wrap(): WrappedOrderModel {
+        throw new Error('invalid wrap');
+    }
+
+    get unwrap(): OrderModel {
+        return new OrderModel(this.data);
+    }
+
+    get size(): BigNumber {
+        return this.isInverse ? super.size.mul(-1) : super.size;
+    }
+
+    get side(): Side {
+        return this.isInverse
+            ? super.side === Side.LONG
+                ? Side.SHORT
+                : super.side === Side.SHORT
+                ? Side.LONG
+                : Side.FLAT
+            : super.side;
+    }
+
+    get limitPrice(): BigNumber {
+        const limitPrice = super.limitPrice;
+
+        if (limitPrice.eq(ZERO) || !this.isInverse) {
+            return limitPrice;
+        } else {
+            return wdiv(ONE, limitPrice);
+        }
     }
 }
