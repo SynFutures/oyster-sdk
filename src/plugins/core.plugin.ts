@@ -1,6 +1,14 @@
-import { SynFuturesV3Ctx } from './synfuturesV3Core';
-import { CacheModule, ObserverModule, GateModule, SimulateModule, InstrumentModule, TxModule } from './modules';
-import { ConfigModule } from './modules/config.module';
+import { SynFuturesV3Ctx } from '../synfuturesV3Core';
+import {
+    CacheModule,
+    GateModule,
+    InstrumentModule,
+    InverseModule,
+    ObserverModule,
+    SimulateModule,
+    TxModule,
+} from '../modules';
+import { ConfigModule } from '../modules/config.module';
 
 export type SynfuturesPlugin = {
     install(synf: SynFuturesV3Ctx): void;
@@ -58,6 +66,14 @@ export function configPlugin(): SynfuturesPlugin {
     return {
         install(ctx: SynFuturesV3Ctx): void {
             ctx.config = new ConfigModule(ctx);
+        },
+    };
+}
+
+export function inversePlugin(): SynfuturesPlugin {
+    return {
+        install(ctx: SynFuturesV3Ctx): void {
+            ctx.inverse = new InverseModule(ctx);
         },
     };
 }

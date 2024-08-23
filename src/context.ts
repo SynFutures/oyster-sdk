@@ -14,6 +14,7 @@ import {
     SimulateInterface,
 } from './modules';
 import { TxInterface } from './modules';
+import { createNullInverseModule, InverseInterface } from './modules/inverse.interface';
 
 export interface Context {
     cache: CacheInterface;
@@ -23,6 +24,7 @@ export interface Context {
     simulate: SimulateInterface;
     tx: TxInterface;
     config: ConfigInterface;
+    inverse: InverseInterface;
 }
 
 export const createNullContext = (): Context => ({
@@ -33,4 +35,5 @@ export const createNullContext = (): Context => ({
     simulate: createNullSimulateModule(),
     tx: createNullTransactionModule(),
     config: createNullConfigModule(),
+    inverse: createNullInverseModule(),
 });

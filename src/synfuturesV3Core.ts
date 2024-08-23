@@ -9,7 +9,7 @@ import {
     simulatePlugin,
     SynfuturesPlugin,
     txPlugin,
-} from './plugin';
+} from './plugins';
 
 export interface SynFuturesV3Ctx extends Context {
     use(plugin: SynfuturesPlugin): SynFuturesV3Ctx;

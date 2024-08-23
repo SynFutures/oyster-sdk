@@ -68,7 +68,7 @@ export interface InstrumentData {
     spotPrice: BigNumber;
 }
 export class InstrumentModel {
-    constructor(private readonly data: InstrumentData) {}
+    constructor(protected readonly data: InstrumentData) {}
 
     //todo fixme info should be a param
     public static minimumInstrumentWithParam(param: QuoteParam): InstrumentModel {
@@ -212,6 +212,10 @@ export class InstrumentModel {
 export class WrappedInstrumentModel extends InstrumentModel {
     get wrap(): WrappedInstrumentModel {
         throw new Error('invalid wrap');
+    }
+
+    get unWrap(): InstrumentModel {
+        return new InstrumentModel(this.data);
     }
 
     get spotPrice(): BigNumber {
