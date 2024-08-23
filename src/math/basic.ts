@@ -105,6 +105,12 @@ export function wdiv(x: BigNumber, y: BigNumber): BigNumber {
     return frac(x, WAD, y);
 }
 
+// division for unsigned WAD number, rounding to nearest
+export function safeWDiv(x: BigNumber, y: BigNumber): BigNumber {
+    if (y.eq(ZERO)) return ZERO;
+    return frac(x, WAD, y);
+}
+
 // division for unsigned WAD number, rounding up
 export function wdivUp(x: BigNumber, y: BigNumber): BigNumber {
     return fracUp(x, WAD, y);

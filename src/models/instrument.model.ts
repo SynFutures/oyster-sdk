@@ -19,7 +19,7 @@ import {
     PERP_EXPIRY,
     RATIO_BASE,
 } from '../constants';
-import { r2w, WAD, wdiv, wmulDown, ZERO } from '../math';
+import { ONE, r2w, safeWDiv, WAD, wdiv, wmulDown, ZERO } from '../math';
 
 import { AccountState } from './account.model';
 import { PairModel, PairState } from './pair.model';
@@ -70,6 +70,7 @@ export interface InstrumentData {
 export class InstrumentModel {
     constructor(private readonly data: InstrumentData) {}
 
+    //todo fixme info should be a param
     public static minimumInstrumentWithParam(param: QuoteParam): InstrumentModel {
         return new InstrumentModel({
             info: {} as InstrumentInfo,
@@ -84,6 +85,11 @@ export class InstrumentModel {
             ),
         });
     }
+
+    get wrap(): WrappedInstrumentModel {
+        return new WrappedInstrumentModel(this.data);
+    }
+
     get spotPrice(): BigNumber {
         return this.data.spotPrice;
     }
@@ -105,7 +111,7 @@ export class InstrumentModel {
     }
 
     get isInverse(): boolean {
-        return ConfigManager.isInversePair(this.info.chainId, this.info.addr, this.info.base.address);
+        return ConfigManager.isInversePair(this.data.info.chainId, this.data.info.addr, this.data.info.base.address);
     }
 
     get setting(): InstrumentSetting {
@@ -140,6 +146,10 @@ export class InstrumentModel {
         return pairs;
     }
 
+    getMarkPrice(expiry: number): BigNumber {
+        return this.markPrices.get(expiry) ?? ZERO;
+    }
+
     getPairModel(expiry: number): PairModel {
         const state = this.state.pairStates.get(expiry);
         return new PairModel(
@@ -169,10 +179,6 @@ export class InstrumentModel {
         }
     }
 
-    getMarkPrice(expiry: number): BigNumber {
-        return this.markPrices.get(expiry) ?? ZERO;
-    }
-
     // calc pair funding rate: fairPrice / spotIndex - 1
     getFundingRate(expiry: number): BigNumber {
         if (this.spotPrice.eq(0)) throw new Error('spot price can not be zero');
@@ -191,15 +197,56 @@ export class InstrumentModel {
             if (this.instrumentType === FeederType.BOTH_STABLE || this.instrumentType === FeederType.NONE_STABLE) {
                 return this.spotPrice;
             } else if (this.instrumentType === FeederType.QUOTE_STABLE) {
-                const rawBenchmarkPrice = wmulDown(rawSpotPrice, r2w(this.market.config.dailyInterestRate))
+                return wmulDown(rawSpotPrice, r2w(this.market.config.dailyInterestRate))
                     .mul(daysLeft)
                     .add(rawSpotPrice);
-                return rawBenchmarkPrice;
             } else {
                 /* else if (this.rootInstrument.instrumentType === FeederType.BASE_STABLE)*/
                 const priceChange = wmulDown(rawSpotPrice, r2w(this.market.config.dailyInterestRate)).mul(daysLeft);
                 return rawSpotPrice.gt(priceChange) ? rawSpotPrice.sub(priceChange) : ZERO;
             }
         }
+    }
+}
+
+export class WrappedInstrumentModel extends InstrumentModel {
+    get wrap(): WrappedInstrumentModel {
+        throw new Error('invalid wrap');
+    }
+
+    get spotPrice(): BigNumber {
+        return this.isInverse ? safeWDiv(ONE, super.spotPrice) : super.spotPrice;
+    }
+
+    get markPrices(): Map<number, BigNumber> {
+        if (!this.isInverse) {
+            return super.markPrices;
+        }
+        const markPrices = new Map<number, BigNumber>();
+        for (const key of super.markPrices.keys()) {
+            markPrices.set(key, safeWDiv(ONE, super.markPrices.get(key)!));
+        }
+        return markPrices;
+    }
+
+    get info(): InstrumentInfo {
+        if (!this.isInverse) {
+            return super.info;
+        }
+        return {
+            chainId: super.info.chainId,
+            addr: super.info.addr,
+            base: super.info.quote,
+            quote: super.info.base,
+            symbol: super.info.symbol,
+        };
+    }
+
+    getMarkPrice(expiry: number): BigNumber {
+        return this.markPrices.get(expiry) ?? ZERO;
+    }
+
+    getBenchmarkPrice(expiry: number): BigNumber {
+        return this.isInverse ? safeWDiv(ONE, super.getBenchmarkPrice(expiry)) : super.getBenchmarkPrice(expiry);
     }
 }
