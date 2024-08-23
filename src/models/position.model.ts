@@ -1,58 +1,93 @@
 import { BigNumber } from 'ethers';
 import { calcFundingFee, calcLiquidationPrice, calcPnl, Position, Side } from '../types';
-import { r2w, wdiv, wmul, wmulUp, ZERO } from '../math';
+import { r2w, wdiv, wmul, wmulUp, ZERO, ONE } from '../math';
 import { ONE_RATIO, PERP_EXPIRY } from '../constants';
 
 import { PairModel } from './pair.model';
 
-export class PositionModel implements Position {
-    public readonly rootPair: PairModel;
-
+export interface PositionData {
+    rootPair: PairModel;
     balance: BigNumber;
     size: BigNumber;
     entryNotional: BigNumber;
     entrySocialLossIndex: BigNumber;
     entryFundingIndex: BigNumber;
+}
 
-    constructor(
-        rootPair: PairModel,
-        balance: BigNumber,
-        size: BigNumber,
-        entryNotional: BigNumber,
-        entrySocialLossIndex: BigNumber,
-        entryFundingIndex: BigNumber,
-    ) {
-        this.rootPair = rootPair;
-        this.balance = balance;
-        this.size = size;
-        this.entryNotional = entryNotional;
-        this.entrySocialLossIndex = entrySocialLossIndex;
-        this.entryFundingIndex = entryFundingIndex;
-    }
+export class PositionModel implements Position {
+    constructor(protected readonly data: PositionData) {}
 
-    public static fromRawPosition(rootPair: PairModel, pos: Position): PositionModel {
-        return new PositionModel(
+    static fromRawPosition(rootPair: PairModel, pos: Position): PositionModel {
+        return new PositionModel({
             rootPair,
-            pos.balance,
-            pos.size,
-            pos.entryNotional,
-            pos.entrySocialLossIndex,
-            pos.entryFundingIndex,
-        );
+            balance: pos.balance,
+            size: pos.size,
+            entryNotional: pos.entryNotional,
+            entrySocialLossIndex: pos.entrySocialLossIndex,
+            entryFundingIndex: pos.entryFundingIndex,
+        });
     }
 
-    public static fromEmptyPosition(rootPair: PairModel): PositionModel {
-        return new PositionModel(rootPair, ZERO, ZERO, ZERO, ZERO, ZERO);
+    static fromEmptyPosition(rootPair: PairModel): PositionModel {
+        return new PositionModel({
+            rootPair,
+            balance: ZERO,
+            size: ZERO,
+            entryNotional: ZERO,
+            entrySocialLossIndex: ZERO,
+            entryFundingIndex: ZERO,
+        });
     }
 
-    public getMaxWithdrawableMargin(): BigNumber {
-        const unrealizedPnl = this.unrealizedPnl;
-        const unrealizedLoss = unrealizedPnl.gt(ZERO) ? ZERO : unrealizedPnl;
+    get rootPair(): PairModel {
+        return this.data.rootPair;
+    }
 
-        const value = wmulUp(this.rootPair.markPrice, this.size.abs());
-        const imRequirement = wmulUp(value, r2w(this.rootPair.rootInstrument.setting.initialMarginRatio));
-        const maxWithdrawableMargin = this.balance.add(unrealizedLoss).sub(imRequirement);
-        return maxWithdrawableMargin.gt(ZERO) ? maxWithdrawableMargin : ZERO;
+    get balance(): BigNumber {
+        return this.data.balance;
+    }
+
+    get size(): BigNumber {
+        return this.data.size;
+    }
+
+    get entryNotional(): BigNumber {
+        return this.data.entryNotional;
+    }
+
+    get entrySocialLossIndex(): BigNumber {
+        return this.data.entrySocialLossIndex;
+    }
+
+    get entryFundingIndex(): BigNumber {
+        return this.data.entryFundingIndex;
+    }
+
+    get wrap(): WrappedPositionModel {
+        return new WrappedPositionModel(this.data);
+    }
+
+    get isInverse(): boolean {
+        return this.rootPair.isInverse;
+    }
+
+    get side(): Side {
+        if (this.size.isNegative()) {
+            return Side.SHORT;
+        } else if (this.size.isZero()) {
+            return Side.FLAT;
+        } else {
+            return Side.LONG;
+        }
+    }
+
+    get leverageWad(): BigNumber {
+        const value = wmul(this.rootPair.markPrice, this.size.abs());
+        const equity = this.getEquity();
+        if (equity.isZero()) {
+            return ZERO;
+        }
+        return wdiv(value, equity);
     }
 
     get entryPrice(): BigNumber {
@@ -78,11 +113,21 @@ export class PositionModel implements Position {
         return ZERO;
     }
 
-    public getEquity(): BigNumber {
+    getMaxWithdrawableMargin(): BigNumber {
+        const unrealizedPnl = this.unrealizedPnl;
+        const unrealizedLoss = unrealizedPnl.gt(ZERO) ? ZERO : unrealizedPnl;
+
+        const value = wmulUp(this.rootPair.markPrice, this.size.abs());
+        const imRequirement = wmulUp(value, r2w(this.rootPair.rootInstrument.setting.initialMarginRatio));
+        const maxWithdrawableMargin = this.balance.add(unrealizedLoss).sub(imRequirement);
+        return maxWithdrawableMargin.gt(ZERO) ? maxWithdrawableMargin : ZERO;
+    }
+
+    getEquity(): BigNumber {
         return this.balance.add(this.unrealizedPnl);
     }
 
-    public getAdditionMarginToIMRSafe(increase: boolean, slippage?: number): BigNumber {
+    getAdditionMarginToIMRSafe(increase: boolean, slippage?: number): BigNumber {
         const ratio = this.rootPair.rootInstrument.setting.initialMarginRatio;
         const positionValue = wmul(this.rootPair.markPrice, this.size.abs());
         let imrValue = wmulUp(positionValue, r2w(ratio));
@@ -100,7 +145,7 @@ export class PositionModel implements Position {
         return additionMargin.gt(ZERO) ? additionMargin : ZERO;
     }
 
-    public isPositionIMSafe(increase: boolean): boolean {
+    isPositionIMSafe(increase: boolean): boolean {
         let equity;
         if (increase) {
             const unrealizedLoss = this.unrealizedPnl.lt(ZERO) ? this.unrealizedPnl : ZERO;
@@ -115,30 +160,55 @@ export class PositionModel implements Position {
         return equity.gte(wmulUp(positionValue, r2w(ratio)));
     }
 
-    public isPositionMMSafe(): boolean {
+    isPositionMMSafe(): boolean {
         const equity = this.getEquity();
         if (equity.isNegative()) return false;
         const positionValue = wmulUp(this.rootPair.markPrice, this.size.abs());
         const ratio = this.rootPair.rootInstrument.setting.maintenanceMarginRatio;
         return equity.gte(wmulUp(positionValue, r2w(ratio)));
     }
+}
+
+export class WrappedPositionModel extends PositionModel {
+    get warp(): WrappedPositionModel {
+        throw new Error('invalid wrap');
+    }
+
+    get unwrap(): PositionModel {
+        return new PositionModel(this.data);
+    }
+
+    get size(): BigNumber {
+        return this.isInverse ? super.size.mul(-1) : super.size;
+    }
 
     get side(): Side {
-        if (this.size.isNegative()) {
-            return Side.SHORT;
-        } else if (this.size.isZero()) {
-            return Side.FLAT;
+        return this.isInverse
+            ? super.side === Side.LONG
+                ? Side.SHORT
+                : super.side === Side.SHORT
+                ? Side.LONG
+                : Side.FLAT
+            : super.side;
+    }
+
+    get entryPrice(): BigNumber {
+        const entryPrice = super.entryPrice;
+
+        if (entryPrice.eq(ZERO) || !this.isInverse) {
+            return entryPrice;
         } else {
-            return Side.LONG;
+            return wdiv(ONE, entryPrice);
         }
     }
 
-    get leverageWad(): BigNumber {
-        const value = wmul(this.rootPair.markPrice, this.size.abs());
-        const equity = this.getEquity();
-        if (equity.isZero()) {
-            return ZERO;
+    get liquidationPrice(): BigNumber {
+        const liquidationPrice = super.liquidationPrice;
+
+        if (liquidationPrice.eq(ZERO) || !this.isInverse) {
+            return liquidationPrice;
+        } else {
+            return wdiv(ONE, liquidationPrice);
         }
-        return wdiv(value, equity);
     }
 }
