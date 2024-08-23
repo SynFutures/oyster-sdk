@@ -1,6 +1,9 @@
 import { InverseInterface } from './inverse.interface';
 import { SynFuturesV3Ctx } from '../synfuturesV3Core';
-import { WrappedInstrumentInfo } from '../types';
+import { FetchInstrumentParam, WrappedInstrumentInfo } from '../types';
+import { PairLevelAccountModel, WrappedInstrumentModel } from '../models';
+import { CallOverrides } from 'ethers/lib/ethers';
+import { TokenInfo } from '@derivation-tech/web3-core';
 
 export class InverseModule implements InverseInterface {
     synfV3: SynFuturesV3Ctx;
@@ -18,5 +21,35 @@ export class InverseModule implements InverseInterface {
             throw new Error(`Invalid instrument`);
         }
         return instrument.wrap.info;
+    }
+
+    //todo need to use wrapped map to fix inverse
+    get accountCache(): Map<string, Map<string, Map<number, PairLevelAccountModel>>> {
+        return this.synfV3.cache.accountCache;
+    }
+
+    async initInstruments(symbolToInfo?: Map<string, TokenInfo>): Promise<WrappedInstrumentModel[]> {
+        const res = await this.synfV3.cache.initInstruments(symbolToInfo);
+        return res.map((i) => {
+            return i.wrap;
+        });
+    }
+
+    get instrumentMap(): Map<string, WrappedInstrumentModel> {
+        const map = new Map<string, WrappedInstrumentModel>();
+        for (const key of this.synfV3.cache.instrumentMap.keys()) {
+            map.set(key, this.synfV3.cache.instrumentMap.get(key)!.wrap);
+        }
+        return map;
+    }
+
+    async updateInstrument(
+        params: FetchInstrumentParam[],
+        overrides?: CallOverrides,
+    ): Promise<WrappedInstrumentModel[]> {
+        const res = await this.synfV3.cache.updateInstrument(params, overrides);
+        return res.map((i) => {
+            return i.wrap;
+        });
     }
 }
