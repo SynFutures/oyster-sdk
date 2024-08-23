@@ -14,16 +14,16 @@ export enum Status {
 }
 
 // Instrument Condition, only matters should contract invariants broken
-export enum InstrumentCondition {
-    NORMAL,
-    FROZEN,
-    RESOLVED,
-}
-
 export enum Management {
     FREEZE,
     RESOLVE,
     NORMALIZE,
+}
+
+export enum InstrumentCondition {
+    NORMAL,
+    FROZEN,
+    RESOLVED,
 }
 
 // 0 for neither base/quote are stableCoin,

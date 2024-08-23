@@ -55,6 +55,12 @@ export interface SynfConfig {
     contractAddress: ContractAddress;
     instrumentProxyByteCode: string;
     tokenInfo?: TokenInfo[];
+    inversePairs?: InversePairs;
+}
+
+export interface InversePairs {
+    instruments: string[];
+    stableCoins: string[];
 }
 
 export interface QuoteParamJson {
@@ -129,6 +135,17 @@ export class ConfigManager {
                 throw new Error('Unsupported Network.');
             }
         }
+    }
+
+    static isInversePair(chainId: CHAIN_ID, instrument: string, baseToken: string): boolean {
+        const { inversePairs } = ConfigManager.getSynfConfig(chainId);
+        if (!inversePairs) {
+            return false;
+        }
+        if (inversePairs.instruments?.includes(instrument.toLowerCase())) {
+            return true;
+        }
+        return !!inversePairs.stableCoins?.includes(baseToken.toLowerCase());
     }
 
     private static mapSynfConfig(json: SynfConfigJson): SynfConfig {
