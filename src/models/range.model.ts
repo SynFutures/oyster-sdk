@@ -6,58 +6,62 @@ import { TickMath, wmulDown, ONE, wdiv } from '../math';
 import { PositionModel } from './position.model';
 import { PairModel } from './pair.model';
 
-export class RangeModel {
-    public readonly rootPair: PairModel;
-
+export interface RangeData {
+    rootPair: PairModel;
     liquidity: BigNumber;
     balance: BigNumber;
     sqrtEntryPX96: BigNumber;
     entryFeeIndex: BigNumber;
+    tickLower: number;
+    tickUpper: number;
+}
 
-    private _tickLower: number;
-    private _tickUpper: number;
-
-    constructor(
-        rootPair: PairModel,
-        liquidity: BigNumber,
-        balance: BigNumber,
-        sqrtEntryPX96: BigNumber,
-        entryFeeIndex: BigNumber,
-        tickLower: number,
-        tickUpper: number,
-    ) {
-        this.rootPair = rootPair;
-        this.liquidity = liquidity;
-        this.balance = balance;
-        this.sqrtEntryPX96 = sqrtEntryPX96;
-        this.entryFeeIndex = entryFeeIndex;
-        this._tickLower = tickLower;
-        this._tickUpper = tickUpper;
-    }
+export class RangeModel {
+    constructor(private readonly data: RangeData) {}
 
     public static fromRawRange(rootPair: PairModel, range: Range, rid: number): RangeModel {
         const { tickLower, tickUpper } = parseTicks(rid);
-        return new RangeModel(
+        return new RangeModel({
             rootPair,
-            range.liquidity,
-            range.balance,
-            range.sqrtEntryPX96,
-            range.entryFeeIndex,
+            liquidity: range.liquidity,
+            balance: range.balance,
+            sqrtEntryPX96: range.sqrtEntryPX96,
+            entryFeeIndex: range.entryFeeIndex,
             tickLower,
             tickUpper,
-        );
+        });
     }
 
-    get wrapped(): WrappedRangeModel {
-        return new WrappedRangeModel(this);
+    get rootPair(): PairModel {
+        return this.data.rootPair;
+    }
+
+    get liquidity(): BigNumber {
+        return this.data.liquidity;
+    }
+
+    get balance(): BigNumber {
+        return this.data.balance;
+    }
+
+    get sqrtEntryPX96(): BigNumber {
+        return this.data.sqrtEntryPX96;
+    }
+
+    get entryFeeIndex(): BigNumber {
+        return this.data.entryFeeIndex;
     }
 
     get tickLower(): number {
-        return this._tickLower;
+        return this.data.tickLower;
     }
 
     get tickUpper(): number {
-        return this._tickUpper;
+        return this.data.tickUpper;
+    }
+
+    get wrapped(): WrappedRangeModel {
+        return new WrappedRangeModel(this.data);
     }
 
     get isInverse(): boolean {
@@ -123,18 +127,6 @@ export class RangeModel {
 }
 
 export class WrappedRangeModel extends RangeModel {
-    constructor(model: RangeModel) {
-        super(
-            model.rootPair,
-            model.liquidity,
-            model.balance,
-            model.sqrtEntryPX96,
-            model.entryFeeIndex,
-            model.tickLower,
-            model.tickUpper,
-        );
-    }
-
     get tickLower(): number {
         return this.isInverse ? super.tickUpper : super.tickLower;
     }
