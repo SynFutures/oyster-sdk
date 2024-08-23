@@ -30,19 +30,6 @@ export class PairState {
         this.pearls.set(tick, pearl);
     }
 
-    setRecord(tick: number, nonce: number, record: ContractRecord): void {
-        if (!this.records.has(tick)) {
-            this.records.set(tick, new Map<number, ContractRecord>());
-        }
-        const nonceMap = this.records.get(tick)!;
-        nonceMap.set(nonce, record);
-        this.records.set(tick, nonceMap);
-    }
-
-    setTickBitMap(wordPos: number, word: BigNumber): void {
-        this.tbitmap.set(wordPos, word);
-    }
-
     getPearl(tick: number): Pearl {
         if (!this.pearls.has(tick)) {
             this.setPearl(tick, {
@@ -57,30 +44,6 @@ export class PairState {
             } as Pearl);
         }
         return this.pearls.get(tick)!;
-    }
-
-    getRecord(tick: number, nonce: number): ContractRecord {
-        if (!this.records.has(tick)) {
-            this.records.set(tick, new Map<number, ContractRecord>());
-        }
-        if (!this.records.get(tick)!.has(nonce)) {
-            this.setRecord(tick, nonce, {
-                taken: ZERO,
-                fee: ZERO,
-                entrySocialLossIndex: ZERO,
-                entryFundingIndex: ZERO,
-            });
-        }
-        return this.records.get(tick)!.get(nonce)!;
-    }
-
-    // int16 => uint
-    getTbitmapWord(wordPos: number): BigNumber {
-        if (!this.tbitmap.has(wordPos)) {
-            this.setTickBitMap(wordPos, ZERO);
-        }
-
-        return this.tbitmap.get(wordPos)!;
     }
 }
 
