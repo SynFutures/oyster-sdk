@@ -1,5 +1,5 @@
 import { BigNumber } from 'ethers';
-import { frac, oppositeSigns, wdivDown, wdivUp, weightedAverage, wmulUp, wmulInt, r2w, wmulDown, wmul } from '../math';
+import { frac, oppositeSigns, wdivDown, wdivUp, wmulUp, wmulInt, r2w, wmulDown, wmul } from '../math';
 import { ZERO, ONE } from '../math/constants';
 import { Amm, PairState } from './pair';
 import { MAX_POSITION_NUM, PERP_EXPIRY } from '../constants';
@@ -147,6 +147,16 @@ export function realizeFundingIncome(amm: Amm, pos: Position): Position {
     return realizeFundingWithPnl(amm, pos).position;
 }
 
+export function realizeSocialLoss(amm: Amm, pos: Position): { position: Position; socialLoss: BigNumber } {
+    const long = pos.size.gt(ZERO);
+    const usize = pos.size.abs();
+    const socialLossIndex = long ? amm.longSocialLossIndex : amm.shortSocialLossIndex;
+    const socialLoss = wmulUp(socialLossIndex.sub(pos.entrySocialLossIndex), usize);
+    pos.balance = pos.balance.sub(socialLoss);
+    pos.entrySocialLossIndex = socialLossIndex;
+    return { position: pos, socialLoss };
+}
+
 export function combine(
     amm: Amm,
     position_1: Position,
@@ -164,6 +174,13 @@ export function combine(
         realized = realized.add(realizedPnl1);
         realized = realized.add(realizedPnl2);
     }
+
+    const { position: realizedPosition1, socialLoss: socialLoss1 } = realizeSocialLoss(amm, position1);
+    const { position: realizedPosition2, socialLoss: socialLoss2 } = realizeSocialLoss(amm, position2);
+    position1 = realizedPosition1;
+    position2 = realizedPosition2;
+    realized = realized.sub(socialLoss1);
+    realized = realized.sub(socialLoss2);
 
     let pic: Position = {
         balance: ZERO,
@@ -205,19 +222,11 @@ export function combine(
             closedShortNotional = shortPic.entryNotional;
         }
         const realizedPnl = closedShortNotional.sub(closedLongNotional);
-        const longPartSocialLoss = wmulUp(amm.longSocialLossIndex.sub(LongPic.entrySocialLossIndex), closedSize);
-        const shortPartSocialLoss = wmulUp(amm.shortSocialLossIndex.sub(shortPic.entrySocialLossIndex), closedSize);
-        const loss = longPartSocialLoss.add(shortPartSocialLoss);
-        pic.balance = pic.balance.add(LongPic.balance).add(shortPic.balance).add(realizedPnl).sub(loss);
-        realized = realized.add(realizedPnl).sub(loss);
+        pic.balance = pic.balance.add(LongPic.balance).add(shortPic.balance).add(realizedPnl);
+        realized = realized.add(realizedPnl);
     } else {
         pic.entryNotional = position1.entryNotional.add(position2.entryNotional);
-        pic.entrySocialLossIndex = weightedAverage(
-            position1.size.abs(),
-            position1.entrySocialLossIndex,
-            position2.size.abs(),
-            position2.entrySocialLossIndex,
-        );
+        pic.entrySocialLossIndex = pic.size.gt(ZERO) ? amm.longSocialLossIndex : amm.shortSocialLossIndex;
         pic.entryFundingIndex = position1.size.gt(ZERO) ? amm.longFundingIndex : amm.shortFundingIndex;
         pic.balance = position1.balance.add(position2.balance);
     }

@@ -1915,6 +1915,71 @@ const _abi = [
     anonymous: false,
     inputs: [
       {
+        indexed: true,
+        internalType: "uint32",
+        name: "expiry",
+        type: "uint32",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "trader",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint48",
+        name: "rid",
+        type: "uint48",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "fee",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "address",
+        name: "operator",
+        type: "address",
+      },
+      {
+        components: [
+          {
+            internalType: "uint128",
+            name: "liquidity",
+            type: "uint128",
+          },
+          {
+            internalType: "uint128",
+            name: "entryFeeIndex",
+            type: "uint128",
+          },
+          {
+            internalType: "uint96",
+            name: "balance",
+            type: "uint96",
+          },
+          {
+            internalType: "uint160",
+            name: "sqrtEntryPX96",
+            type: "uint160",
+          },
+        ],
+        indexed: false,
+        internalType: "struct Range",
+        name: "range",
+        type: "tuple",
+      },
+    ],
+    name: "WithdrawRangeFee",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
         indexed: false,
         internalType: "address",
         name: "previousAdmin",

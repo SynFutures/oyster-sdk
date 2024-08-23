@@ -1089,6 +1089,10 @@ export function withinOrderLimit(limitPrice: BigNumber, markPrice: BigNumber, im
     return wdiv(limitPrice.sub(markPrice).abs(), markPrice).lte(r2w(imr).mul(2));
 }
 
+export function withinDeviationLimit(fairPrice: BigNumber, markPrice: BigNumber, imr: number): boolean {
+    return wdiv(fairPrice.sub(markPrice).abs(), markPrice).lte(r2w(imr));
+}
+
 export async function batchQuery(
     ctx: ChainContext,
     iface: Interface,

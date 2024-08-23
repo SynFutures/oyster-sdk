@@ -48,6 +48,7 @@ import {
     encodeTradeWithRiskParam,
     encodeBatchPlaceWithReferralParam,
     alignTick,
+    withinDeviationLimit,
 } from './common/util';
 import {
     AddParam,
@@ -1637,6 +1638,16 @@ export class SynFuturesV3 {
 
         if (!withinOrderLimit(targetPrice, pairModel.markPrice, pairModel.rootInstrument.setting.initialMarginRatio)) {
             throw new Error('Limit order price is too far away from mark price');
+        }
+
+        if (
+            !withinDeviationLimit(
+                pairAccountModel.rootPair.fairPriceWad,
+                pairModel.markPrice,
+                pairModel.rootInstrument.setting.initialMarginRatio,
+            )
+        ) {
+            throw new Error('fair price is too far away from mark price');
         }
 
         return this._simulateOrder(pairAccountModel, targetTick, baseSize, leverageWad);
