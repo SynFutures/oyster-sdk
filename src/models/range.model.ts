@@ -1,7 +1,7 @@
 import { BigNumber } from 'ethers';
 import { Amm, Position, Range, rangeToPosition, tally } from '../types';
 import { parseTicks, rangeKey } from '../common';
-import { TickMath, wmulDown } from '../math';
+import { TickMath, wmulDown, ONE, wdiv } from '../math';
 
 import { PositionModel } from './position.model';
 import { PairModel } from './pair.model';
@@ -14,8 +14,8 @@ export class RangeModel {
     sqrtEntryPX96: BigNumber;
     entryFeeIndex: BigNumber;
 
-    tickLower: number;
-    tickUpper: number;
+    private _tickLower: number;
+    private _tickUpper: number;
 
     constructor(
         rootPair: PairModel,
@@ -31,8 +31,8 @@ export class RangeModel {
         this.balance = balance;
         this.sqrtEntryPX96 = sqrtEntryPX96;
         this.entryFeeIndex = entryFeeIndex;
-        this.tickLower = tickLower;
-        this.tickUpper = tickUpper;
+        this._tickLower = tickLower;
+        this._tickUpper = tickUpper;
     }
 
     public static fromRawRange(rootPair: PairModel, range: Range, rid: number): RangeModel {
@@ -46,6 +46,22 @@ export class RangeModel {
             tickLower,
             tickUpper,
         );
+    }
+
+    get wrapped(): WrappedRangeModel {
+        return new WrappedRangeModel(this);
+    }
+
+    get tickLower(): number {
+        return this._tickLower;
+    }
+
+    get tickUpper(): number {
+        return this._tickUpper;
+    }
+
+    get isInverse(): boolean {
+        return this.rootPair.isInverse;
     }
 
     get rid(): number {
@@ -103,5 +119,43 @@ export class RangeModel {
         amm.tick = tick;
         amm.sqrtPX96 = TickMath.getSqrtRatioAtTick(tick);
         return amm;
+    }
+}
+
+export class WrappedRangeModel extends RangeModel {
+    constructor(model: RangeModel) {
+        super(
+            model.rootPair,
+            model.liquidity,
+            model.balance,
+            model.sqrtEntryPX96,
+            model.entryFeeIndex,
+            model.tickLower,
+            model.tickUpper,
+        );
+    }
+
+    get tickLower(): number {
+        return this.isInverse ? super.tickUpper : super.tickLower;
+    }
+
+    get tickUpper(): number {
+        return this.isInverse ? super.tickLower : super.tickUpper;
+    }
+
+    get lowerPrice(): BigNumber {
+        return this.isInverse ? wdiv(ONE, super.upperPrice) : super.lowerPrice;
+    }
+
+    get upperPrice(): BigNumber {
+        return this.isInverse ? wdiv(ONE, super.lowerPrice) : super.upperPrice;
+    }
+
+    get lowerPositionModelIfRemove(): PositionModel {
+        return this.isInverse ? super.upperPositionModelIfRemove : super.lowerPositionModelIfRemove;
+    }
+
+    get upperPositionModelIfRemove(): PositionModel {
+        return this.isInverse ? super.lowerPositionModelIfRemove : super.upperPositionModelIfRemove;
     }
 }

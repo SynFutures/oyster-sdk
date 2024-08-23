@@ -84,6 +84,11 @@ export class InstrumentModel {
         );
     }
 
+    // TODO
+    get isInverse(): boolean {
+        return false;
+    }
+
     get setting(): InstrumentSetting {
         return this.state.setting;
     }

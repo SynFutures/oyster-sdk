@@ -124,6 +124,10 @@ export class PairModel {
         return new PairModel(instrumentModel, amm, ZERO);
     }
 
+    get isInverse(): boolean {
+        return this.rootInstrument.isInverse;
+    }
+
     get amm(): Amm {
         return this.state.amm;
     }
