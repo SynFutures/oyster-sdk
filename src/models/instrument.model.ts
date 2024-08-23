@@ -23,6 +23,7 @@ import { r2w, WAD, wdiv, wmulDown, ZERO } from '../math';
 
 import { AccountState } from './account.model';
 import { PairModel, PairState } from './pair.model';
+import { ConfigManager } from '../config';
 
 export class InstrumentState {
     condition: InstrumentCondition;
@@ -59,34 +60,52 @@ export class InstrumentState {
     }
 }
 
-export class InstrumentModel {
+export interface InstrumentData {
     info: InstrumentInfo;
     state: InstrumentState;
     market: InstrumentMarket;
-
-    markPrices = new Map<number, BigNumber>();
-
+    markPrices: Map<number, BigNumber>;
     spotPrice: BigNumber;
-
-    constructor(info: InstrumentInfo, market: InstrumentMarket, state: InstrumentState, spotPrice: BigNumber) {
-        this.info = info;
-        this.market = market;
-        this.state = state;
-        this.spotPrice = spotPrice;
-    }
+}
+export class InstrumentModel {
+    constructor(private readonly data: InstrumentData) {}
 
     public static minimumInstrumentWithParam(param: QuoteParam): InstrumentModel {
-        return new InstrumentModel(
-            {} as InstrumentInfo,
-            {} as InstrumentMarket,
-            new InstrumentState(InstrumentCondition.NORMAL, INITIAL_MARGIN_RATIO, MAINTENANCE_MARGIN_RATIO, param),
-            ZERO,
-        );
+        return new InstrumentModel({
+            info: {} as InstrumentInfo,
+            market: {} as InstrumentMarket,
+            markPrices: new Map<number, BigNumber>(),
+            spotPrice: ZERO,
+            state: new InstrumentState(
+                InstrumentCondition.NORMAL,
+                INITIAL_MARGIN_RATIO,
+                MAINTENANCE_MARGIN_RATIO,
+                param,
+            ),
+        });
+    }
+    get spotPrice(): BigNumber {
+        return this.data.spotPrice;
     }
 
-    // TODO
+    get markPrices(): Map<number, BigNumber> {
+        return this.data.markPrices;
+    }
+
+    get market(): InstrumentMarket {
+        return this.data.market;
+    }
+
+    get info(): InstrumentInfo {
+        return this.data.info;
+    }
+
+    get state(): InstrumentState {
+        return this.data.state;
+    }
+
     get isInverse(): boolean {
-        return false;
+        return ConfigManager.isInversePair(this.info.chainId, this.info.addr, this.info.base.address);
     }
 
     get setting(): InstrumentSetting {
@@ -135,7 +154,7 @@ export class InstrumentModel {
         if (state.blockInfo) this.state.blockInfo = state.blockInfo;
         this.state.condition = state.condition;
         this.state.setting = state.setting;
-        this.spotPrice = spotPrice;
+        this.data.spotPrice = spotPrice;
     }
 
     updatePair(amm: Amm, markPrice: BigNumber, blockInfo?: BlockInfo): void {

@@ -504,6 +504,7 @@ export class ObserverModule implements ObserverInterface {
                 }
             }
             const instrumentInfo: InstrumentInfo = {
+                chainId: this.synfV3.cache.ctx.chainId,
                 addr: rawInstrument.instrumentAddr,
                 symbol: rawInstrument.symbol,
                 base: baseInfo,
@@ -529,13 +530,13 @@ export class ObserverModule implements ObserverInterface {
                 param,
                 blockInfo,
             );
-
-            const instrumentModel = new InstrumentModel(
-                instrumentInfo,
-                market,
-                instrumentState,
-                rawInstrument.spotPrice,
-            );
+            const instrumentModel = new InstrumentModel({
+                info: instrumentInfo,
+                market: market,
+                state: instrumentState,
+                spotPrice: rawInstrument.spotPrice,
+                markPrices: new Map<number, BigNumber>(),
+            });
             for (let i = 0; i < rawInstrument.amms.length; i++) {
                 const rawAmm = rawInstrument.amms[i];
                 if (rawAmm.expiry === 0) {
