@@ -30,6 +30,7 @@ export interface InstrumentInfo {
     base: BaseInfo;
     quote: TokenInfo;
 }
+export type WrappedInstrumentInfo = InstrumentInfo;
 
 export interface InstrumentMarket extends Market {
     feeder: PriceFeeder | DexV2Feeder;
