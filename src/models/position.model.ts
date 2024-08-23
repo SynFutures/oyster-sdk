@@ -1,7 +1,8 @@
-import { calcFundingFee, calcLiquidationPrice, calcPnl, Position, Side } from '../types';
 import { BigNumber } from 'ethers';
+import { calcFundingFee, calcLiquidationPrice, calcPnl, Position, Side } from '../types';
 import { r2w, wdiv, wmul, wmulUp, ZERO } from '../math';
 import { ONE_RATIO, PERP_EXPIRY } from '../constants';
+
 import { PairModel } from './pair.model';
 
 export class PositionModel implements Position {

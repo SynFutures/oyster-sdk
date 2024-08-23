@@ -1,7 +1,8 @@
-import { Order, Side } from '../types';
 import { BigNumber } from 'ethers';
+import { Order, Side } from '../types';
 import { orderKey, parseOrderTickNonce } from '../common';
 import { TickMath, wdiv, wmul, ZERO } from '../math';
+
 import { PositionModel } from './position.model';
 import { PairModel } from './pair.model';
 

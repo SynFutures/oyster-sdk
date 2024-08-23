@@ -1,8 +1,8 @@
+import { BigNumber } from 'ethers';
+import { BlockInfo } from '@derivation-tech/web3-core';
 import {
     Amm,
     EMPTY_AMM,
-    EMPTY_POSITION,
-    EMPTY_QUOTE_PARAM,
     FeederType,
     InstrumentCondition,
     InstrumentInfo,
@@ -11,9 +11,6 @@ import {
     MarketType,
     QuoteParam,
 } from '../types';
-import { BlockInfo } from '@derivation-tech/web3-core';
-import { BigNumber } from 'ethers';
-import { deserializeSimpleObject, mustParseNumber, serializeSimpleObject } from '../common';
 import {
     INITIAL_MARGIN_RATIO,
     MAINTENANCE_MARGIN_RATIO,
@@ -23,6 +20,7 @@ import {
     RATIO_BASE,
 } from '../constants';
 import { r2w, WAD, wdiv, wmulDown, ZERO } from '../math';
+
 import { AccountState } from './account.model';
 import { PairModel, PairState } from './pair.model';
 
@@ -50,67 +48,6 @@ export class InstrumentState {
         this.blockInfo = blockInfo;
     }
 
-    serialize(): any {
-        const accounts: any = {};
-        for (const [k, v] of this.accounts) {
-            const _accounts: any = (accounts[k.toString()] = {});
-            for (const [_k, _v] of v) {
-                _accounts[_k] = _v.serialize();
-            }
-        }
-
-        const pairs: any = {};
-        for (const [k, v] of this.pairStates) {
-            pairs[k.toString()] = v.serialize();
-        }
-
-        return {
-            accounts,
-            pairs,
-            condition: this.condition,
-            setting: serializeSimpleObject({
-                initialMarginRatio: this.setting.initialMarginRatio,
-                maintenanceMarginRatio: this.setting.maintenanceMarginRatio,
-                quoteParam: this.setting.quoteParam,
-            }),
-        };
-    }
-
-    deserialize(serialized: any): this {
-        for (const [k, v] of Object.entries(serialized.accounts)) {
-            if (typeof v !== 'object' || v === null) {
-                throw new Error('invalid deserialize');
-            }
-
-            const _map = new Map<string, AccountState>();
-            for (const [_k, _v] of Object.entries(v)) {
-                const account = new AccountState(EMPTY_POSITION, [], [], [], []);
-                _map.set(_k, account.deserialize(_v));
-            }
-            this.accounts.set(mustParseNumber(k), _map);
-        }
-
-        for (const [k, v] of Object.entries(serialized.pairs)) {
-            const pairs = new PairState(EMPTY_AMM);
-            this.pairStates.set(mustParseNumber(k), pairs.deserialize(v));
-        }
-
-        this.condition = serialized.condition;
-
-        this.setting = deserializeSimpleObject(serialized.setting);
-
-        return this;
-    }
-
-    copy(): InstrumentState {
-        return new InstrumentState(
-            InstrumentCondition.NORMAL,
-            INITIAL_MARGIN_RATIO,
-            MAINTENANCE_MARGIN_RATIO,
-            EMPTY_QUOTE_PARAM,
-        ).deserialize(this.serialize());
-    }
-
     setAccountState(trader: string, expiry: number, account: AccountState): void {
         let traderMap = this.accounts.get(expiry);
         if (!traderMap) {
@@ -119,31 +56,6 @@ export class InstrumentState {
         }
 
         traderMap.set(trader.toLowerCase(), account);
-    }
-
-    getAccountState(expiry: number, trader: string): AccountState {
-        trader = trader.toLowerCase();
-        if (!this.accounts.has(expiry)) {
-            const traderMap = new Map<string, AccountState>();
-            this.accounts.set(expiry, traderMap);
-        }
-        if (!this.accounts.get(expiry)!.has(trader)) {
-            const traderAccount = new AccountState(EMPTY_POSITION, [], [], [], []);
-            this.accounts.get(expiry)!.set(trader, traderAccount);
-        }
-        return this.accounts.get(expiry)!.get(trader)!;
-    }
-
-    getPairState(expiry: number): PairState {
-        if (expiry < 0) {
-            throw new Error('expiry cannot be negative');
-        }
-        if (!this.pairStates.has(expiry)) {
-            const pairState = new PairState(EMPTY_AMM);
-            pairState.amm.expiry = expiry;
-            this.pairStates.set(expiry, pairState);
-        }
-        return this.pairStates.get(expiry)!;
     }
 }
 
