@@ -174,7 +174,7 @@ export class PositionModel implements Position {
 }
 
 export class WrappedPositionModel extends PositionModel {
-    get warp(): WrappedPositionModel {
+    get wrap(): WrappedPositionModel {
         throw new Error('invalid wrap');
     }
 

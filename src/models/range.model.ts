@@ -127,7 +127,7 @@ export class RangeModel {
 }
 
 export class WrappedRangeModel extends RangeModel {
-    get warp(): WrappedRangeModel {
+    get wrap(): WrappedRangeModel {
         throw new Error('invalid wrap');
     }
 
