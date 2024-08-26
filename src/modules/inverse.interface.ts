@@ -11,6 +11,12 @@ import {
     IPlaceOrderRequest,
     ISimulateAddLiquidityResult,
     IAddLiquidityRequest,
+    IAdjustMarginRequest,
+    ISimulateAdjustMarginResult,
+    IRemoveLiquidityResult,
+    IRemoveLiquidityRequest,
+    IBatchPlaceScaledLimitOrderRequest,
+    IBatchPlaceScaledLimitOrderResult,
 } from '../types/inverse';
 
 export interface InverseInterface extends BaseInterFace {
@@ -41,20 +47,40 @@ export interface InverseInterface extends BaseInterFace {
     // if simulate before, just pass the simulateResult
     trade(
         params: ITradeRequest,
-        simulateResult?: ISimulateTradeResult,
+        simulateResult?: ISimulateTradeResult, // TODO: if not pass simulateResult, will simulate check before send tx
     ): Promise<ContractTransaction | providers.TransactionReceipt>;
 
     simulatePlaceOrder(params: IPlaceOrderRequest): ISimulatePlaceOrderResult;
     // if simulate before, just pass the simulateResult
     placeOrder(
         params: IPlaceOrderRequest,
-        simulateResult?: ISimulatePlaceOrderResult,
+        simulateResult?: ISimulatePlaceOrderResult, // TODO: if not pass simulateResult, will simulate check before send tx
     ): Promise<ContractTransaction | providers.TransactionReceipt>;
 
     simulateAddLiquidity(params: IAddLiquidityRequest): ISimulateAddLiquidityResult;
     addLiquidity(
         params: IAddLiquidityRequest,
-        simulateResult?: ISimulateAddLiquidityResult,
+        simulateResult?: ISimulateAddLiquidityResult, // TODO: if not pass simulateResult, will simulate check before send tx
+    ): Promise<ContractTransaction | providers.TransactionReceipt>;
+
+    simulateAdjustMargin(params: IAdjustMarginRequest): ISimulateAdjustMarginResult;
+    adjustMargin(
+        params: IAdjustMarginRequest,
+        simulateResult?: ISimulateAdjustMarginResult, // TODO: if not pass simulateResult, will simulate check before send tx)
+    ): Promise<ContractTransaction | providers.TransactionReceipt>;
+
+    simulateRemoveLiquidity(params: IRemoveLiquidityRequest): IRemoveLiquidityResult;
+
+    removeLiquidity(
+        params: IRemoveLiquidityRequest,
+        simulateResult?: IRemoveLiquidityResult, // TODO: if not pass simulateResult, will simulate check before send tx
+    ): Promise<ContractTransaction | providers.TransactionReceipt>;
+
+    simulateBatchPlaceScaledLimitOrder(params: IBatchPlaceScaledLimitOrderRequest): IBatchPlaceScaledLimitOrderResult;
+
+    batchPlaceScaledLimitOrder(
+        params: IBatchPlaceScaledLimitOrderRequest,
+        simulateResult?: IBatchPlaceScaledLimitOrderResult, // TODO: if not pass simulateResult, will simulate check before send tx
     ): Promise<ContractTransaction | providers.TransactionReceipt>;
 }
 

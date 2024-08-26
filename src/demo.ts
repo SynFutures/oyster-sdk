@@ -1,8 +1,16 @@
 import { BigNumber, Signer } from 'ethers';
 import { InverseInterface, InverseModule } from './modules';
 import { SynFuturesV3 } from './synfuturesV3Core';
-import { ITradeRequest, Side, IPlaceOrderRequest, IAddLiquidityRequest, MarketType } from './types';
-import { WrappedPositionModel } from './models';
+import {
+    ITradeRequest,
+    Side,
+    IPlaceOrderRequest,
+    IAddLiquidityRequest,
+    MarketType,
+    IAdjustMarginRequest,
+    IRemoveLiquidityRequest,
+} from './types';
+import { PairModel, RangeModel, WrappedPositionModel } from './models';
 import { PERP_EXPIRY } from './constants';
 
 export async function main(): Promise<void> {
@@ -12,6 +20,8 @@ export async function main(): Promise<void> {
     await demoTrade(inverseDemoModule);
     await demoPlaceOrder(inverseDemoModule);
     await demoAddLiquidity(inverseDemoModule);
+    await demoAdjustMargin(inverseDemoModule);
+    await demoRemoveLiquidity(inverseDemoModule);
 }
 
 async function demoTrade(inverseModule: InverseInterface): Promise<void> {
@@ -49,7 +59,7 @@ async function demoTrade(inverseModule: InverseInterface): Promise<void> {
 
     const txResult = await inverseModule.trade(paramsInput, simulateResult);
 
-    console.log('trade result tx:', txResult);
+    console.log('result tx:', txResult);
 }
 
 async function demoPlaceOrder(inverseModule: InverseInterface): Promise<void> {
@@ -80,7 +90,7 @@ async function demoPlaceOrder(inverseModule: InverseInterface): Promise<void> {
 
     const txResult = await inverseModule.placeOrder(paramsInput, simulateResult);
 
-    console.log('trade result tx:', txResult);
+    console.log('result tx:', txResult);
 }
 
 async function demoAddLiquidity(inverseModule: InverseInterface): Promise<void> {
@@ -110,5 +120,66 @@ async function demoAddLiquidity(inverseModule: InverseInterface): Promise<void> 
 
     const txResult = await inverseModule.addLiquidity(paramsInput, simulateResult);
 
+    console.log('result tx:', txResult);
+}
+
+async function demoAdjustMargin(inverseModule: InverseInterface): Promise<void> {
+    // TODO: mock position for testing, replace to the actual position
+    const position = null as unknown as WrappedPositionModel;
+    const signer = null as unknown as Signer;
+    // input like website
+    const paramsInput: IAdjustMarginRequest = {
+        signer,
+        transferAmount: BigNumber.from(1),
+        leverage: BigNumber.from(5),
+        position: position,
+        traderAddr: '0x0',
+        slippage: 10,
+        deadline: 5,
+    };
+    const simulateResult = inverseModule.simulateAdjustMargin(paramsInput);
+
+    // output like website
+    console.log(`simulate result:`, {
+        'Margin Required/Margin Released': simulateResult.marginToDepositWad,
+        marginToDeposit: simulateResult.marginToDepositWad,
+        // ...
+    });
+
+    const txResult = await inverseModule.adjustMargin(paramsInput, simulateResult);
+
     console.log('trade result tx:', txResult);
+}
+
+async function demoRemoveLiquidity(inverseModule: InverseInterface): Promise<void> {
+    // TODO: mock signer for testing, replace to the actual signer
+    const signer = null as unknown as Signer;
+    const pair = null as unknown as PairModel;
+    const range = null as unknown as RangeModel;
+    const currentPosition = null as unknown as WrappedPositionModel;
+    // input like website
+    const paramsInput: IRemoveLiquidityRequest = {
+        signer,
+        slippage: 10,
+        deadline: 5,
+        traderAddr: '0x0',
+        pair,
+        range,
+    };
+    const simulateResult = inverseModule.simulateRemoveLiquidity(paramsInput);
+
+    // output like website
+    console.log(`simulate result:`, {
+        'Value to be removed': simulateResult?.simulatePositionRemoved?.getEquity(),
+        'Current Trading Position': currentPosition.size,
+        'Liquidity Net Position': simulateResult?.simulationMainPosition.size.sub(currentPosition?.size || 0),
+        'New Trading Position': simulateResult?.simulationMainPosition.size,
+        Margin: simulateResult?.simulationMainPosition.getEquity(),
+        Leverage: simulateResult?.simulationMainPosition.leverageWad,
+        // ...
+    });
+
+    const txResult = await inverseModule.removeLiquidity(paramsInput, simulateResult);
+
+    console.log('result tx:', txResult);
 }

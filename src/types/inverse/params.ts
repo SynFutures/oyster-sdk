@@ -1,6 +1,6 @@
 import { BigNumber, Signer } from 'ethers';
-import { Side } from '../enum';
-import { PositionModel, WrappedPositionModel } from '../../models';
+import { BatchOrderSizeDistribution, Side } from '../enum';
+import { PairModel, PositionModel, RangeModel, WrappedPositionModel } from '../../models';
 import { InstrumentIdentifier, SimulateOrderResult, SimulateTradeResult } from '../params';
 
 export interface ITradeRequest {
@@ -11,11 +11,11 @@ export interface ITradeRequest {
     slippage: number;
     deadline: number;
 
-    // [size] from website
+    // [size] from website, input baseAmount or quoteAmount
     baseAmount?: BigNumber; // base size input from website
     quoteAmount?: BigNumber; // input by quote will calculate base amount send to deep module
 
-    // [Adjust Margin] by leverage or margin
+    // [Adjust Margin] by leverage or margin, input leverage or margin
     leverage?: BigNumber; // leverage input from website
     margin?: BigNumber; // margin input from website
 
@@ -23,6 +23,7 @@ export interface ITradeRequest {
     referralCode?: string;
 }
 
+// TODO: Result class with unwrap()/wrap() @sam
 export interface ISimulateTradeResult extends SimulateTradeResult {
     origin: SimulateTradeResult; // origin result
     tradePrice: BigNumber; // [modify] inverse display
@@ -31,17 +32,17 @@ export interface ISimulateTradeResult extends SimulateTradeResult {
 
 export interface IPlaceOrderRequest {
     signer: Signer;
-    position: WrappedPositionModel;
+    position: WrappedPositionModel; // TODO by @jinxi: or pair?
     traderAddr: string;
     side: Side; // side choose from website
     leverage: BigNumber; // leverage input from website
     deadline: number;
 
-    // [price] from website
+    // [price] from website, input orderTick or orderPrice
     orderTick?: number; // need align input price to tick
     orderPrice?: BigNumber; // or pass price to sdk to calculate
 
-    // [size] from website
+    // [size] from website, input baseAmount or quoteAmount
     baseAmount?: BigNumber; // base size input from website
     quoteAmount?: BigNumber; // input by quote will calculate base amount send to deep module
 
@@ -49,9 +50,10 @@ export interface IPlaceOrderRequest {
     referralCode?: string;
 }
 
+// TODO: Result class with unwrap()/wrap() @sam
 export interface ISimulatePlaceOrderResult extends SimulateOrderResult {
     origin: SimulateOrderResult; // origin result
-    marginRequired: BigNumber; // [add] equal to balance from SimulateOrderResult
+    marginRequired: BigNumber; // [add] equal to balance from SimulateOrderResult, TOOD by @jinxi, maybe rename old [balance]?
     estimatedTradeValue: BigNumber; // [add] estimated TradeValue for this order
 }
 
@@ -69,7 +71,7 @@ export interface IAddLiquidityRequest {
     referralCode?: string;
 }
 
-// TODO:  old sdk result has no type
+// TODO:  old sdk result has no type, need add to type
 export interface SimulateAddLiquidityResult {
     tickDelta: number;
     liquidity: BigNumber;
@@ -87,6 +89,7 @@ export interface SimulateAddLiquidityResult {
     equivalentAlpha: BigNumber;
 }
 
+// TODO: Result class with unwrap()/wrap() @sam
 export interface ISimulateAddLiquidityResult extends SimulateAddLiquidityResult {
     origin: SimulateAddLiquidityResult; // origin result
     lowerPrice: BigNumber; // [modify] inverse display
@@ -96,4 +99,112 @@ export interface ISimulateAddLiquidityResult extends SimulateAddLiquidityResult 
     lowerLeverageWad: BigNumber; // [modify] inverse display
     upperLeverageWad: BigNumber; // [modify] inverse display
     capitalEfficiencyBoost: number; // [add] calcBoost() result
+}
+
+export interface IAdjustMarginRequest {
+    signer: Signer;
+    position: WrappedPositionModel;
+    traderAddr: string;
+    slippage: number;
+    deadline: number;
+
+    // [amount] from website
+    transferAmount?: BigNumber; // positive for [transfer in] and negative for [transfer out]
+    leverage?: BigNumber; // bigger then current for [transfer out], less then current current for [transfer in]
+
+    // referral
+    referralCode?: string;
+}
+
+// TODO:  old sdk result has no type, need add to type
+interface AdjustMarginResult {
+    transferAmount: BigNumber;
+    simulationMainPosition: PositionModel;
+    marginToDepositWad: BigNumber;
+    leverageWad: BigNumber;
+}
+
+// TODO: Result class with unwrap()/wrap() @sam
+export interface ISimulateAdjustMarginResult extends AdjustMarginResult {
+    origin: AdjustMarginResult; // origin result
+    simulationMainPosition: WrappedPositionModel; // [modify] inverse display
+}
+
+export interface IRemoveLiquidityRequest {
+    signer: Signer;
+    traderAddr: string;
+    slippage: number;
+    deadline: number;
+    pair: PairModel; // TODO by @jinxi, maybe WrappedPairModel?
+    range: RangeModel; // TODO by @jinxi, maybe WrappedRangeModel?
+}
+
+// TODO:  old sdk result has no type, need add to type
+
+export interface RemoveLiquidityResult {
+    simulatePositionRemoved: PositionModel;
+    simulationMainPosition: PositionModel;
+    sqrtStrikeLowerPX96: BigNumber;
+    sqrtStrikeUpperPX96: BigNumber;
+}
+
+export interface IRemoveLiquidityResult extends RemoveLiquidityResult {
+    origin: RemoveLiquidityResult; // origin result
+    simulatePositionRemoved: WrappedPositionModel; // [modify] inverse display
+    simulationMainPosition: WrappedPositionModel; // [modify] inverse display
+    sqrtStrikeLowerPX96: BigNumber; // [modify] inverse display
+    sqrtStrikeUpperPX96: BigNumber; // [modify] inverse display
+}
+
+export interface IBatchPlaceScaledLimitOrderRequest {
+    signer: Signer;
+    position: WrappedPositionModel; // TODO by @jinxi: or pair?
+    traderAddr: string;
+    side: Side; // side choose from website
+    leverage: BigNumber; // leverage input from website
+    deadline: number;
+
+    // [lower price] from website, input price or tick
+    lowerTick?: number; // tick for lower
+    lowerPrice?: BigNumber; // price from website
+
+    // [upper price] from website, input price or tick
+    upperTick?: number; // tick for upper
+    upperPrice?: BigNumber; // price from website
+
+    orderCount: number;
+    sizeDistribution: BatchOrderSizeDistribution;
+
+    // [size] from website, input baseAmount or quoteAmount
+    baseAmount?: BigNumber; // base size input from website
+    quoteAmount?: BigNumber; // input by quote will calculate base amount send to deep module
+}
+
+// TODO:  old sdk result has no type, need add to type
+interface BatchPlaceScaledLimitOrderResult {
+    orders: {
+        tick: number;
+        baseSize: BigNumber;
+        ratio: number;
+        balance: BigNumber;
+        leverageWad: BigNumber;
+        minFeeRebate: BigNumber;
+        minOrderSize: BigNumber;
+    }[];
+    marginToDepositWad: BigNumber;
+    minOrderValue: BigNumber;
+    totalMinSize: BigNumber;
+}
+
+export interface IBatchPlaceScaledLimitOrderResult extends BatchPlaceScaledLimitOrderResult {
+    orders: {
+        tick: number;
+        baseSize: BigNumber;
+        ratio: number;
+        balance: BigNumber;
+        leverageWad: BigNumber;
+        minFeeRebate: BigNumber;
+        minOrderSize: BigNumber;
+        tradeValue: BigNumber; // [add] tick price * baseSize
+    }[];
 }
