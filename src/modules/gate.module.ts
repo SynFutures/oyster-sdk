@@ -1,14 +1,14 @@
-import { GateInterface } from './gate.interface';
 import { BigNumber, CallOverrides, ContractTransaction, ethers, Overrides, Signer } from 'ethers';
 import { encodeDepositParam, encodeWithdrawParam } from '../common';
-import { SynFuturesV3Ctx } from '../synfuturesV3Core';
+import { SynFuturesV3 } from '../core';
 import { NATIVE_TOKEN_ADDRESS } from '../constants';
 import { NumericConverter } from '../types';
+import { GateInterface } from './gate.interface';
 
 export class GateModule implements GateInterface {
-    synfV3: SynFuturesV3Ctx;
+    synfV3: SynFuturesV3;
 
-    constructor(synfV3: SynFuturesV3Ctx) {
+    constructor(synfV3: SynFuturesV3) {
         this.synfV3 = synfV3;
     }
 
@@ -18,11 +18,11 @@ export class GateModule implements GateInterface {
         amount: BigNumber,
         overrides?: Overrides,
     ): Promise<ContractTransaction | ethers.providers.TransactionReceipt> {
-        const unsignedTx = await this.synfV3.cache.contracts.gate.populateTransaction.deposit(
+        const unsignedTx = await this.synfV3.contracts.gate.populateTransaction.deposit(
             encodeDepositParam(quoteAddr, amount),
             overrides ?? {},
         );
-        return this.synfV3.cache.ctx.sendTx(signer, unsignedTx);
+        return this.synfV3.ctx.sendTx(signer, unsignedTx);
     }
 
     async withdraw(
@@ -31,11 +31,11 @@ export class GateModule implements GateInterface {
         amount: BigNumber,
         overrides?: Overrides,
     ): Promise<ContractTransaction | ethers.providers.TransactionReceipt> {
-        const unsignedTx = await this.synfV3.cache.contracts.gate.populateTransaction.withdraw(
+        const unsignedTx = await this.synfV3.contracts.gate.populateTransaction.withdraw(
             encodeWithdrawParam(quoteAddr, amount),
             overrides ?? {},
         );
-        return this.synfV3.cache.ctx.sendTx(signer, unsignedTx);
+        return this.synfV3.ctx.sendTx(signer, unsignedTx);
     }
 
     async gateOperation(
@@ -44,11 +44,11 @@ export class GateModule implements GateInterface {
         amountWad: BigNumber,
         deposit: boolean,
     ): Promise<ContractTransaction | ethers.providers.TransactionReceipt> {
-        const gate = this.synfV3.cache.contracts.gate;
+        const gate = this.synfV3.contracts.gate;
         const usingNative = quoteAddress.toLowerCase() === NATIVE_TOKEN_ADDRESS.toLowerCase();
         const quoteInfo = usingNative
-            ? this.synfV3.cache.ctx.wrappedNativeToken
-            : await this.synfV3.cache.ctx.getTokenInfo(quoteAddress);
+            ? this.synfV3.ctx.wrappedNativeToken
+            : await this.synfV3.ctx.getTokenInfo(quoteAddress);
         const decimals = quoteInfo.decimals;
         const amount = NumericConverter.toContractQuoteAmount(amountWad, decimals);
         let unsignedTx;
@@ -59,7 +59,7 @@ export class GateModule implements GateInterface {
             unsignedTx = await gate.populateTransaction.withdraw(encodeWithdrawParam(quoteAddress, amount));
         }
 
-        return this.synfV3.cache.ctx.sendTx(signer, unsignedTx);
+        return this.synfV3.ctx.sendTx(signer, unsignedTx);
     }
 
     async getPendingParams(
@@ -69,19 +69,18 @@ export class GateModule implements GateInterface {
         pendingDuration: BigNumber;
         thresholds: BigNumber[];
     }> {
-        const gateInterface = this.synfV3.cache.contracts.gate.interface;
+        const gateInterface = this.synfV3.contracts.gate.interface;
         const calls = quotes.map((quote) => {
             return {
-                target: this.synfV3.cache.contracts.gate.address,
+                target: this.synfV3.contracts.gate.address,
                 callData: gateInterface.encodeFunctionData('thresholdOf', [quote]),
             };
         });
         calls.push({
-            target: this.synfV3.cache.contracts.gate.address,
+            target: this.synfV3.contracts.gate.address,
             callData: gateInterface.encodeFunctionData('pendingDuration'),
         });
-        const rawRet = (await this.synfV3.cache.ctx.getMulticall3().callStatic.aggregate(calls, overrides ?? {}))
-            .returnData;
+        const rawRet = (await this.synfV3.ctx.getMulticall3().callStatic.aggregate(calls, overrides ?? {})).returnData;
         const thresholds = rawRet
             .slice(0, quotes.length)
             .map((ret) => gateInterface.decodeFunctionResult('thresholdOf', ret)[0] as BigNumber);

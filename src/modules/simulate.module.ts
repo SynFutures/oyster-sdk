@@ -1,4 +1,5 @@
-import { SynFuturesV3Ctx } from '../synfuturesV3Core';
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { SynFuturesV3 as SynFuturesV3Core } from '../core';
 import {
     alignRangeTick,
     BatchOrderSizeDistribution,
@@ -43,6 +44,7 @@ import {
 } from '../constants';
 import { updateFundingIndex } from '../math/funding';
 import {
+    Combine,
     alignTick,
     alphaWadToTickDelta,
     encodePlaceWithReferralParam,
@@ -56,11 +58,17 @@ import {
 } from '../common';
 import { InstrumentModel, PairLevelAccountModel, PairModel, PositionModel, RangeModel } from '../models';
 import { SimulateInterface } from './simulate.interface';
+import { CachePlugin } from './cache.plugin';
+import { InstrumentPlugin } from './instrument.plugin';
+import { ObserverPlugin } from './observer.plugin';
+
+type SynFuturesV3 = Combine<[SynFuturesV3Core, CachePlugin, InstrumentPlugin, ObserverPlugin]>;
 
 export class SimulateModule implements SimulateInterface {
-    synfV3: SynFuturesV3Ctx;
-    constructor(v3Sdk: SynFuturesV3Ctx) {
-        this.synfV3 = v3Sdk;
+    synfV3: SynFuturesV3;
+
+    constructor(synfV3: SynFuturesV3) {
+        this.synfV3 = synfV3;
     }
 
     // given lower price and upper price, return the ticks for batch orders
@@ -128,7 +136,7 @@ export class SimulateModule implements SimulateInterface {
             ]),
         );
         const tx = await instrument.populateTransaction.multicall(callData, overrides ?? {});
-        return await this.synfV3.cache.ctx.sendTx(signer, tx);
+        return await this.synfV3.ctx.sendTx(signer, tx);
     }
 
     async simulateCrossMarketOrder(
@@ -153,14 +161,14 @@ export class SimulateModule implements SimulateInterface {
         if ((long && targetTick <= currentTick) || (!long && targetTick >= currentTick))
             throw Error('please place normal order');
         let swapToTick = long ? targetTick + 1 : targetTick - 1;
-        let { size: swapSize, quotation: quotation } = await this.synfV3.cache.contracts.observer.inquireByTick(
+        let { size: swapSize, quotation: quotation } = await this.synfV3.contracts.observer.inquireByTick(
             pair.rootInstrument.info.addr,
             pair.amm.expiry,
             swapToTick,
         );
         if ((long && quotation.postTick <= targetTick) || (!long && quotation.postTick >= targetTick)) {
             swapToTick = long ? swapToTick + 1 : swapToTick - 1;
-            const retry = await this.synfV3.cache.contracts.observer.inquireByTick(
+            const retry = await this.synfV3.contracts.observer.inquireByTick(
                 pair.rootInstrument.info.addr,
                 pair.amm.expiry,
                 swapToTick,
@@ -725,12 +733,12 @@ export class SimulateModule implements SimulateInterface {
         if (!instrument || !instrument.state.pairStates.has(expiry)) {
             // need uncreated instrument
             const benchmarkPrice = await this.simulateBenchmarkPrice(instrumentIdentifier, expiry);
-            const { quoteTokenInfo } = await getTokenInfo(instrumentIdentifier, this.synfV3.cache.ctx);
+            const { quoteTokenInfo } = await getTokenInfo(instrumentIdentifier, this.synfV3.ctx);
             quoteInfo = quoteTokenInfo;
             if (instrument) {
                 setting = instrument.setting;
             } else {
-                const quoteParam = this.synfV3.cache.config.quotesParam[quoteInfo.symbol]!;
+                const quoteParam = this.synfV3.conf.quotesParam[quoteInfo.symbol]!;
                 instrument = InstrumentModel.minimumInstrumentWithParam(quoteParam);
                 setting = instrument.setting;
             }

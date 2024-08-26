@@ -1,9 +1,3 @@
-import { SynFuturesV3Ctx } from '../synfuturesV3Core';
-
-export interface BaseInterFace {
-    get synfV3(): SynFuturesV3Ctx;
-}
-
 export * from './cache.interface';
 export * from './instrument.interface';
 export * from './simulate.interface';
@@ -18,4 +12,13 @@ export * from './simulate.module';
 export * from './gate.module';
 export * from './observer.module';
 export * from './tx.module';
+export * from './config.module';
 export * from './inverse.module';
+export * from './cache.plugin';
+export * from './instrument.plugin';
+export * from './simulate.plugin';
+export * from './gate.plugin';
+export * from './observer.plugin';
+export * from './tx.plugin';
+export * from './config.plugin';
+export * from './inverse.plugin';

@@ -1,5 +1,4 @@
-import { BaseInterFace } from './index';
-import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
+import { BaseInterface } from '../common';
 import { FetchInstrumentParam, InstrumentInfo } from '../types';
 import { PairLevelAccountModel, WrappedInstrumentModel } from '../models';
 import { TokenInfo } from '@derivation-tech/web3-core';
@@ -19,7 +18,7 @@ import {
     IBatchPlaceScaledLimitOrderResult,
 } from '../types/inverse';
 
-export interface InverseInterface extends BaseInterFace {
+export interface InverseInterface extends BaseInterface {
     get instrumentMap(): Map<string, WrappedInstrumentModel>;
     get accountCache(): Map<string, Map<string, Map<number, PairLevelAccountModel>>>;
 
@@ -82,19 +81,4 @@ export interface InverseInterface extends BaseInterFace {
         params: IBatchPlaceScaledLimitOrderRequest,
         simulateResult?: IBatchPlaceScaledLimitOrderResult, // TODO: if not pass simulateResult, will simulate check before send tx
     ): Promise<ContractTransaction | providers.TransactionReceipt>;
-}
-
-export function createNullInverseModule(): InverseInterface {
-    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-    const errorHandler = () => {
-        throw new InterfaceImplementationMissingError('InverseInterface', 'inverse');
-    };
-    return {
-        synfV3: null as never,
-        instrumentMap: null as never,
-        getInstrumentInfo: errorHandler,
-        accountCache: null as never,
-        initInstruments: errorHandler,
-        updateInstrument: errorHandler,
-    };
 }

@@ -14,10 +14,9 @@ import {
 } from '../types';
 import { TokenInfo } from '@derivation-tech/web3-core';
 import { OrderModel, PairLevelAccountModel, PairModel, RangeModel } from '../models';
-import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
-import { BaseInterFace } from './index';
+import { BaseInterface } from '../common';
 
-export interface InstrumentInterface extends BaseInterFace {
+export interface InstrumentInterface extends BaseInterface {
     //////////////////////////////////////////////////////////
     // Low level Api
     //////////////////////////////////////////////////////////
@@ -392,36 +391,4 @@ export interface InstrumentInterface extends BaseInterFace {
      * @param size the order size
      */
     inquire(instrumentAddr: string, expiry: number, size: BigNumber): Promise<Quotation>;
-}
-
-export function createNullInstrumentModule(): InstrumentInterface {
-    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-    const errorHandler = () => {
-        throw new InterfaceImplementationMissingError('InstrumentInterface', 'instrument');
-    };
-    return {
-        synfV3: null as never,
-        addLiquidity: errorHandler,
-        removeLiquidity: errorHandler,
-        batchCancelOrder: errorHandler,
-        computeInstrumentAddress: errorHandler,
-        getOrderMarginByLeverage: errorHandler,
-        getTick: errorHandler,
-        getSqrtFairPX96: errorHandler,
-        inquire: errorHandler,
-        fill: errorHandler,
-        cancel: errorHandler,
-        adjust: errorHandler,
-        add: errorHandler,
-        addLiquidityWithAsymmetricRange: errorHandler,
-        adjustMargin: errorHandler,
-        batchPlace: errorHandler,
-        donateInsuranceFund: errorHandler,
-        intuitiveTrade: errorHandler,
-        limitOrder: errorHandler,
-        place: errorHandler,
-        remove: errorHandler,
-        trade: errorHandler,
-        tradeWithRisk: errorHandler,
-    };
 }

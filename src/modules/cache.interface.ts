@@ -1,16 +1,11 @@
 import { ConfigState, GateState, InstrumentModel, PairLevelAccountModel } from '../models';
-import { ChainContext, TokenInfo } from '@derivation-tech/web3-core';
+import { TokenInfo } from '@derivation-tech/web3-core';
 import { BigNumber, CallOverrides, Signer } from 'ethers';
 import { FetchInstrumentParam, Instrument, InstrumentIdentifier, InstrumentInfo } from '../types';
-import { SynfConfig, SynFuturesV3Contracts } from '../config';
 import { Provider } from '@ethersproject/providers';
-import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
-import { BaseInterFace } from './index';
+import { BaseInterface } from '../common';
 
-export interface CacheInterface extends BaseInterFace {
-    get ctx(): ChainContext;
-    get config(): SynfConfig;
-    get contracts(): SynFuturesV3Contracts;
+export interface CacheInterface extends BaseInterface {
     get gateState(): GateState;
     get configState(): ConfigState;
     // update <-- new block info
@@ -32,10 +27,6 @@ export interface CacheInterface extends BaseInterFace {
      * @param symbolToInfo the token info
      */
     initInstruments(symbolToInfo?: Map<string, TokenInfo>): Promise<InstrumentModel[]>;
-
-    setProvider(provider: Provider, isOpSdkCompatible?: boolean): void;
-
-    registerQuoteInfo(tokenInfo: TokenInfo): void;
 
     computeInitData(instrumentIdentifier: InstrumentIdentifier): Promise<string>;
 
@@ -74,33 +65,4 @@ export interface CacheInterface extends BaseInterFace {
      * @param target the target address
      */
     getCachedGateBalance(quote: string, target: string): BigNumber;
-}
-
-export function createNullCacheModule(): CacheInterface {
-    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-    const errorHandler = () => {
-        throw new InterfaceImplementationMissingError('CacheInterface', 'cache');
-    };
-    return {
-        synfV3: null as never,
-        ctx: null as never,
-        accountCache: null as never,
-        config: null as never,
-        configState: null as never,
-        contracts: null as never,
-        gateState: null as never,
-        instrumentMap: null as never,
-        quoteSymbolToInfo: null as never,
-        computeInitData: errorHandler,
-        getCachedGateBalance: errorHandler,
-        getInstrumentContract: errorHandler,
-        getInstrumentInfo: errorHandler,
-        init: errorHandler,
-        initInstruments: errorHandler,
-        registerQuoteInfo: errorHandler,
-        setProvider: errorHandler,
-        syncGateCache: errorHandler,
-        syncGateCacheWithAllQuotes: errorHandler,
-        updateInstrument: errorHandler,
-    };
 }

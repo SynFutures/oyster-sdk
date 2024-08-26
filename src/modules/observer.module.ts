@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { ObserverInterface } from './observer.interface';
 import { BigNumber, CallOverrides, ethers } from 'ethers';
 import { BlockInfo, TokenInfo, ZERO_ADDRESS } from '@derivation-tech/web3-core';
-import { SynFuturesV3Ctx } from '../synfuturesV3Core';
+import { SynFuturesV3 as SynFuturesV3Core } from '../core';
 import {
     InstrumentLevelAccountModel,
     InstrumentModel,
@@ -43,6 +44,7 @@ import {
 } from '../types';
 import { calcMaxWithdrawable, TickMath, wdiv, ZERO } from '../math';
 import {
+    Combine,
     alphaWadToTickDelta,
     calcBenchmarkPrice,
     fromWad,
@@ -53,13 +55,18 @@ import {
     trimObj,
 } from '../common';
 import { RANGE_SPACING } from '../constants';
+import { CachePlugin } from './cache.plugin';
+import { InstrumentPlugin } from './instrument.plugin';
+
+type SynFuturesV3 = Combine<[SynFuturesV3Core, CachePlugin, InstrumentPlugin]>;
 
 export class ObserverModule implements ObserverInterface {
-    synfV3: SynFuturesV3Ctx;
+    synfV3: SynFuturesV3;
 
-    constructor(synfV3: SynFuturesV3Ctx) {
+    constructor(synfV3: SynFuturesV3) {
         this.synfV3 = synfV3;
     }
+
     estimateAPY(pairModel: PairModel, poolFee24h: BigNumber, alphaWad: BigNumber): number {
         if (pairModel.amm.liquidity.eq(ZERO)) return 0;
         const assumeAddMargin = pairModel.rootInstrument.minRangeValue;
@@ -82,13 +89,13 @@ export class ObserverModule implements ObserverInterface {
 
     async fetchInstrumentBatch(params: FetchInstrumentParam[], overrides?: CallOverrides): Promise<InstrumentModel[]> {
         const [rawList, rawBlockInfo] = trimObj(
-            await this.synfV3.cache.contracts.observer.getInstrumentBatch(params, overrides ?? {}),
+            await this.synfV3.contracts.observer.getInstrumentBatch(params, overrides ?? {}),
         );
         return this.parseInstrumentData(rawList, rawBlockInfo);
     }
 
     async getAllInstruments(batchSize = 10, overrides?: CallOverrides): Promise<InstrumentModel[]> {
-        const instrumentLists = await this.synfV3.cache.contracts.gate.getAllInstruments(overrides ?? {});
+        const instrumentLists = await this.synfV3.contracts.gate.getAllInstruments(overrides ?? {});
         let instrumentModels: InstrumentModel[] = [];
         const totalPage = Math.ceil(instrumentLists.length / batchSize);
 
@@ -98,7 +105,7 @@ export class ObserverModule implements ObserverInterface {
                 (i + 1) * batchSize >= instrumentLists.length ? instrumentLists.length : (i + 1) * batchSize,
             );
             const [rawList, rawBlockInfo] = trimObj(
-                await this.synfV3.cache.contracts.observer.getInstrumentByAddressList(queryList, overrides ?? {}),
+                await this.synfV3.contracts.observer.getInstrumentByAddressList(queryList, overrides ?? {}),
             );
             instrumentModels = instrumentModels.concat(await this.parseInstrumentData(rawList, rawBlockInfo));
         }
@@ -114,26 +121,25 @@ export class ObserverModule implements ObserverInterface {
         fundFlows: FundFlow[];
         blockInfo: BlockInfo;
     }> {
-        const gateInterface = this.synfV3.cache.contracts.gate.interface;
-        const observerInterface = this.synfV3.cache.contracts.observer.interface;
+        const gateInterface = this.synfV3.contracts.gate.interface;
+        const observerInterface = this.synfV3.contracts.observer.interface;
 
         const calls: { target: string; callData: string }[] = [];
 
         calls.push(
             ...quoteAddrs.map((quote) => {
                 return {
-                    target: this.synfV3.cache.contracts.gate.address,
+                    target: this.synfV3.contracts.gate.address,
                     callData: gateInterface.encodeFunctionData('fundFlowOf', [quote, trader]),
                 };
             }),
         );
         // just to get the block info
         calls.push({
-            target: this.synfV3.cache.contracts.observer.address,
+            target: this.synfV3.contracts.observer.address,
             callData: observerInterface.encodeFunctionData('getVaultBalances', [trader, quoteAddrs]),
         });
-        const rawRet = (await this.synfV3.cache.ctx.getMulticall3().callStatic.aggregate(calls, overrides ?? {}))
-            .returnData;
+        const rawRet = (await this.synfV3.ctx.getMulticall3().callStatic.aggregate(calls, overrides ?? {})).returnData;
         const fundFlows = rawRet.slice(0, quoteAddrs.length).map((ret) => {
             return trimObj(gateInterface.decodeFunctionResult('fundFlowOf', ret)[0]) as FundFlow;
         });
@@ -157,17 +163,16 @@ export class ObserverModule implements ObserverInterface {
         );
         await this.synfV3.cache.syncGateCache(target, quotes);
 
-        const observerInterface = this.synfV3.cache.contracts.observer.interface;
+        const observerInterface = this.synfV3.contracts.observer.interface;
         const calls = [];
         //todo optimise by observer
         for (const instrument of allInstrumentAddr) {
             calls.push({
-                target: this.synfV3.cache.contracts.observer.address,
+                target: this.synfV3.contracts.observer.address,
                 callData: observerInterface.encodeFunctionData('getPortfolios', [target, instrument]),
             });
         }
-        const rawRet = (await this.synfV3.cache.ctx.getMulticall3().callStatic.aggregate(calls, overrides ?? {}))
-            .returnData;
+        const rawRet = (await this.synfV3.ctx.getMulticall3().callStatic.aggregate(calls, overrides ?? {})).returnData;
 
         const map = new Map<string, InstrumentLevelAccountModel>(); // instrument address in lowercase => InstrumentLevelAccount
         for (let i = 0; i < rawRet.length; i++) {
@@ -209,7 +214,7 @@ export class ObserverModule implements ObserverInterface {
         tick: number,
         right: boolean,
     ): Promise<number> {
-        const observer = this.synfV3.cache.contracts.observer;
+        const observer = this.synfV3.contracts.observer;
         return await TickMath.getNextInitializedTickOutside(observer, instrumentAddr, expiry, tick, right);
     }
 
@@ -262,8 +267,8 @@ export class ObserverModule implements ObserverInterface {
         }
         const ticks = traderAccount.orders.map((o) => o.tick);
         const nonces = traderAccount.orders.map((o) => o.nonce);
-        const pearls = await this.synfV3.cache.contracts.observer.getPearls(instrumentAddr, expiry, ticks);
-        const records = await this.synfV3.cache.contracts.observer.getRecords(instrumentAddr, expiry, ticks, nonces);
+        const pearls = await this.synfV3.contracts.observer.getPearls(instrumentAddr, expiry, ticks);
+        const records = await this.synfV3.contracts.observer.getRecords(instrumentAddr, expiry, ticks, nonces);
         // order settle part
         for (let i = 0; i < traderAccount.orders.length; i++) {
             const order = traderAccount.orders[i];
@@ -307,10 +312,10 @@ export class ObserverModule implements ObserverInterface {
     async getQuoteTokenInfo(quoteSymbol: string, instrumentAddr: string): Promise<TokenInfo> {
         return (
             this.synfV3.cache.quoteSymbolToInfo.get(quoteSymbol) ??
-            (await this.synfV3.cache.ctx.getTokenInfo(quoteSymbol)) ??
-            (await this.synfV3.cache.ctx.getTokenInfo(
+            (await this.synfV3.ctx.getTokenInfo(quoteSymbol)) ??
+            (await this.synfV3.ctx.getTokenInfo(
                 (
-                    await this.synfV3.cache.contracts.observer.getSetting(instrumentAddr)
+                    await this.synfV3.contracts.observer.getSetting(instrumentAddr)
                 ).quote,
             ))
         );
@@ -327,7 +332,7 @@ export class ObserverModule implements ObserverInterface {
     }
 
     async getSizeToTargetTick(instrumentAddr: string, expiry: number, targetTick: number): Promise<BigNumber> {
-        const observer = this.synfV3.cache.contracts.observer;
+        const observer = this.synfV3.contracts.observer;
         return await TickMath.getSizeToTargetTick(observer, instrumentAddr, expiry, targetTick);
     }
 
@@ -339,13 +344,13 @@ export class ObserverModule implements ObserverInterface {
         pendings: { maxWithdrawable: BigNumber; pending: Pending }[];
         blockInfo: BlockInfo;
     }> {
-        const gateInterface = this.synfV3.cache.contracts.gate.interface;
-        const observerInterface = this.synfV3.cache.contracts.observer.interface;
+        const gateInterface = this.synfV3.contracts.gate.interface;
+        const observerInterface = this.synfV3.contracts.observer.interface;
         const calls: { target: string; callData: string }[] = [];
         calls.push(
             ...quotes.map((quote) => {
                 return {
-                    target: this.synfV3.cache.contracts.gate.address,
+                    target: this.synfV3.contracts.gate.address,
                     callData: gateInterface.encodeFunctionData('fundFlowOf', [quote, trader]),
                 };
             }),
@@ -353,7 +358,7 @@ export class ObserverModule implements ObserverInterface {
         calls.push(
             ...quotes.map((quote) => {
                 return {
-                    target: this.synfV3.cache.contracts.gate.address,
+                    target: this.synfV3.contracts.gate.address,
                     callData: gateInterface.encodeFunctionData('thresholdOf', [quote]),
                 };
             }),
@@ -361,17 +366,16 @@ export class ObserverModule implements ObserverInterface {
         calls.push(
             ...quotes.map((quote) => {
                 return {
-                    target: this.synfV3.cache.contracts.gate.address,
+                    target: this.synfV3.contracts.gate.address,
                     callData: gateInterface.encodeFunctionData('reserveOf', [quote, trader]),
                 };
             }),
         );
         calls.push({
-            target: this.synfV3.cache.contracts.observer.address,
+            target: this.synfV3.contracts.observer.address,
             callData: observerInterface.encodeFunctionData('getPendings', [quotes, trader]),
         });
-        const rawRet = (await this.synfV3.cache.ctx.getMulticall3().callStatic.aggregate(calls, overrides ?? {}))
-            .returnData;
+        const rawRet = (await this.synfV3.ctx.getMulticall3().callStatic.aggregate(calls, overrides ?? {})).returnData;
         const fundFlows = rawRet
             .slice(0, quotes.length)
             .map((ret) => gateInterface.decodeFunctionResult('fundFlowOf', ret)[0] as FundFlow);
@@ -406,7 +410,7 @@ export class ObserverModule implements ObserverInterface {
     }> {
         const instrument = this.synfV3.cache.getInstrumentContract(
             pair.rootInstrument.info.addr,
-            this.synfV3.cache.ctx.provider,
+            this.synfV3.ctx.provider,
         );
         const expiry = pair.amm.expiry;
         const sign = signOfSide(side);
@@ -430,7 +434,7 @@ export class ObserverModule implements ObserverInterface {
     }> {
         const expiry = pair.amm.expiry;
         const long = side === Side.LONG;
-        const { size, quotation } = await this.synfV3.cache.contracts.observer.inquireByNotional(
+        const { size, quotation } = await this.synfV3.contracts.observer.inquireByNotional(
             pair.rootInstrument.info.addr,
             expiry,
             quoteAmount,
@@ -452,8 +456,7 @@ export class ObserverModule implements ObserverInterface {
             instrumentIdentifier.baseSymbol,
             instrumentIdentifier.quoteSymbol,
         );
-        const market = this.synfV3.cache.contracts.marketContracts[instrumentIdentifier.marketType]
-            ?.market as CexMarket;
+        const market = this.synfV3.contracts.marketContracts[instrumentIdentifier.marketType]?.market as CexMarket;
         let benchmarkPrice;
         try {
             benchmarkPrice = await market.getBenchmarkPrice(instrumentAddress, expiry);
@@ -472,8 +475,8 @@ export class ObserverModule implements ObserverInterface {
             instrumentIdentifier.baseSymbol,
             instrumentIdentifier.quoteSymbol,
         );
-        const baseParam = this.synfV3.cache.config.quotesParam[baseSymbol];
-        const quoteParam = this.synfV3.cache.config.quotesParam[quoteSymbol];
+        const baseParam = this.synfV3.conf.quotesParam[baseSymbol];
+        const quoteParam = this.synfV3.conf.quotesParam[quoteSymbol];
 
         const baseStable = baseParam && baseParam.qtype === QuoteType.STABLE;
         const quoteStable = quoteParam && quoteParam.qtype === QuoteType.STABLE;
@@ -486,7 +489,7 @@ export class ObserverModule implements ObserverInterface {
             expiry,
             rawSpotPrice,
             feederType,
-            this.synfV3.cache.config.marketConfig.DEXV2!.dailyInterestRate,
+            this.synfV3.conf.marketConfig.DEXV2!.dailyInterestRate,
         );
     }
 
@@ -498,13 +501,13 @@ export class ObserverModule implements ObserverInterface {
             let baseInfo: TokenInfo = { symbol: baseSymbol, address: ethers.constants.AddressZero, decimals: 0 };
             if (!cexMarket(marketType as MarketType)) {
                 // fetch base token info from ctx
-                const onCtxBaseInfo = await this.synfV3.cache.ctx.getTokenInfo(baseSymbol);
+                const onCtxBaseInfo = await this.synfV3.ctx.getTokenInfo(baseSymbol);
                 if (onCtxBaseInfo) {
                     baseInfo = onCtxBaseInfo;
                 }
             }
             const instrumentInfo: InstrumentInfo = {
-                chainId: this.synfV3.cache.ctx.chainId,
+                chainId: this.synfV3.ctx.chainId,
                 addr: rawInstrument.instrumentAddr,
                 symbol: rawInstrument.symbol,
                 base: baseInfo,
@@ -513,9 +516,9 @@ export class ObserverModule implements ObserverInterface {
             const marketInfo: MarketInfo = {
                 addr: rawInstrument.market,
                 type: marketType,
-                beacon: this.synfV3.cache.config.contractAddress.market[marketType as MarketType]!.beacon,
+                beacon: this.synfV3.conf.contractAddress.market[marketType as MarketType]!.beacon,
             };
-            const marketConfig: MarketConfig = this.synfV3.cache.config.marketConfig[marketType as MarketType]!;
+            const marketConfig: MarketConfig = this.synfV3.conf.marketConfig[marketType as MarketType]!;
             const feeder = cexMarket(marketType as MarketType)
                 ? (rawInstrument.priceFeeder as PriceFeeder)
                 : (rawInstrument.dexV2Feeder as DexV2Feeder);
@@ -544,8 +547,8 @@ export class ObserverModule implements ObserverInterface {
                 }
                 instrumentModel.updatePair(rawAmm as Amm, rawInstrument.markPrices[i], blockInfo);
             }
-            this.synfV3.cache.ctx.registerAddress(instrumentInfo.addr, instrumentInfo.symbol);
-            this.synfV3.cache.ctx.registerContractParser(instrumentInfo.addr, new InstrumentParser());
+            this.synfV3.ctx.registerAddress(instrumentInfo.addr, instrumentInfo.symbol);
+            this.synfV3.ctx.registerContractParser(instrumentInfo.addr, new InstrumentParser());
             instrumentModels.push(instrumentModel);
         }
         return instrumentModels;
@@ -560,7 +563,7 @@ export class ObserverModule implements ObserverInterface {
         instrument = instrument.toLowerCase();
         target = target.toLowerCase();
         await this.synfV3.cache.updateInstrument([{ instrument: instrument, expiries: [expiry] }]);
-        const resp = await this.synfV3.cache.contracts.observer.getAcc(instrument, expiry, target, overrides ?? {});
+        const resp = await this.synfV3.contracts.observer.getAcc(instrument, expiry, target, overrides ?? {});
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const pair: PairModel = this.synfV3.cache.instrumentMap.get(instrument)!.getPairModel(expiry);
         const pairLevelAccountModel = PairLevelAccountModel.fromRawPortfolio(
@@ -583,14 +586,14 @@ export class ObserverModule implements ObserverInterface {
     }
 
     async getDexV2RawSpotPrice(identifier: InstrumentIdentifier): Promise<BigNumber> {
-        const { baseTokenInfo, quoteTokenInfo } = await getTokenInfo(identifier, this.synfV3.cache.ctx);
+        const { baseTokenInfo, quoteTokenInfo } = await getTokenInfo(identifier, this.synfV3.ctx);
 
         const baseScaler = BigNumber.from(10).pow(18 - baseTokenInfo.decimals);
         const quoteScaler = BigNumber.from(10).pow(18 - quoteTokenInfo.decimals);
 
         const isToken0Quote = BigNumber.from(baseTokenInfo.address).gt(BigNumber.from(quoteTokenInfo.address));
 
-        const dexV2PairInfo = await this.synfV3.cache.contracts.observer.inspectMaxReserveDexV2Pair(
+        const dexV2PairInfo = await this.synfV3.contracts.observer.inspectMaxReserveDexV2Pair(
             baseTokenInfo.address,
             quoteTokenInfo.address,
         );
@@ -614,8 +617,7 @@ export class ObserverModule implements ObserverInterface {
             instrumentIdentifier.baseSymbol,
             instrumentIdentifier.quoteSymbol,
         );
-        const market = this.synfV3.cache.contracts.marketContracts[instrumentIdentifier.marketType]
-            ?.market as CexMarket;
+        const market = this.synfV3.contracts.marketContracts[instrumentIdentifier.marketType]?.market as CexMarket;
         let rawSpotPrice;
         try {
             rawSpotPrice = await market.getRawPrice(instrumentAddress);

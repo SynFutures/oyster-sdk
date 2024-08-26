@@ -46,7 +46,7 @@ export interface ContractAddress {
     feederFactory: { [key in MarketType]?: FeederFactoryAddress };
 }
 
-export interface SynfConfig {
+export interface SynFuturesConfig {
     subgraph: string;
     // aws proxy for frontend use
     subgraphProxy: string;
@@ -102,7 +102,7 @@ export interface FeederFactoryContracts {
 }
 
 export class ConfigManager {
-    static getSynfConfig(chainId: CHAIN_ID): SynfConfig {
+    static getSynfConfig(chainId: CHAIN_ID): SynFuturesConfig {
         switch (chainId) {
             case CHAIN_ID.LOCAL: {
                 return ConfigManager.mapSynfConfig(localConfig);
@@ -148,8 +148,8 @@ export class ConfigManager {
         return !!inversePairs.stableCoins?.includes(baseToken.toLowerCase());
     }
 
-    private static mapSynfConfig(json: SynfConfigJson): SynfConfig {
-        const config: SynfConfig = {
+    private static mapSynfConfig(json: SynfConfigJson): SynFuturesConfig {
+        const config: SynFuturesConfig = {
             ...json,
             quotesParam: ConfigManager.mapQuotesParam(json.quotesParam),
         };

@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { TokenInfo } from '@derivation-tech/web3-core';
-import { SynFuturesV3Ctx } from '../synfuturesV3Core';
+import { SynFuturesV3 as SynFuturesV3Core } from '../core';
 import {
     AddParam,
     AdjustParam,
@@ -17,6 +18,7 @@ import {
     TradeParam,
 } from '../types';
 import {
+    Combine,
     encodeAddWithReferralParam,
     encodeAdjustWithReferralParam,
     encodeBatchPlaceWithReferralParam,
@@ -35,12 +37,17 @@ import { BigNumber, ContractTransaction, ethers, Overrides, PayableOverrides, Si
 import { SdkError } from '../errors/sdk.error';
 import { TickMath } from '../math';
 import { DEFAULT_REFERRAL_CODE, MAX_CANCEL_ORDER_COUNT, PEARL_SPACING } from '../constants';
-import { InstrumentInterface } from './instrument.interface';
 import { OrderModel, PairLevelAccountModel, PairModel, RangeModel } from '../models';
-export class InstrumentModule implements InstrumentInterface {
-    synfV3: SynFuturesV3Ctx;
+import { InstrumentInterface } from './instrument.interface';
+import { CachePlugin } from './cache.plugin';
+import { TxPlugin } from './tx.plugin';
 
-    constructor(synfV3: SynFuturesV3Ctx) {
+type SynFuturesV3 = Combine<[SynFuturesV3Core, CachePlugin, TxPlugin]>;
+
+export class InstrumentModule implements InstrumentInterface {
+    synfV3: SynFuturesV3;
+
+    constructor(synfV3: SynFuturesV3) {
         this.synfV3 = synfV3;
     }
 
@@ -49,10 +56,10 @@ export class InstrumentModule implements InstrumentInterface {
         base: string | TokenInfo,
         quote: string | TokenInfo,
     ): Promise<string> {
-        const gateAddress = this.synfV3.cache.config.contractAddress.gate;
+        const gateAddress = this.synfV3.conf.contractAddress.gate;
         const marketType = mType as MarketType;
-        const beaconAddress = this.synfV3.cache.config.contractAddress.market[marketType]!.beacon;
-        const instrumentProxyByteCode = this.synfV3.cache.config.instrumentProxyByteCode;
+        const beaconAddress = this.synfV3.conf.contractAddress.market[marketType]!.beacon;
+        const instrumentProxyByteCode = this.synfV3.conf.instrumentProxyByteCode;
         let salt: string;
 
         const { baseSymbol, quoteSymbol } = getTokenSymbol(base, quote);
@@ -61,7 +68,7 @@ export class InstrumentModule implements InstrumentInterface {
             quoteAddress =
                 typeof quote !== 'string'
                     ? (quote as TokenInfo).address
-                    : await this.synfV3.cache.ctx.getAddress(quoteSymbol);
+                    : await this.synfV3.ctx.getAddress(quoteSymbol);
         } catch {
             //todo beore fetch from graph
             throw new SdkError('Get quote address failed');
@@ -74,9 +81,7 @@ export class InstrumentModule implements InstrumentInterface {
         } else {
             //DEXV2
             const baseAddress =
-                typeof base !== 'string'
-                    ? (base as TokenInfo).address
-                    : await this.synfV3.cache.ctx.getAddress(baseSymbol);
+                typeof base !== 'string' ? (base as TokenInfo).address : await this.synfV3.ctx.getAddress(baseSymbol);
             salt = ethers.utils.defaultAbiCoder.encode(
                 ['string', 'address', 'address'],
                 [marketType, baseAddress, quoteAddress],
@@ -483,11 +488,11 @@ export class InstrumentModule implements InstrumentInterface {
             instrumentIdentifier.quoteSymbol,
         );
         let unsignedTx;
-        const gate = this.synfV3.cache.contracts.gate.connect(signer);
+        const gate = this.synfV3.contracts.gate.connect(signer);
         const indexOfInstrument = await gate.indexOf(instrumentAddress);
         if (BigNumber.from(indexOfInstrument).isZero()) {
-            this.synfV3.cache.ctx.registerContractParser(instrumentAddress, new InstrumentParser());
-            this.synfV3.cache.ctx.registerAddress(
+            this.synfV3.ctx.registerContractParser(instrumentAddress, new InstrumentParser());
+            this.synfV3.ctx.registerAddress(
                 instrumentAddress,
                 instrumentIdentifier.baseSymbol +
                     '-' +

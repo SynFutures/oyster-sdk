@@ -1,8 +1,7 @@
-import { BaseInterFace } from './index';
-import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
 import { CallOverrides } from 'ethers';
+import { BaseInterface } from '../common';
 
-export interface ConfigInterface extends BaseInterFace {
+export interface ConfigInterface extends BaseInterface {
     /**
      *Open Lp
      * @param quoteAddr the quote address
@@ -17,16 +16,4 @@ export interface ConfigInterface extends BaseInterFace {
      * @param overrides overrides with ethers types
      */
     inWhiteListLps(quoteAddr: string, traders: string[], overrides?: CallOverrides): Promise<boolean[]>;
-}
-
-export function createNullConfigModule(): ConfigInterface {
-    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-    const errorHandler = () => {
-        throw new InterfaceImplementationMissingError('ConfigInterface', 'config');
-    };
-    return {
-        synfV3: null as never,
-        openLp: errorHandler,
-        inWhiteListLps: errorHandler,
-    };
 }
