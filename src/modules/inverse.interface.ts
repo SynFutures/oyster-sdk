@@ -1,11 +1,10 @@
-import { BaseInterFace } from './index';
-import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
-import { FetchInstrumentParam, InstrumentInfo } from '../types';
-import { PairLevelAccountModel, WrappedInstrumentModel } from '../models';
-import { TokenInfo } from '@derivation-tech/web3-core';
 import { CallOverrides } from 'ethers';
+import { TokenInfo } from '@derivation-tech/web3-core';
+import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
+import { FetchInstrumentParam, InstrumentInfo, BaseInterface } from '../types';
+import { PairLevelAccountModel, WrappedInstrumentModel } from '../models';
 
-export interface InverseInterface extends BaseInterFace {
+export interface InverseInterface extends BaseInterface {
     get instrumentMap(): Map<string, WrappedInstrumentModel>;
     get accountCache(): Map<string, Map<string, Map<number, PairLevelAccountModel>>>;
 

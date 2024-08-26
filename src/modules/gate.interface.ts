@@ -1,8 +1,8 @@
 import { BigNumber, CallOverrides, ethers, Overrides, Signer } from 'ethers';
 import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
-import { BaseInterFace } from './index';
+import { BaseInterface } from '../types';
 
-export interface GateInterface extends BaseInterFace {
+export interface GateInterface extends BaseInterface {
     /**
      *Deposit to Gate
      * @param signer custom signer

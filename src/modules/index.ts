@@ -1,9 +1,3 @@
-import { SynFuturesV3Ctx } from '../synfuturesV3Core';
-
-export interface BaseInterFace {
-    get synfV3(): SynFuturesV3Ctx;
-}
-
 export * from './cache.interface';
 export * from './instrument.interface';
 export * from './simulate.interface';

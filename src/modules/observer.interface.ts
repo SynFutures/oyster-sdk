@@ -1,11 +1,19 @@
 import { BigNumber, CallOverrides } from 'ethers';
-import { InstrumentLevelAccountModel, InstrumentModel, PairLevelAccountModel, PairModel } from '../models';
-import { FetchInstrumentParam, FundFlow, InstrumentIdentifier, Pending, Position, Quotation, Side } from '../types';
 import { BlockInfo, TokenInfo } from '@derivation-tech/web3-core';
+import { InstrumentLevelAccountModel, InstrumentModel, PairLevelAccountModel, PairModel } from '../models';
+import {
+    FetchInstrumentParam,
+    FundFlow,
+    InstrumentIdentifier,
+    Pending,
+    Position,
+    Quotation,
+    Side,
+    BaseInterface,
+} from '../types';
 import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
-import { BaseInterFace } from './index';
 
-export interface ObserverInterface extends BaseInterFace {
+export interface ObserverInterface extends BaseInterface {
     /**
      *Get instrument level accounts infos
      *given single trader address, return multiple instrument level account which have been involved

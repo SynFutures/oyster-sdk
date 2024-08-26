@@ -8,4 +8,4 @@ export * from './abis';
 export * from './models';
 export * from './modules';
 export * from './context';
-export * from './plugin';
+export * from './plugins';

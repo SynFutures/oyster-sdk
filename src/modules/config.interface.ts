@@ -1,8 +1,8 @@
-import { BaseInterFace } from './index';
-import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
 import { CallOverrides } from 'ethers';
+import { BaseInterface } from '../types';
+import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
 
-export interface ConfigInterface extends BaseInterFace {
+export interface ConfigInterface extends BaseInterface {
     /**
      *Open Lp
      * @param quoteAddr the quote address

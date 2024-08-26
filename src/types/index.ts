@@ -1,4 +1,5 @@
 export * from './account';
+export * from './base';
 export * from './market';
 export * from './order';
 export * from './pair';

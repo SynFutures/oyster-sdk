@@ -35,8 +35,9 @@ import { BigNumber, ContractTransaction, ethers, Overrides, PayableOverrides, Si
 import { SdkError } from '../errors/sdk.error';
 import { TickMath } from '../math';
 import { DEFAULT_REFERRAL_CODE, MAX_CANCEL_ORDER_COUNT, PEARL_SPACING } from '../constants';
-import { InstrumentInterface } from './instrument.interface';
 import { OrderModel, PairLevelAccountModel, PairModel, RangeModel } from '../models';
+import { InstrumentInterface } from './instrument.interface';
+
 export class InstrumentModule implements InstrumentInterface {
     synfV3: SynFuturesV3Ctx;
 

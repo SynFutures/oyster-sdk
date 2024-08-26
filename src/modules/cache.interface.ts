@@ -5,9 +5,9 @@ import { FetchInstrumentParam, Instrument, InstrumentIdentifier, InstrumentInfo 
 import { SynfConfig, SynFuturesV3Contracts } from '../config';
 import { Provider } from '@ethersproject/providers';
 import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
-import { BaseInterFace } from './index';
+import { BaseInterface } from '../types';
 
-export interface CacheInterface extends BaseInterFace {
+export interface CacheInterface extends BaseInterface {
     get ctx(): ChainContext;
     get config(): SynfConfig;
     get contracts(): SynFuturesV3Contracts;

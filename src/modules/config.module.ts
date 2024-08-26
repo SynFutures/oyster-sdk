@@ -1,7 +1,7 @@
-import { ConfigInterface } from './config.interface';
 import { CallOverrides, ethers } from 'ethers';
-import { SynFuturesV3Ctx } from '../synfuturesV3Core';
 import { CHAIN_ID } from '@derivation-tech/web3-core';
+import { SynFuturesV3Ctx } from '../synfuturesV3Core';
+import { ConfigInterface } from './config.interface';
 
 export class ConfigModule implements ConfigInterface {
     synfV3: SynFuturesV3Ctx;

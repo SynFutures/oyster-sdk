@@ -1,8 +1,8 @@
 import * as ethers from 'ethers';
 import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
-import { BaseInterFace } from './index';
+import { BaseInterface } from '../types';
 
-export interface TxInterface extends BaseInterFace {
+export interface TxInterface extends BaseInterface {
     /**
      * Send transaction
      * @param signer custom signer,can change it in this method whatever you want

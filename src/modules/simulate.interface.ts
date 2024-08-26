@@ -1,6 +1,7 @@
 import { BigNumber, ethers, PayableOverrides, Signer } from 'ethers';
 import { PairLevelAccountModel, PairModel, PositionModel, RangeModel } from '../models';
 import {
+    BaseInterface,
     BatchOrderSizeDistribution,
     InstrumentIdentifier,
     Quotation,
@@ -10,9 +11,8 @@ import {
     TokenInfo,
 } from '../types';
 import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
-import { BaseInterFace } from './index';
 
-export interface SimulateInterface extends BaseInterFace {
+export interface SimulateInterface extends BaseInterface {
     placeCrossMarketOrder(
         signer: Signer,
         pair: PairModel,
