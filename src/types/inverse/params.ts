@@ -1,9 +1,10 @@
-import { BigNumber } from 'ethers';
+import { BigNumber, Signer } from 'ethers';
 import { Side } from '../enum';
 import { PositionModel, WrappedPositionModel } from '../../models';
 import { InstrumentIdentifier, SimulateOrderResult, SimulateTradeResult } from '../params';
 
 export interface ITradeRequest {
+    signer: Signer;
     position: WrappedPositionModel;
     traderAddr: string;
     side: Side; // side choose from website
@@ -29,6 +30,7 @@ export interface ISimulateTradeResult extends SimulateTradeResult {
 }
 
 export interface IPlaceOrderRequest {
+    signer: Signer;
     position: WrappedPositionModel;
     traderAddr: string;
     side: Side; // side choose from website
@@ -54,12 +56,15 @@ export interface ISimulatePlaceOrderResult extends SimulateOrderResult {
 }
 
 export interface IAddLiquidityRequest {
+    signer: Signer;
     traderAddr: string;
     instrumentIdentifier: InstrumentIdentifier;
+    expiry: number;
     margin: BigNumber;
     alpha: BigNumber;
     slippage: number;
     deadline: number;
+    currentSqrtPX96?: BigNumber;
     // referral
     referralCode?: string;
 }

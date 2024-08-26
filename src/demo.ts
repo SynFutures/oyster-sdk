@@ -1,8 +1,9 @@
-import { BigNumber } from 'ethers';
+import { BigNumber, Signer } from 'ethers';
 import { InverseInterface, InverseModule } from './modules';
 import { SynFuturesV3 } from './synfuturesV3Core';
 import { ITradeRequest, Side, IPlaceOrderRequest, IAddLiquidityRequest, MarketType } from './types';
 import { WrappedPositionModel } from './models';
+import { PERP_EXPIRY } from './constants';
 
 export async function main(): Promise<void> {
     const sdk = SynFuturesV3.getInstance('base');
@@ -16,9 +17,11 @@ export async function main(): Promise<void> {
 async function demoTrade(inverseModule: InverseInterface): Promise<void> {
     // TODO: mock position for testing, replace to the actual position
     const position = null as unknown as WrappedPositionModel;
+    const signer = null as unknown as Signer;
 
     // input like website
     const paramsInput: ITradeRequest = {
+        signer,
         side: Side.LONG,
         quoteAmount: BigNumber.from(1),
         leverage: BigNumber.from(5),
@@ -52,8 +55,10 @@ async function demoTrade(inverseModule: InverseInterface): Promise<void> {
 async function demoPlaceOrder(inverseModule: InverseInterface): Promise<void> {
     // TODO: mock position for testing, replace to the actual position
     const position = null as unknown as WrappedPositionModel;
+    const signer = null as unknown as Signer;
     // input like website
     const paramsInput: IPlaceOrderRequest = {
+        signer,
         side: Side.LONG,
         baseAmount: BigNumber.from(1),
         leverage: BigNumber.from(5),
@@ -79,9 +84,13 @@ async function demoPlaceOrder(inverseModule: InverseInterface): Promise<void> {
 }
 
 async function demoAddLiquidity(inverseModule: InverseInterface): Promise<void> {
+    // TODO: mock signer for testing, replace to the actual signer
+    const signer = null as unknown as Signer;
     // input like website
     const paramsInput: IAddLiquidityRequest = {
+        signer,
         instrumentIdentifier: { baseSymbol: 'BTC', quoteSymbol: 'USDC', marketType: MarketType.LINK },
+        expiry: PERP_EXPIRY,
         margin: BigNumber.from(1),
         alpha: BigNumber.from(2),
         slippage: 10,
