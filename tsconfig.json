@@ -26,5 +26,5 @@
         "removeComments": true
     },
     "exclude": ["node_modules", "temp", "coverage", "build"],
-    "include": ["src/**/*.ts", "src/**/*.json","tests/**/*.ts"]
+    "include": ["src/**/*.ts", "src/**/*.json"]
 }
