@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { SynFuturesV3 } from '../synfuturesV3Core';
+import type { SynFuturesV3 } from '../core';
 import type { BaseInterface } from './base';
 
 interface ModuleConstructor<T extends BaseInterface> {

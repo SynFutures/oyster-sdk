@@ -1,5 +1,5 @@
 import { CHAIN_ID, ChainContext, ContractParser, TokenInfo } from '@derivation-tech/web3-core';
-import { SynFuturesV3Ctx } from '../synfuturesV3Core';
+import { SynFuturesV3 as SynFuturesV3Core } from '../core';
 import {
     Beacon__factory,
     cexMarket,
@@ -40,10 +40,12 @@ import {
     InstrumentParser,
 } from '../common';
 import { Provider } from '@ethersproject/providers';
+import { ObserverPlugin } from './observer.plugin';
+
+type SynFuturesV3 = SynFuturesV3Core & ObserverPlugin;
 
 export class CacheModule implements CacheInterface {
-    synfV3: SynFuturesV3Ctx;
-    ctx!: ChainContext;
+    synfV3: SynFuturesV3;
     config!: SynfConfig;
     contracts!: SynFuturesV3Contracts;
     gateState: GateState;
@@ -55,12 +57,15 @@ export class CacheModule implements CacheInterface {
     // quote symbol => quote token info
     quoteSymbolToInfo: Map<string, TokenInfo> = new Map();
 
-    constructor(synfV3: SynFuturesV3Ctx, chainId: number) {
+    get ctx(): ChainContext {
+        return this.synfV3.ctx;
+    }
+
+    constructor(synfV3: SynFuturesV3) {
         this.synfV3 = synfV3;
-        this.ctx = ChainContext.getInstance(chainId);
         this.gateState = new GateState(this.ctx.wrappedNativeToken.address.toLowerCase());
         this.configState = new ConfigState();
-        this._init(ConfigManager.getSynfConfig(chainId));
+        this._init(ConfigManager.getSynfConfig(this.ctx.chainId));
     }
 
     async init(): Promise<void> {

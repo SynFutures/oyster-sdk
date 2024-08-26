@@ -1,12 +1,15 @@
 import { CallOverrides, ethers } from 'ethers';
 import { CHAIN_ID } from '@derivation-tech/web3-core';
-import { SynFuturesV3Ctx } from '../synfuturesV3Core';
+import { SynFuturesV3 as SynFuturesV3Core } from '../core';
 import { ConfigInterface } from './config.interface';
+import { CachePlugin } from './cache.plugin';
+
+type SynFuturesV3 = SynFuturesV3Core & CachePlugin;
 
 export class ConfigModule implements ConfigInterface {
-    synfV3: SynFuturesV3Ctx;
+    synfV3: SynFuturesV3;
 
-    constructor(synfV3: SynFuturesV3Ctx) {
+    constructor(synfV3: SynFuturesV3) {
         this.synfV3 = synfV3;
     }
 
@@ -14,10 +17,7 @@ export class ConfigModule implements ConfigInterface {
         let calls = [];
         let results: boolean[] = [];
         let configInterface: ethers.utils.Interface = this.synfV3.cache.contracts.config.interface;
-        if (
-            (this.synfV3.cache.ctx.chainId === CHAIN_ID.BASE || this.synfV3.cache.ctx.chainId === CHAIN_ID.LOCAL) &&
-            quoteAddr
-        ) {
+        if ((this.synfV3.ctx.chainId === CHAIN_ID.BASE || this.synfV3.ctx.chainId === CHAIN_ID.LOCAL) && quoteAddr) {
             for (const trader of traders) {
                 calls.push({
                     target: this.synfV3.cache.contracts.config.address,
@@ -25,7 +25,7 @@ export class ConfigModule implements ConfigInterface {
                 });
             }
             try {
-                const rawData = await this.synfV3.cache.ctx.multicall3.callStatic.aggregate(calls, overrides ?? {});
+                const rawData = await this.synfV3.ctx.multicall3.callStatic.aggregate(calls, overrides ?? {});
                 for (const data of rawData.returnData) {
                     results.push(configInterface.decodeFunctionResult('lpWhitelist', data)[0]);
                 }
@@ -47,7 +47,7 @@ export class ConfigModule implements ConfigInterface {
                 callData: configInterface.encodeFunctionData('lpWhitelist', [trader]),
             });
         }
-        const rawData = await this.synfV3.cache.ctx.multicall3.callStatic.aggregate(calls, overrides ?? {});
+        const rawData = await this.synfV3.ctx.multicall3.callStatic.aggregate(calls, overrides ?? {});
         for (const data of rawData.returnData) {
             results.push(configInterface.decodeFunctionResult('lpWhitelist', data)[0]);
         }
@@ -55,10 +55,7 @@ export class ConfigModule implements ConfigInterface {
     }
 
     async openLp(quoteAddr?: string, overrides?: CallOverrides): Promise<boolean> {
-        if (
-            (this.synfV3.cache.ctx.chainId === CHAIN_ID.BASE || this.synfV3.cache.ctx.chainId === CHAIN_ID.LOCAL) &&
-            quoteAddr
-        ) {
+        if ((this.synfV3.ctx.chainId === CHAIN_ID.BASE || this.synfV3.ctx.chainId === CHAIN_ID.LOCAL) && quoteAddr) {
             try {
                 const restricted = await this.synfV3.cache.contracts.config.restrictLp(quoteAddr, overrides ?? {});
                 return !restricted;

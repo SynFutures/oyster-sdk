@@ -3,7 +3,6 @@ import { BlockInfo, TokenInfo } from '@derivation-tech/web3-core';
 import { BaseInterface } from '../common';
 import { InstrumentLevelAccountModel, InstrumentModel, PairLevelAccountModel, PairModel } from '../models';
 import { FetchInstrumentParam, FundFlow, InstrumentIdentifier, Pending, Position, Quotation, Side } from '../types';
-import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
 
 export interface ObserverInterface extends BaseInterface {
     /**
@@ -156,30 +155,4 @@ export interface ObserverInterface extends BaseInterface {
      * @param alphaWad the alpha
      */
     estimateAPY(pairModel: PairModel, poolFee24h: BigNumber, alphaWad: BigNumber): number;
-}
-
-export function createNullObserverModule(): ObserverInterface {
-    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-    const errorHandler = () => {
-        throw new InterfaceImplementationMissingError('ObserverInterface', 'observer');
-    };
-    return {
-        synfV3: null as never,
-        fetchInstrumentBatch: errorHandler,
-        getAllInstruments: errorHandler,
-        getInstrumentLevelAccounts: errorHandler,
-        getPairLevelAccount: errorHandler,
-        getQuoteTokenInfo: errorHandler,
-        inspectDexV2MarketBenchmarkPrice: errorHandler,
-        inspectCexMarketBenchmarkPrice: errorHandler,
-        getRawSpotPrice: errorHandler,
-        getNextInitializedTickOutside: errorHandler,
-        getSizeToTargetTick: errorHandler,
-        getFundFlows: errorHandler,
-        getUserPendings: errorHandler,
-        inquireByBase: errorHandler,
-        inquireByQuote: errorHandler,
-        getPositionIfSettle: errorHandler,
-        estimateAPY: errorHandler,
-    };
 }

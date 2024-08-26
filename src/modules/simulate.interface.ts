@@ -10,7 +10,6 @@ import {
     TokenInfo,
 } from '../types';
 import { BaseInterface } from '../common';
-import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
 
 export interface SimulateInterface extends BaseInterface {
     placeCrossMarketOrder(
@@ -191,26 +190,4 @@ export interface SimulateInterface extends BaseInterface {
         marginNeedWad: BigNumber,
         balanceInVaultWadOverride?: BigNumber,
     ): BigNumber;
-}
-
-export function createNullSimulateModule(): SimulateInterface {
-    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-    const errorHandler = () => {
-        throw new InterfaceImplementationMissingError('SimulateInterface', 'simulate');
-    };
-    return {
-        synfV3: null as never,
-        simulateOrder: errorHandler,
-        simulateBatchPlace: errorHandler,
-        simulateBatchOrder: errorHandler,
-        simulateTrade: errorHandler,
-        simulateAdjustMargin: errorHandler,
-        simulateBenchmarkPrice: errorHandler,
-        simulateAddLiquidity: errorHandler,
-        simulateAddLiquidityWithAsymmetricRange: errorHandler,
-        simulateRemoveLiquidity: errorHandler,
-        marginToDepositWad: errorHandler,
-        placeCrossMarketOrder: errorHandler,
-        simulateCrossMarketOrder: errorHandler,
-    };
 }

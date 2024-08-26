@@ -1,4 +1,5 @@
-import { SynFuturesV3Ctx } from '../synfuturesV3Core';
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { SynFuturesV3 as SynFuturesV3Core } from '../core';
 import {
     alignRangeTick,
     BatchOrderSizeDistribution,
@@ -56,11 +57,17 @@ import {
 } from '../common';
 import { InstrumentModel, PairLevelAccountModel, PairModel, PositionModel, RangeModel } from '../models';
 import { SimulateInterface } from './simulate.interface';
+import { CachePlugin } from './cache.plugin';
+import { InstrumentPlugin } from './instrument.plugin';
+import { ObserverPlugin } from './observer.plugin';
+
+type SynFuturesV3 = SynFuturesV3Core & CachePlugin & InstrumentPlugin & ObserverPlugin;
 
 export class SimulateModule implements SimulateInterface {
-    synfV3: SynFuturesV3Ctx;
-    constructor(v3Sdk: SynFuturesV3Ctx) {
-        this.synfV3 = v3Sdk;
+    synfV3: SynFuturesV3;
+
+    constructor(synfV3: SynFuturesV3) {
+        this.synfV3 = synfV3;
     }
 
     // given lower price and upper price, return the ticks for batch orders
@@ -128,7 +135,7 @@ export class SimulateModule implements SimulateInterface {
             ]),
         );
         const tx = await instrument.populateTransaction.multicall(callData, overrides ?? {});
-        return await this.synfV3.cache.ctx.sendTx(signer, tx);
+        return await this.synfV3.ctx.sendTx(signer, tx);
     }
 
     async simulateCrossMarketOrder(
@@ -725,7 +732,7 @@ export class SimulateModule implements SimulateInterface {
         if (!instrument || !instrument.state.pairStates.has(expiry)) {
             // need uncreated instrument
             const benchmarkPrice = await this.simulateBenchmarkPrice(instrumentIdentifier, expiry);
-            const { quoteTokenInfo } = await getTokenInfo(instrumentIdentifier, this.synfV3.cache.ctx);
+            const { quoteTokenInfo } = await getTokenInfo(instrumentIdentifier, this.synfV3.ctx);
             quoteInfo = quoteTokenInfo;
             if (instrument) {
                 setting = instrument.setting;

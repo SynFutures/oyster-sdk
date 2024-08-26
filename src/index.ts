@@ -1,4 +1,4 @@
-export * from './synfuturesV3Core';
+export * from './core';
 export * from './types';
 export * from './math';
 export * from './config';
@@ -7,5 +7,3 @@ export * from './common';
 export * from './abis';
 export * from './models';
 export * from './modules';
-export * from './context';
-export * from './plugins';

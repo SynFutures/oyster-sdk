@@ -1,5 +1,4 @@
 import * as ethers from 'ethers';
-import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
 import { BaseInterface } from '../common';
 
 export interface TxInterface extends BaseInterface {
@@ -12,15 +11,4 @@ export interface TxInterface extends BaseInterface {
         signer: ethers.Signer,
         rawTx: ethers.PopulatedTransaction | Promise<ethers.PopulatedTransaction>,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt>;
-}
-
-export function createNullTransactionModule(): TxInterface {
-    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-    const errorHandler = () => {
-        throw new InterfaceImplementationMissingError('TxInterface', 'tx');
-    };
-    return {
-        synfV3: null as never,
-        sendTx: errorHandler,
-    };
 }

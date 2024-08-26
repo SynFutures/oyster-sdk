@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { TokenInfo } from '@derivation-tech/web3-core';
-import { SynFuturesV3Ctx } from '../synfuturesV3Core';
+import { SynFuturesV3 as SynFuturesV3Core } from '../core';
 import {
     AddParam,
     AdjustParam,
@@ -37,11 +38,15 @@ import { TickMath } from '../math';
 import { DEFAULT_REFERRAL_CODE, MAX_CANCEL_ORDER_COUNT, PEARL_SPACING } from '../constants';
 import { OrderModel, PairLevelAccountModel, PairModel, RangeModel } from '../models';
 import { InstrumentInterface } from './instrument.interface';
+import { CachePlugin } from './cache.plugin';
+import { TxPlugin } from './tx.plugin';
+
+type SynFuturesV3 = SynFuturesV3Core & CachePlugin & TxPlugin;
 
 export class InstrumentModule implements InstrumentInterface {
-    synfV3: SynFuturesV3Ctx;
+    synfV3: SynFuturesV3;
 
-    constructor(synfV3: SynFuturesV3Ctx) {
+    constructor(synfV3: SynFuturesV3) {
         this.synfV3 = synfV3;
     }
 
@@ -62,7 +67,7 @@ export class InstrumentModule implements InstrumentInterface {
             quoteAddress =
                 typeof quote !== 'string'
                     ? (quote as TokenInfo).address
-                    : await this.synfV3.cache.ctx.getAddress(quoteSymbol);
+                    : await this.synfV3.ctx.getAddress(quoteSymbol);
         } catch {
             //todo beore fetch from graph
             throw new SdkError('Get quote address failed');
@@ -75,9 +80,7 @@ export class InstrumentModule implements InstrumentInterface {
         } else {
             //DEXV2
             const baseAddress =
-                typeof base !== 'string'
-                    ? (base as TokenInfo).address
-                    : await this.synfV3.cache.ctx.getAddress(baseSymbol);
+                typeof base !== 'string' ? (base as TokenInfo).address : await this.synfV3.ctx.getAddress(baseSymbol);
             salt = ethers.utils.defaultAbiCoder.encode(
                 ['string', 'address', 'address'],
                 [marketType, baseAddress, quoteAddress],
@@ -487,8 +490,8 @@ export class InstrumentModule implements InstrumentInterface {
         const gate = this.synfV3.cache.contracts.gate.connect(signer);
         const indexOfInstrument = await gate.indexOf(instrumentAddress);
         if (BigNumber.from(indexOfInstrument).isZero()) {
-            this.synfV3.cache.ctx.registerContractParser(instrumentAddress, new InstrumentParser());
-            this.synfV3.cache.ctx.registerAddress(
+            this.synfV3.ctx.registerContractParser(instrumentAddress, new InstrumentParser());
+            this.synfV3.ctx.registerAddress(
                 instrumentAddress,
                 instrumentIdentifier.baseSymbol +
                     '-' +

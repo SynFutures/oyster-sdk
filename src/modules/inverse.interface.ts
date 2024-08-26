@@ -1,6 +1,5 @@
 import { CallOverrides } from 'ethers';
 import { TokenInfo } from '@derivation-tech/web3-core';
-import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
 import { FetchInstrumentParam, InstrumentInfo } from '../types';
 import { BaseInterface } from '../common';
 import { PairLevelAccountModel, WrappedInstrumentModel } from '../models';
@@ -28,19 +27,4 @@ export interface InverseInterface extends BaseInterface {
      * @param overrides overrides with ethers types
      */
     updateInstrument(params: FetchInstrumentParam[], overrides?: CallOverrides): Promise<WrappedInstrumentModel[]>;
-}
-
-export function createNullInverseModule(): InverseInterface {
-    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-    const errorHandler = () => {
-        throw new InterfaceImplementationMissingError('InverseInterface', 'inverse');
-    };
-    return {
-        synfV3: null as never,
-        instrumentMap: null as never,
-        getInstrumentInfo: errorHandler,
-        accountCache: null as never,
-        initInstruments: errorHandler,
-        updateInstrument: errorHandler,
-    };
 }

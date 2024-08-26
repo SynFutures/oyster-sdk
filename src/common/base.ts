@@ -1,5 +1,5 @@
-import { SynFuturesV3Ctx } from '../synfuturesV3Core';
+import { SynFuturesV3 } from '../core';
 
 export interface BaseInterface {
-    get synfV3(): SynFuturesV3Ctx;
+    get synfV3(): SynFuturesV3;
 }

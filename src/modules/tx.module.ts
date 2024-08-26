@@ -1,12 +1,12 @@
 import { TxInterface } from './tx.interface';
 import { PopulatedTransaction, Signer } from 'ethers';
-import { SynFuturesV3Ctx } from '../synfuturesV3Core';
+import { SynFuturesV3 } from '../core';
 import * as ethers from 'ethers';
 
 export class TxModule implements TxInterface {
-    synfV3: SynFuturesV3Ctx;
+    synfV3: SynFuturesV3;
 
-    constructor(synfV3: SynFuturesV3Ctx) {
+    constructor(synfV3: SynFuturesV3) {
         this.synfV3 = synfV3;
     }
 
@@ -14,6 +14,6 @@ export class TxModule implements TxInterface {
         signer: Signer,
         rawTx: PopulatedTransaction | Promise<PopulatedTransaction>,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        return await this.synfV3.cache.ctx.sendTx(signer, rawTx);
+        return await this.synfV3.ctx.sendTx(signer, rawTx);
     }
 }

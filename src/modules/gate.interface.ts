@@ -1,5 +1,4 @@
 import { BigNumber, CallOverrides, ethers, Overrides, Signer } from 'ethers';
-import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
 import { BaseInterface } from '../common';
 
 export interface GateInterface extends BaseInterface {
@@ -54,18 +53,4 @@ export interface GateInterface extends BaseInterface {
         quotes: string[],
         overrides?: CallOverrides,
     ): Promise<{ pendingDuration: BigNumber; thresholds: BigNumber[] }>;
-}
-
-export function createNullGateModule(): GateInterface {
-    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-    const errorHandler = () => {
-        throw new InterfaceImplementationMissingError('GateInterface', 'gate');
-    };
-    return {
-        synfV3: null as never,
-        deposit: errorHandler,
-        withdraw: errorHandler,
-        gateOperation: errorHandler,
-        getPendingParams: errorHandler,
-    };
 }

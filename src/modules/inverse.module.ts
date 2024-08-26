@@ -1,14 +1,18 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { InverseInterface } from './inverse.interface';
-import { SynFuturesV3Ctx } from '../synfuturesV3Core';
+import { SynFuturesV3 as SynFuturesV3Core } from '../core';
 import { FetchInstrumentParam, WrappedInstrumentInfo } from '../types';
 import { PairLevelAccountModel, WrappedInstrumentModel } from '../models';
 import { CallOverrides } from 'ethers/lib/ethers';
 import { TokenInfo } from '@derivation-tech/web3-core';
+import { CachePlugin } from './cache.plugin';
+
+type SynFuturesV3 = SynFuturesV3Core & CachePlugin;
 
 export class InverseModule implements InverseInterface {
-    synfV3: SynFuturesV3Ctx;
+    synfV3: SynFuturesV3;
 
-    constructor(synfV3: SynFuturesV3Ctx) {
+    constructor(synfV3: SynFuturesV3) {
         this.synfV3 = synfV3;
     }
 
