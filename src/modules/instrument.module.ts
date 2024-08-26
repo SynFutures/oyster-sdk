@@ -56,10 +56,10 @@ export class InstrumentModule implements InstrumentInterface {
         base: string | TokenInfo,
         quote: string | TokenInfo,
     ): Promise<string> {
-        const gateAddress = this.synfV3.cache.config.contractAddress.gate;
+        const gateAddress = this.synfV3.config.contractAddress.gate;
         const marketType = mType as MarketType;
-        const beaconAddress = this.synfV3.cache.config.contractAddress.market[marketType]!.beacon;
-        const instrumentProxyByteCode = this.synfV3.cache.config.instrumentProxyByteCode;
+        const beaconAddress = this.synfV3.config.contractAddress.market[marketType]!.beacon;
+        const instrumentProxyByteCode = this.synfV3.config.instrumentProxyByteCode;
         let salt: string;
 
         const { baseSymbol, quoteSymbol } = getTokenSymbol(base, quote);
@@ -488,7 +488,7 @@ export class InstrumentModule implements InstrumentInterface {
             instrumentIdentifier.quoteSymbol,
         );
         let unsignedTx;
-        const gate = this.synfV3.cache.contracts.gate.connect(signer);
+        const gate = this.synfV3.contracts.gate.connect(signer);
         const indexOfInstrument = await gate.indexOf(instrumentAddress);
         if (BigNumber.from(indexOfInstrument).isZero()) {
             this.synfV3.ctx.registerContractParser(instrumentAddress, new InstrumentParser());

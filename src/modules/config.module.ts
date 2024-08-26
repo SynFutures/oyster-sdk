@@ -1,12 +1,7 @@
 import { CallOverrides, ethers } from 'ethers';
 import { CHAIN_ID } from '@derivation-tech/web3-core';
-import { Combine } from '../common';
-import { SynFuturesV3 as SynFuturesV3Core } from '../core';
+import { SynFuturesV3 } from '../core';
 import { ConfigInterface } from './config.interface';
-import { CachePlugin } from './cache.plugin';
-
-type SynFuturesV3 = Combine<[SynFuturesV3Core, CachePlugin]>;
-
 export class ConfigModule implements ConfigInterface {
     synfV3: SynFuturesV3;
 
@@ -17,11 +12,11 @@ export class ConfigModule implements ConfigInterface {
     async inWhiteListLps(quoteAddr: string, traders: string[], overrides?: CallOverrides): Promise<boolean[]> {
         let calls = [];
         let results: boolean[] = [];
-        let configInterface: ethers.utils.Interface = this.synfV3.cache.contracts.config.interface;
+        let configInterface: ethers.utils.Interface = this.synfV3.contracts.config.interface;
         if ((this.synfV3.ctx.chainId === CHAIN_ID.BASE || this.synfV3.ctx.chainId === CHAIN_ID.LOCAL) && quoteAddr) {
             for (const trader of traders) {
                 calls.push({
-                    target: this.synfV3.cache.contracts.config.address,
+                    target: this.synfV3.contracts.config.address,
                     callData: configInterface.encodeFunctionData('lpWhitelist', [quoteAddr, trader]),
                 });
             }
@@ -44,7 +39,7 @@ export class ConfigModule implements ConfigInterface {
 
         for (const trader of traders) {
             calls.push({
-                target: this.synfV3.cache.contracts.config.address,
+                target: this.synfV3.contracts.config.address,
                 callData: configInterface.encodeFunctionData('lpWhitelist', [trader]),
             });
         }
@@ -58,12 +53,12 @@ export class ConfigModule implements ConfigInterface {
     async openLp(quoteAddr?: string, overrides?: CallOverrides): Promise<boolean> {
         if ((this.synfV3.ctx.chainId === CHAIN_ID.BASE || this.synfV3.ctx.chainId === CHAIN_ID.LOCAL) && quoteAddr) {
             try {
-                const restricted = await this.synfV3.cache.contracts.config.restrictLp(quoteAddr, overrides ?? {});
+                const restricted = await this.synfV3.contracts.config.restrictLp(quoteAddr, overrides ?? {});
                 return !restricted;
             } catch (e) {
                 // ignore error since the contract on some network may not have this function
             }
         }
-        return this.synfV3.cache.contracts.config.openLp(overrides ?? {});
+        return this.synfV3.contracts.config.openLp(overrides ?? {});
     }
 }

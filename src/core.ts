@@ -1,5 +1,20 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { CHAIN_ID, ChainContext } from '@derivation-tech/web3-core';
+import { Provider } from '@ethersproject/providers';
+import { CHAIN_ID, ChainContext, TokenInfo, ContractParser } from '@derivation-tech/web3-core';
+import {
+    Beacon__factory,
+    cexMarket,
+    CexMarket__factory,
+    Config__factory,
+    DexV2Market__factory,
+    EmergingFeederFactory__factory,
+    Gate__factory,
+    Guardian__factory,
+    MarketType,
+    Observer__factory,
+    PythFeederFactory__factory,
+} from './types';
 import {
     cachePlugin,
     gatePlugin,
@@ -33,7 +48,15 @@ import {
     ConfigModule,
     InverseModule,
 } from './modules';
-import { Combine, mount } from './common';
+import {
+    ConfigManager,
+    ContractAddress,
+    FeederFactoryContracts,
+    MarketContracts,
+    SynfConfig,
+    SynFuturesV3Contracts,
+} from './config';
+import { Combine, mount, CexMarketParser, ConfigParser, DexV2MarketParser, GateParser, GuardianParser } from './common';
 
 export interface SynFutureV3Plugin<T extends SynFuturesV3, U> {
     install(synfV3: T): T & U;
@@ -105,9 +128,131 @@ export class SynFuturesV3 {
     }
 
     ctx: ChainContext;
+    config!: SynfConfig;
+    contracts!: SynFuturesV3Contracts;
 
     constructor(chainId: CHAIN_ID | string) {
         this.ctx = ChainContext.getInstance(chainId);
+        this._init(ConfigManager.getSynfConfig(this.ctx.chainId));
+    }
+
+    private _init(config: SynfConfig): void {
+        this.config = config;
+        const provider = this.ctx.provider;
+        if (provider) {
+            this._initContracts(provider, config.contractAddress);
+        }
+        const contractAddress = this.config.contractAddress;
+        this.ctx.registerAddress(contractAddress.gate, 'Gate');
+        this.ctx.registerAddress(contractAddress.observer, 'Observer');
+        this.ctx.registerAddress(contractAddress.config, 'Config');
+        this.ctx.registerContractParser(contractAddress.gate, new GateParser(this.ctx));
+        this.ctx.registerContractParser(contractAddress.config, new ConfigParser());
+        if (contractAddress.guardian) {
+            this.ctx.registerAddress(contractAddress.guardian, 'Guardian');
+            this.ctx.registerContractParser(contractAddress.guardian, new GuardianParser());
+        }
+
+        for (const marketType in contractAddress.market) {
+            const marketAddress = contractAddress.market[marketType as MarketType]!;
+            this.ctx.registerAddress(marketAddress.market, `${marketType}-Market`);
+            this.ctx.registerAddress(marketAddress.beacon, `${marketType}-InstrumentBeacon`);
+            if (cexMarket(marketType as MarketType)) {
+                this.ctx.registerContractParser(marketAddress.market, new CexMarketParser());
+            } else {
+                this.ctx.registerContractParser(marketAddress.market, new DexV2MarketParser());
+            }
+        }
+        for (const marketType in contractAddress.feederFactory) {
+            const feederFactoryAddress = contractAddress.feederFactory[marketType as MarketType]!;
+            if (feederFactoryAddress.factory !== '' && feederFactoryAddress.beacon !== '') {
+                this.ctx.registerAddress(feederFactoryAddress.factory, `${marketType}-FeederFactory`);
+                this.ctx.registerAddress(feederFactoryAddress.beacon, `${marketType}-FeederBeacon`);
+                if (marketType === MarketType.PYTH) {
+                    this.ctx.registerContractParser(
+                        feederFactoryAddress.factory,
+                        new ContractParser(PythFeederFactory__factory.createInterface()),
+                    );
+                } else if (marketType === MarketType.EMG) {
+                    this.ctx.registerContractParser(
+                        feederFactoryAddress.factory,
+                        new ContractParser(EmergingFeederFactory__factory.createInterface()),
+                    );
+                }
+            }
+        }
+        if (this.config.tokenInfo) {
+            for (const token of this.config.tokenInfo) {
+                this.registerQuoteInfo(token);
+            }
+        }
+    }
+
+    private _initContracts(provider: Provider, contractAddress: ContractAddress): void {
+        // At present, beacon for chainlink instrument and dexV2 instrument are the same contract (in InstrumentBeacon.sol).
+        const marketContracts: { [key in MarketType]?: MarketContracts } = {};
+        for (const marketType in contractAddress.market) {
+            const mType = marketType as MarketType;
+            const marketAddress = contractAddress.market[mType]!;
+            marketContracts[mType] = {
+                market: cexMarket(mType)
+                    ? CexMarket__factory.connect(marketAddress.market, provider)
+                    : DexV2Market__factory.connect(marketAddress.market, provider),
+                beacon: Beacon__factory.connect(marketAddress.beacon, provider),
+            };
+        }
+        const feederFactoryContracts: { [key in MarketType]?: FeederFactoryContracts } = {};
+        for (const marketType in contractAddress.feederFactory) {
+            const mType = marketType as MarketType;
+            const feederFactoryAddress = contractAddress.feederFactory[mType]!;
+            if (feederFactoryAddress.factory !== '' && feederFactoryAddress.beacon !== '') {
+                if (mType === MarketType.PYTH) {
+                    feederFactoryContracts[mType] = {
+                        factory: PythFeederFactory__factory.connect(feederFactoryAddress.factory, provider),
+                        beacon: Beacon__factory.connect(feederFactoryAddress.beacon, provider),
+                    };
+                } else if (mType === MarketType.EMG) {
+                    feederFactoryContracts[mType] = {
+                        factory: EmergingFeederFactory__factory.connect(feederFactoryAddress.factory, provider),
+                        beacon: Beacon__factory.connect(feederFactoryAddress.beacon, provider),
+                    };
+                } else {
+                    throw new Error(`Invalid market type ${mType}`);
+                }
+            }
+        }
+
+        this.contracts = {
+            gate: Gate__factory.connect(contractAddress.gate, provider),
+            observer: Observer__factory.connect(contractAddress.observer, provider),
+            config: Config__factory.connect(contractAddress.config, provider),
+            guardian: contractAddress.guardian
+                ? Guardian__factory.connect(contractAddress.guardian, provider)
+                : undefined,
+            marketContracts: marketContracts,
+            feederFactoryContracts: feederFactoryContracts,
+        };
+    }
+
+    /**
+     * Set provider for sdk and ChainContext
+     * @param provider Ethers provider
+     * @param isOpSdkCompatible Is it the OP technology stack?
+     */
+    setProvider(provider: Provider, isOpSdkCompatible?: boolean): void {
+        if (!isOpSdkCompatible) this.ctx.info.isOpSdkCompatible = false;
+        this.ctx.setProvider(provider);
+        this._initContracts(provider, this.config.contractAddress);
+    }
+
+    /**
+     * Register new quote info
+     * @param tokenInfo {@link TokenInfo}
+     */
+    registerQuoteInfo(tokenInfo: TokenInfo): void {
+        this.ctx.tokenInfo.set(tokenInfo.symbol.toLowerCase(), tokenInfo);
+        this.ctx.tokenInfo.set(tokenInfo.address.toLowerCase(), tokenInfo);
+        this.ctx.registerAddress(tokenInfo.address, tokenInfo.symbol);
     }
 
     /**

@@ -161,14 +161,14 @@ export class SimulateModule implements SimulateInterface {
         if ((long && targetTick <= currentTick) || (!long && targetTick >= currentTick))
             throw Error('please place normal order');
         let swapToTick = long ? targetTick + 1 : targetTick - 1;
-        let { size: swapSize, quotation: quotation } = await this.synfV3.cache.contracts.observer.inquireByTick(
+        let { size: swapSize, quotation: quotation } = await this.synfV3.contracts.observer.inquireByTick(
             pair.rootInstrument.info.addr,
             pair.amm.expiry,
             swapToTick,
         );
         if ((long && quotation.postTick <= targetTick) || (!long && quotation.postTick >= targetTick)) {
             swapToTick = long ? swapToTick + 1 : swapToTick - 1;
-            const retry = await this.synfV3.cache.contracts.observer.inquireByTick(
+            const retry = await this.synfV3.contracts.observer.inquireByTick(
                 pair.rootInstrument.info.addr,
                 pair.amm.expiry,
                 swapToTick,
@@ -738,7 +738,7 @@ export class SimulateModule implements SimulateInterface {
             if (instrument) {
                 setting = instrument.setting;
             } else {
-                const quoteParam = this.synfV3.cache.config.quotesParam[quoteInfo.symbol]!;
+                const quoteParam = this.synfV3.config.quotesParam[quoteInfo.symbol]!;
                 instrument = InstrumentModel.minimumInstrumentWithParam(quoteParam);
                 setting = instrument.setting;
             }
