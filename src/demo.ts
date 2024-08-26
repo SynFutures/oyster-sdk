@@ -1,7 +1,7 @@
 import { BigNumber } from 'ethers';
 import { InverseInterface, InverseModule } from './modules';
 import { SynFuturesV3 } from './synfuturesV3Core';
-import { ITradeRequest, Side, IPlaceOrderRequest } from './types';
+import { ITradeRequest, Side, IPlaceOrderRequest, IAddLiquidityRequest, MarketType } from './types';
 import { WrappedPositionModel } from './models';
 
 export async function main(): Promise<void> {
@@ -10,6 +10,7 @@ export async function main(): Promise<void> {
 
     await demoTrade(inverseDemoModule);
     await demoPlaceOrder(inverseDemoModule);
+    await demoAddLiquidity(inverseDemoModule);
 }
 
 async function demoTrade(inverseModule: InverseInterface): Promise<void> {
@@ -23,6 +24,8 @@ async function demoTrade(inverseModule: InverseInterface): Promise<void> {
         leverage: BigNumber.from(5),
         position: position,
         traderAddr: '0x0',
+        slippage: 10,
+        deadline: 5,
     };
     const simulateResult = inverseModule.simulateTrade(paramsInput);
 
@@ -57,6 +60,7 @@ async function demoPlaceOrder(inverseModule: InverseInterface): Promise<void> {
         orderPrice: BigNumber.from(63573.183152),
         position: position,
         traderAddr: '0x0',
+        deadline: 5,
     };
     const simulateResult = inverseModule.simulatePlaceOrder(paramsInput);
 
@@ -70,6 +74,32 @@ async function demoPlaceOrder(inverseModule: InverseInterface): Promise<void> {
     });
 
     const txResult = await inverseModule.placeOrder(paramsInput, simulateResult);
+
+    console.log('trade result tx:', txResult);
+}
+
+async function demoAddLiquidity(inverseModule: InverseInterface): Promise<void> {
+    // input like website
+    const paramsInput: IAddLiquidityRequest = {
+        instrumentIdentifier: { baseSymbol: 'BTC', quoteSymbol: 'USDC', marketType: MarketType.LINK },
+        margin: BigNumber.from(1),
+        alpha: BigNumber.from(2),
+        slippage: 10,
+        deadline: 5,
+        traderAddr: '0x0',
+    };
+    const simulateResult = inverseModule.simulateAddLiquidity(paramsInput);
+
+    // output like website
+    console.log(`simulate result:`, {
+        'Capital Efficiency Boost': simulateResult.capitalEfficiencyBoost,
+        'Removal Price': `${simulateResult.lowerPrice}/${simulateResult.upperPrice}`,
+        'Liquidation Price': `${simulateResult.lowerPosition.liquidationPrice}/${simulateResult.upperPosition.liquidationPrice}`,
+        marginToDeposit: simulateResult.marginToDepositWad,
+        // ...
+    });
+
+    const txResult = await inverseModule.addLiquidity(paramsInput, simulateResult);
 
     console.log('trade result tx:', txResult);
 }

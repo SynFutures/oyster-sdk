@@ -1,12 +1,14 @@
 import { BigNumber } from 'ethers';
 import { Side } from '../enum';
-import { WrappedPositionModel } from '../../models';
-import { SimulateOrderResult, SimulateTradeResult } from '../params';
+import { PositionModel, WrappedPositionModel } from '../../models';
+import { InstrumentIdentifier, SimulateOrderResult, SimulateTradeResult } from '../params';
 
 export interface ITradeRequest {
     position: WrappedPositionModel;
     traderAddr: string;
     side: Side; // side choose from website
+    slippage: number;
+    deadline: number;
 
     // [size] from website
     baseAmount?: BigNumber; // base size input from website
@@ -31,6 +33,7 @@ export interface IPlaceOrderRequest {
     traderAddr: string;
     side: Side; // side choose from website
     leverage: BigNumber; // leverage input from website
+    deadline: number;
 
     // [price] from website
     orderTick?: number; // need align input price to tick
@@ -39,10 +42,53 @@ export interface IPlaceOrderRequest {
     // [size] from website
     baseAmount?: BigNumber; // base size input from website
     quoteAmount?: BigNumber; // input by quote will calculate base amount send to deep module
+
+    // referral
+    referralCode?: string;
 }
 
 export interface ISimulatePlaceOrderResult extends SimulateOrderResult {
     origin: SimulateOrderResult; // origin result
     marginRequired: BigNumber; // [add] equal to balance from SimulateOrderResult
     estimatedTradeValue: BigNumber; // [add] estimated TradeValue for this order
+}
+
+export interface IAddLiquidityRequest {
+    traderAddr: string;
+    instrumentIdentifier: InstrumentIdentifier;
+    margin: BigNumber;
+    alpha: BigNumber;
+    slippage: number;
+    deadline: number;
+    // referral
+    referralCode?: string;
+}
+
+// TODO:  old sdk result has no type
+export interface SimulateAddLiquidityResult {
+    tickDelta: number;
+    liquidity: BigNumber;
+    upperPrice: BigNumber;
+    lowerPrice: BigNumber;
+    lowerPosition: PositionModel;
+    lowerLeverageWad: BigNumber;
+    upperPosition: PositionModel;
+    upperLeverageWad: BigNumber;
+    sqrtStrikeLowerPX96: BigNumber;
+    sqrtStrikeUpperPX96: BigNumber;
+    marginToDepositWad: BigNumber;
+    minMargin: BigNumber;
+    minEffectiveQuoteAmount: BigNumber;
+    equivalentAlpha: BigNumber;
+}
+
+export interface ISimulateAddLiquidityResult extends SimulateAddLiquidityResult {
+    origin: SimulateAddLiquidityResult; // origin result
+    lowerPrice: BigNumber; // [modify] inverse display
+    upperPrice: BigNumber; // [modify] inverse display
+    lowerPosition: WrappedPositionModel; // [modify] inverse display
+    upperPosition: WrappedPositionModel; // [modify] inverse display
+    lowerLeverageWad: BigNumber; // [modify] inverse display
+    upperLeverageWad: BigNumber; // [modify] inverse display
+    capitalEfficiencyBoost: number; // [add] calcBoost() result
 }

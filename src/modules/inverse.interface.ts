@@ -4,7 +4,14 @@ import { FetchInstrumentParam, InstrumentInfo } from '../types';
 import { PairLevelAccountModel, WrappedInstrumentModel } from '../models';
 import { TokenInfo } from '@derivation-tech/web3-core';
 import { CallOverrides, ContractTransaction, providers } from 'ethers';
-import { ITradeRequest, ISimulateTradeResult, ISimulatePlaceOrderResult, IPlaceOrderRequest } from '../types/inverse';
+import {
+    ITradeRequest,
+    ISimulateTradeResult,
+    ISimulatePlaceOrderResult,
+    IPlaceOrderRequest,
+    ISimulateAddLiquidityResult,
+    IAddLiquidityRequest,
+} from '../types/inverse';
 
 export interface InverseInterface extends BaseInterFace {
     get instrumentMap(): Map<string, WrappedInstrumentModel>;
@@ -42,6 +49,12 @@ export interface InverseInterface extends BaseInterFace {
     placeOrder(
         params: IPlaceOrderRequest,
         simulateResult?: ISimulatePlaceOrderResult,
+    ): Promise<ContractTransaction | providers.TransactionReceipt>;
+
+    simulateAddLiquidity(params: IAddLiquidityRequest): ISimulateAddLiquidityResult;
+    addLiquidity(
+        params: IAddLiquidityRequest,
+        simulateResult?: ISimulateAddLiquidityResult,
     ): Promise<ContractTransaction | providers.TransactionReceipt>;
 }
 
