@@ -4,7 +4,7 @@ import { FetchInstrumentParam, InstrumentInfo } from '../types';
 import { PairLevelAccountModel, WrappedInstrumentModel } from '../models';
 import { TokenInfo } from '@derivation-tech/web3-core';
 import { CallOverrides, ContractTransaction, providers } from 'ethers';
-import { ITradeRequest, ISimulateTradeResult } from '../types/inverse';
+import { ITradeRequest, ISimulateTradeResult, ISimulatePlaceOrderResult, IPlaceOrderRequest } from '../types/inverse';
 
 export interface InverseInterface extends BaseInterFace {
     get instrumentMap(): Map<string, WrappedInstrumentModel>;
@@ -35,6 +35,13 @@ export interface InverseInterface extends BaseInterFace {
     trade(
         params: ITradeRequest,
         simulateResult?: ISimulateTradeResult,
+    ): Promise<ContractTransaction | providers.TransactionReceipt>;
+
+    simulatePlaceOrder(params: IPlaceOrderRequest): ISimulatePlaceOrderResult;
+    // if simulate before, just pass the simulateResult
+    placeOrder(
+        params: IPlaceOrderRequest,
+        simulateResult?: ISimulatePlaceOrderResult,
     ): Promise<ContractTransaction | providers.TransactionReceipt>;
 }
 

@@ -174,6 +174,7 @@ export class PositionModel implements Position {
 }
 
 export class WrappedPositionModel extends PositionModel {
+    // TODO by @jinxi: can i read root account from position?
     get wrap(): WrappedPositionModel {
         throw new Error('invalid wrap');
     }
