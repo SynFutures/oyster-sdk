@@ -1,12 +1,9 @@
 import { BigNumber, CallOverrides, ContractTransaction, ethers, Overrides, Signer } from 'ethers';
-import { encodeDepositParam, encodeWithdrawParam, Combine } from '../common';
-import { SynFuturesV3 as SynFuturesV3Core } from '../core';
+import { encodeDepositParam, encodeWithdrawParam } from '../common';
+import { SynFuturesV3 } from '../core';
 import { NATIVE_TOKEN_ADDRESS } from '../constants';
 import { NumericConverter } from '../types';
 import { GateInterface } from './gate.interface';
-import { CachePlugin } from './cache.plugin';
-
-type SynFuturesV3 = Combine<[SynFuturesV3Core, CachePlugin]>;
 
 export class GateModule implements GateInterface {
     synfV3: SynFuturesV3;
@@ -21,7 +18,7 @@ export class GateModule implements GateInterface {
         amount: BigNumber,
         overrides?: Overrides,
     ): Promise<ContractTransaction | ethers.providers.TransactionReceipt> {
-        const unsignedTx = await this.synfV3.cache.contracts.gate.populateTransaction.deposit(
+        const unsignedTx = await this.synfV3.contracts.gate.populateTransaction.deposit(
             encodeDepositParam(quoteAddr, amount),
             overrides ?? {},
         );
@@ -34,7 +31,7 @@ export class GateModule implements GateInterface {
         amount: BigNumber,
         overrides?: Overrides,
     ): Promise<ContractTransaction | ethers.providers.TransactionReceipt> {
-        const unsignedTx = await this.synfV3.cache.contracts.gate.populateTransaction.withdraw(
+        const unsignedTx = await this.synfV3.contracts.gate.populateTransaction.withdraw(
             encodeWithdrawParam(quoteAddr, amount),
             overrides ?? {},
         );
@@ -47,7 +44,7 @@ export class GateModule implements GateInterface {
         amountWad: BigNumber,
         deposit: boolean,
     ): Promise<ContractTransaction | ethers.providers.TransactionReceipt> {
-        const gate = this.synfV3.cache.contracts.gate;
+        const gate = this.synfV3.contracts.gate;
         const usingNative = quoteAddress.toLowerCase() === NATIVE_TOKEN_ADDRESS.toLowerCase();
         const quoteInfo = usingNative
             ? this.synfV3.ctx.wrappedNativeToken
@@ -72,15 +69,15 @@ export class GateModule implements GateInterface {
         pendingDuration: BigNumber;
         thresholds: BigNumber[];
     }> {
-        const gateInterface = this.synfV3.cache.contracts.gate.interface;
+        const gateInterface = this.synfV3.contracts.gate.interface;
         const calls = quotes.map((quote) => {
             return {
-                target: this.synfV3.cache.contracts.gate.address,
+                target: this.synfV3.contracts.gate.address,
                 callData: gateInterface.encodeFunctionData('thresholdOf', [quote]),
             };
         });
         calls.push({
-            target: this.synfV3.cache.contracts.gate.address,
+            target: this.synfV3.contracts.gate.address,
             callData: gateInterface.encodeFunctionData('pendingDuration'),
         });
         const rawRet = (await this.synfV3.ctx.getMulticall3().callStatic.aggregate(calls, overrides ?? {})).returnData;
