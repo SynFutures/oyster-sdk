@@ -1,12 +1,12 @@
 import { BigNumber, CallOverrides, ContractTransaction, ethers, Overrides, Signer } from 'ethers';
-import { encodeDepositParam, encodeWithdrawParam } from '../common';
+import { encodeDepositParam, encodeWithdrawParam, Combine } from '../common';
 import { SynFuturesV3 as SynFuturesV3Core } from '../core';
 import { NATIVE_TOKEN_ADDRESS } from '../constants';
 import { NumericConverter } from '../types';
 import { GateInterface } from './gate.interface';
 import { CachePlugin } from './cache.plugin';
 
-type SynFuturesV3 = SynFuturesV3Core & CachePlugin;
+type SynFuturesV3 = Combine<[SynFuturesV3Core, CachePlugin]>;
 
 export class GateModule implements GateInterface {
     synfV3: SynFuturesV3;

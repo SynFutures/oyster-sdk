@@ -44,6 +44,7 @@ import {
 } from '../constants';
 import { updateFundingIndex } from '../math/funding';
 import {
+    Combine,
     alignTick,
     alphaWadToTickDelta,
     encodePlaceWithReferralParam,
@@ -61,7 +62,7 @@ import { CachePlugin } from './cache.plugin';
 import { InstrumentPlugin } from './instrument.plugin';
 import { ObserverPlugin } from './observer.plugin';
 
-type SynFuturesV3 = SynFuturesV3Core & CachePlugin & InstrumentPlugin & ObserverPlugin;
+type SynFuturesV3 = Combine<[SynFuturesV3Core, CachePlugin, InstrumentPlugin, ObserverPlugin]>;
 
 export class SimulateModule implements SimulateInterface {
     synfV3: SynFuturesV3;

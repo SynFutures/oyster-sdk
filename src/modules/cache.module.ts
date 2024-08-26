@@ -1,4 +1,5 @@
-import { CHAIN_ID, ChainContext, ContractParser, TokenInfo } from '@derivation-tech/web3-core';
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { CHAIN_ID, ContractParser, TokenInfo } from '@derivation-tech/web3-core';
 import { SynFuturesV3 as SynFuturesV3Core } from '../core';
 import {
     Beacon__factory,
@@ -31,6 +32,7 @@ import {
     SynFuturesV3Contracts,
 } from '../config';
 import {
+    Combine,
     CexMarketParser,
     ConfigParser,
     DexV2MarketParser,
@@ -42,7 +44,7 @@ import {
 import { Provider } from '@ethersproject/providers';
 import { ObserverPlugin } from './observer.plugin';
 
-type SynFuturesV3 = SynFuturesV3Core & ObserverPlugin;
+type SynFuturesV3 = Combine<[SynFuturesV3Core, ObserverPlugin]>;
 
 export class CacheModule implements CacheInterface {
     synfV3: SynFuturesV3;
@@ -57,15 +59,11 @@ export class CacheModule implements CacheInterface {
     // quote symbol => quote token info
     quoteSymbolToInfo: Map<string, TokenInfo> = new Map();
 
-    get ctx(): ChainContext {
-        return this.synfV3.ctx;
-    }
-
     constructor(synfV3: SynFuturesV3) {
         this.synfV3 = synfV3;
-        this.gateState = new GateState(this.ctx.wrappedNativeToken.address.toLowerCase());
+        this.gateState = new GateState(this.synfV3.ctx.wrappedNativeToken.address.toLowerCase());
         this.configState = new ConfigState();
-        this._init(ConfigManager.getSynfConfig(this.ctx.chainId));
+        this._init(ConfigManager.getSynfConfig(this.synfV3.ctx.chainId));
     }
 
     async init(): Promise<void> {
@@ -94,15 +92,15 @@ export class CacheModule implements CacheInterface {
 
         for (const instrument of list) {
             this.instrumentMap.set(instrument.info.addr.toLowerCase(), instrument);
-            this.ctx.registerAddress(instrument.info.addr, instrument.info.symbol);
-            this.ctx.registerContractParser(instrument.info.addr, new InstrumentParser());
+            this.synfV3.ctx.registerAddress(instrument.info.addr, instrument.info.symbol);
+            this.synfV3.ctx.registerContractParser(instrument.info.addr, new InstrumentParser());
         }
         return list;
     }
 
     setProvider(provider: Provider, isOpSdkCompatible?: boolean): void {
-        if (!isOpSdkCompatible) this.ctx.info.isOpSdkCompatible = false;
-        this.ctx.setProvider(provider);
+        if (!isOpSdkCompatible) this.synfV3.ctx.info.isOpSdkCompatible = false;
+        this.synfV3.ctx.setProvider(provider);
         this._initContracts(provider, this.config.contractAddress);
     }
 
@@ -113,13 +111,13 @@ export class CacheModule implements CacheInterface {
     }
 
     registerQuoteInfo(tokenInfo: TokenInfo): void {
-        this.ctx.tokenInfo.set(tokenInfo.symbol.toLowerCase(), tokenInfo);
-        this.ctx.tokenInfo.set(tokenInfo.address.toLowerCase(), tokenInfo);
-        this.ctx.registerAddress(tokenInfo.address, tokenInfo.symbol);
+        this.synfV3.ctx.tokenInfo.set(tokenInfo.symbol.toLowerCase(), tokenInfo);
+        this.synfV3.ctx.tokenInfo.set(tokenInfo.address.toLowerCase(), tokenInfo);
+        this.synfV3.ctx.registerAddress(tokenInfo.address, tokenInfo.symbol);
     }
 
     async computeInitData(instrumentIdentifier: InstrumentIdentifier): Promise<string> {
-        const { baseTokenInfo, quoteTokenInfo } = await getTokenInfo(instrumentIdentifier, this.ctx);
+        const { baseTokenInfo, quoteTokenInfo } = await getTokenInfo(instrumentIdentifier, this.synfV3.ctx);
         const quoteAddress = quoteTokenInfo.address;
         let data;
         if (cexMarket(instrumentIdentifier.marketType)) {
@@ -145,7 +143,7 @@ export class CacheModule implements CacheInterface {
         const quoteParamConfig = this.config.quotesParam;
         const quoteAddresses: string[] = [];
         for (const symbol in quoteParamConfig) {
-            quoteAddresses.push(await this.ctx.getAddress(symbol));
+            quoteAddresses.push(await this.synfV3.ctx.getAddress(symbol));
         }
         await this.syncGateCache(target, quoteAddresses);
     }
@@ -167,7 +165,7 @@ export class CacheModule implements CacheInterface {
     }
 
     public getInstrumentContract(address: string, signerOrProvider?: Signer | Provider): Instrument {
-        return Instrument__factory.connect(address, signerOrProvider ?? this.ctx.provider);
+        return Instrument__factory.connect(address, signerOrProvider ?? this.synfV3.ctx.provider);
     }
 
     private updateInstrumentCache(instrumentModels: InstrumentModel[]): void {
@@ -187,43 +185,43 @@ export class CacheModule implements CacheInterface {
 
     private _init(config: SynfConfig): void {
         this.config = config;
-        const provider = this.ctx.provider;
+        const provider = this.synfV3.ctx.provider;
         if (provider) {
             this._initContracts(provider, config.contractAddress);
         }
         const contractAddress = this.config.contractAddress;
-        this.ctx.registerAddress(contractAddress.gate, 'Gate');
-        this.ctx.registerAddress(contractAddress.observer, 'Observer');
-        this.ctx.registerAddress(contractAddress.config, 'Config');
-        this.ctx.registerContractParser(contractAddress.gate, new GateParser(this.ctx));
-        this.ctx.registerContractParser(contractAddress.config, new ConfigParser());
+        this.synfV3.ctx.registerAddress(contractAddress.gate, 'Gate');
+        this.synfV3.ctx.registerAddress(contractAddress.observer, 'Observer');
+        this.synfV3.ctx.registerAddress(contractAddress.config, 'Config');
+        this.synfV3.ctx.registerContractParser(contractAddress.gate, new GateParser(this.synfV3.ctx));
+        this.synfV3.ctx.registerContractParser(contractAddress.config, new ConfigParser());
         if (contractAddress.guardian) {
-            this.ctx.registerAddress(contractAddress.guardian, 'Guardian');
-            this.ctx.registerContractParser(contractAddress.guardian, new GuardianParser());
+            this.synfV3.ctx.registerAddress(contractAddress.guardian, 'Guardian');
+            this.synfV3.ctx.registerContractParser(contractAddress.guardian, new GuardianParser());
         }
 
         for (const marketType in contractAddress.market) {
             const marketAddress = contractAddress.market[marketType as MarketType]!;
-            this.ctx.registerAddress(marketAddress.market, `${marketType}-Market`);
-            this.ctx.registerAddress(marketAddress.beacon, `${marketType}-InstrumentBeacon`);
+            this.synfV3.ctx.registerAddress(marketAddress.market, `${marketType}-Market`);
+            this.synfV3.ctx.registerAddress(marketAddress.beacon, `${marketType}-InstrumentBeacon`);
             if (cexMarket(marketType as MarketType)) {
-                this.ctx.registerContractParser(marketAddress.market, new CexMarketParser());
+                this.synfV3.ctx.registerContractParser(marketAddress.market, new CexMarketParser());
             } else {
-                this.ctx.registerContractParser(marketAddress.market, new DexV2MarketParser());
+                this.synfV3.ctx.registerContractParser(marketAddress.market, new DexV2MarketParser());
             }
         }
         for (const marketType in contractAddress.feederFactory) {
             const feederFactoryAddress = contractAddress.feederFactory[marketType as MarketType]!;
             if (feederFactoryAddress.factory !== '' && feederFactoryAddress.beacon !== '') {
-                this.ctx.registerAddress(feederFactoryAddress.factory, `${marketType}-FeederFactory`);
-                this.ctx.registerAddress(feederFactoryAddress.beacon, `${marketType}-FeederBeacon`);
+                this.synfV3.ctx.registerAddress(feederFactoryAddress.factory, `${marketType}-FeederFactory`);
+                this.synfV3.ctx.registerAddress(feederFactoryAddress.beacon, `${marketType}-FeederBeacon`);
                 if (marketType === MarketType.PYTH) {
-                    this.ctx.registerContractParser(
+                    this.synfV3.ctx.registerContractParser(
                         feederFactoryAddress.factory,
                         new ContractParser(PythFeederFactory__factory.createInterface()),
                     );
                 } else if (marketType === MarketType.EMG) {
-                    this.ctx.registerContractParser(
+                    this.synfV3.ctx.registerContractParser(
                         feederFactoryAddress.factory,
                         new ContractParser(EmergingFeederFactory__factory.createInterface()),
                     );
@@ -285,7 +283,7 @@ export class CacheModule implements CacheInterface {
 
     async updateConfigState(): Promise<void> {
         this.configState.openLp = true;
-        if (this.ctx.chainId !== CHAIN_ID.BASE) {
+        if (this.synfV3.ctx.chainId !== CHAIN_ID.BASE) {
             try {
                 this.configState.openLp = await this.contracts.config.openLp();
             } catch (e) {
@@ -294,7 +292,7 @@ export class CacheModule implements CacheInterface {
         }
         this.configState.openLiquidator = await this.contracts.config.openLiquidator();
         for (const [symbol, param] of Object.entries(this.config.quotesParam)) {
-            const quoteInfo = await this.ctx.getTokenInfo(symbol);
+            const quoteInfo = await this.synfV3.ctx.getTokenInfo(symbol);
             this.configState.setQuoteParam(quoteInfo.address, param ?? EMPTY_QUOTE_PARAM);
         }
 

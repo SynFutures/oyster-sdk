@@ -1,5 +1,5 @@
 import { ConfigState, GateState, InstrumentModel, PairLevelAccountModel } from '../models';
-import { ChainContext, TokenInfo } from '@derivation-tech/web3-core';
+import { TokenInfo } from '@derivation-tech/web3-core';
 import { BigNumber, CallOverrides, Signer } from 'ethers';
 import { FetchInstrumentParam, Instrument, InstrumentIdentifier, InstrumentInfo } from '../types';
 import { SynfConfig, SynFuturesV3Contracts } from '../config';
@@ -7,7 +7,6 @@ import { Provider } from '@ethersproject/providers';
 import { BaseInterface } from '../common';
 
 export interface CacheInterface extends BaseInterface {
-    get ctx(): ChainContext;
     get config(): SynfConfig;
     get contracts(): SynFuturesV3Contracts;
     get gateState(): GateState;

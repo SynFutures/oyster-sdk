@@ -1,10 +1,11 @@
 import { CallOverrides, ethers } from 'ethers';
 import { CHAIN_ID } from '@derivation-tech/web3-core';
+import { Combine } from '../common';
 import { SynFuturesV3 as SynFuturesV3Core } from '../core';
 import { ConfigInterface } from './config.interface';
 import { CachePlugin } from './cache.plugin';
 
-type SynFuturesV3 = SynFuturesV3Core & CachePlugin;
+type SynFuturesV3 = Combine<[SynFuturesV3Core, CachePlugin]>;
 
 export class ConfigModule implements ConfigInterface {
     synfV3: SynFuturesV3;

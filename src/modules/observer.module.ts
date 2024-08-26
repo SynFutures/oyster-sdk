@@ -44,6 +44,7 @@ import {
 } from '../types';
 import { calcMaxWithdrawable, TickMath, wdiv, ZERO } from '../math';
 import {
+    Combine,
     alphaWadToTickDelta,
     calcBenchmarkPrice,
     fromWad,
@@ -57,7 +58,7 @@ import { RANGE_SPACING } from '../constants';
 import { CachePlugin } from './cache.plugin';
 import { InstrumentPlugin } from './instrument.plugin';
 
-type SynFuturesV3 = SynFuturesV3Core & CachePlugin & InstrumentPlugin;
+type SynFuturesV3 = Combine<[SynFuturesV3Core, CachePlugin, InstrumentPlugin]>;
 
 export class ObserverModule implements ObserverInterface {
     synfV3: SynFuturesV3;

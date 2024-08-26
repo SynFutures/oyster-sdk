@@ -3,64 +3,60 @@
 import type { SynFuturesV3 } from '../core';
 import type { BaseInterface } from './base';
 
-interface ModuleConstructor<T extends BaseInterface> {
-    new (sdk: SynFuturesV3): T;
-}
-
-function mountProps(target: any, source: any, obj: any): void {
-    // mount member functions
-    Object.getOwnPropertyNames(source).forEach((prop) => {
-        if (/^constructor$/.test(prop)) {
-            // ignore
-            return;
-        }
-
-        let descriptor = Object.getOwnPropertyDescriptor(source, prop)!;
-
-        if (typeof descriptor.value === 'function') {
-            descriptor = {
-                ...descriptor,
-                value: descriptor.value.bind(obj),
-            };
-        }
-
-        Object.defineProperty(target, prop, descriptor);
-    });
-
-    // mount member variables
-    Object.getOwnPropertyNames(obj).forEach((prop) => {
-        if (prop === 'synfV3') {
-            // ignore
-            return;
-        }
-
-        const descriptor = Object.getOwnPropertyDescriptor(obj, prop)!;
-
-        if (typeof descriptor.value === 'function') {
-            // ignore
-            return;
-        }
-
-        Object.defineProperty(target, prop, {
-            enumerable: false,
-            configurable: false,
-            get: function () {
-                return obj[prop];
-            },
-        });
-    });
+interface ModuleConstructor<T extends SynFuturesV3, U extends BaseInterface> {
+    new (sdk: T): U;
 }
 
 /**
  * Mount module to sdk instance
  * @param sdk SDK instance
- * @param module Module class
- * @returns Module instance
+ * @param moduleConstructor Module class
+ * @param module Module instance
  */
-export function mount<T extends BaseInterface>(sdk: SynFuturesV3, module: ModuleConstructor<T>): T {
-    const _module = new module(sdk);
+export function mount<T extends SynFuturesV3, U extends BaseInterface>(
+    sdk: SynFuturesV3,
+    moduleConstructor: ModuleConstructor<T, U>,
+    module: U,
+): void {
+    // mount member functions
+    Object.getOwnPropertyNames(moduleConstructor).forEach((prop) => {
+        if (/^constructor$/.test(prop)) {
+            // ignore
+            return;
+        }
 
-    mountProps(sdk, module.prototype, _module);
+        let descriptor = Object.getOwnPropertyDescriptor(moduleConstructor, prop)!;
 
-    return _module;
+        if (typeof descriptor.value === 'function') {
+            descriptor = {
+                ...descriptor,
+                value: descriptor.value.bind(module),
+            };
+        }
+
+        Object.defineProperty(sdk, prop, descriptor);
+    });
+
+    // mount member variables
+    Object.getOwnPropertyNames(module).forEach((prop) => {
+        if (prop === 'synfV3') {
+            // ignore
+            return;
+        }
+
+        const descriptor = Object.getOwnPropertyDescriptor(module, prop)!;
+
+        if (typeof descriptor.value === 'function') {
+            // ignore
+            return;
+        }
+
+        Object.defineProperty(sdk, prop, {
+            enumerable: false,
+            configurable: false,
+            get: function () {
+                return (module as any)[prop];
+            },
+        });
+    });
 }

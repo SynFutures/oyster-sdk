@@ -18,6 +18,7 @@ import {
     TradeParam,
 } from '../types';
 import {
+    Combine,
     encodeAddWithReferralParam,
     encodeAdjustWithReferralParam,
     encodeBatchPlaceWithReferralParam,
@@ -41,7 +42,7 @@ import { InstrumentInterface } from './instrument.interface';
 import { CachePlugin } from './cache.plugin';
 import { TxPlugin } from './tx.plugin';
 
-type SynFuturesV3 = SynFuturesV3Core & CachePlugin & TxPlugin;
+type SynFuturesV3 = Combine<[SynFuturesV3Core, CachePlugin, TxPlugin]>;
 
 export class InstrumentModule implements InstrumentInterface {
     synfV3: SynFuturesV3;

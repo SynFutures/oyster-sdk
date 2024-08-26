@@ -12,6 +12,7 @@ export * from './simulate.module';
 export * from './gate.module';
 export * from './observer.module';
 export * from './tx.module';
+export * from './config.module';
 export * from './inverse.module';
 export * from './cache.plugin';
 export * from './instrument.plugin';
