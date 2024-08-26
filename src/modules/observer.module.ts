@@ -475,8 +475,8 @@ export class ObserverModule implements ObserverInterface {
             instrumentIdentifier.baseSymbol,
             instrumentIdentifier.quoteSymbol,
         );
-        const baseParam = this.synfV3.config.quotesParam[baseSymbol];
-        const quoteParam = this.synfV3.config.quotesParam[quoteSymbol];
+        const baseParam = this.synfV3.conf.quotesParam[baseSymbol];
+        const quoteParam = this.synfV3.conf.quotesParam[quoteSymbol];
 
         const baseStable = baseParam && baseParam.qtype === QuoteType.STABLE;
         const quoteStable = quoteParam && quoteParam.qtype === QuoteType.STABLE;
@@ -489,7 +489,7 @@ export class ObserverModule implements ObserverInterface {
             expiry,
             rawSpotPrice,
             feederType,
-            this.synfV3.config.marketConfig.DEXV2!.dailyInterestRate,
+            this.synfV3.conf.marketConfig.DEXV2!.dailyInterestRate,
         );
     }
 
@@ -516,9 +516,9 @@ export class ObserverModule implements ObserverInterface {
             const marketInfo: MarketInfo = {
                 addr: rawInstrument.market,
                 type: marketType,
-                beacon: this.synfV3.config.contractAddress.market[marketType as MarketType]!.beacon,
+                beacon: this.synfV3.conf.contractAddress.market[marketType as MarketType]!.beacon,
             };
-            const marketConfig: MarketConfig = this.synfV3.config.marketConfig[marketType as MarketType]!;
+            const marketConfig: MarketConfig = this.synfV3.conf.marketConfig[marketType as MarketType]!;
             const feeder = cexMarket(marketType as MarketType)
                 ? (rawInstrument.priceFeeder as PriceFeeder)
                 : (rawInstrument.dexV2Feeder as DexV2Feeder);

@@ -738,7 +738,7 @@ export class SimulateModule implements SimulateInterface {
             if (instrument) {
                 setting = instrument.setting;
             } else {
-                const quoteParam = this.synfV3.config.quotesParam[quoteInfo.symbol]!;
+                const quoteParam = this.synfV3.conf.quotesParam[quoteInfo.symbol]!;
                 instrument = InstrumentModel.minimumInstrumentWithParam(quoteParam);
                 setting = instrument.setting;
             }

@@ -53,7 +53,7 @@ import {
     ContractAddress,
     FeederFactoryContracts,
     MarketContracts,
-    SynfConfig,
+    SynFuturesConfig,
     SynFuturesV3Contracts,
 } from './config';
 import { Combine, mount, CexMarketParser, ConfigParser, DexV2MarketParser, GateParser, GuardianParser } from './common';
@@ -128,7 +128,7 @@ export class SynFuturesV3 {
     }
 
     ctx: ChainContext;
-    config!: SynfConfig;
+    conf!: SynFuturesConfig;
     contracts!: SynFuturesV3Contracts;
 
     constructor(chainId: CHAIN_ID | string) {
@@ -136,13 +136,13 @@ export class SynFuturesV3 {
         this._init(ConfigManager.getSynfConfig(this.ctx.chainId));
     }
 
-    private _init(config: SynfConfig): void {
-        this.config = config;
+    private _init(config: SynFuturesConfig): void {
+        this.conf = config;
         const provider = this.ctx.provider;
         if (provider) {
             this._initContracts(provider, config.contractAddress);
         }
-        const contractAddress = this.config.contractAddress;
+        const contractAddress = this.conf.contractAddress;
         this.ctx.registerAddress(contractAddress.gate, 'Gate');
         this.ctx.registerAddress(contractAddress.observer, 'Observer');
         this.ctx.registerAddress(contractAddress.config, 'Config');
@@ -181,8 +181,8 @@ export class SynFuturesV3 {
                 }
             }
         }
-        if (this.config.tokenInfo) {
-            for (const token of this.config.tokenInfo) {
+        if (this.conf.tokenInfo) {
+            for (const token of this.conf.tokenInfo) {
                 this.registerQuoteInfo(token);
             }
         }
@@ -242,7 +242,7 @@ export class SynFuturesV3 {
     setProvider(provider: Provider, isOpSdkCompatible?: boolean): void {
         if (!isOpSdkCompatible) this.ctx.info.isOpSdkCompatible = false;
         this.ctx.setProvider(provider);
-        this._initContracts(provider, this.config.contractAddress);
+        this._initContracts(provider, this.conf.contractAddress);
     }
 
     /**

@@ -56,10 +56,10 @@ export class InstrumentModule implements InstrumentInterface {
         base: string | TokenInfo,
         quote: string | TokenInfo,
     ): Promise<string> {
-        const gateAddress = this.synfV3.config.contractAddress.gate;
+        const gateAddress = this.synfV3.conf.contractAddress.gate;
         const marketType = mType as MarketType;
-        const beaconAddress = this.synfV3.config.contractAddress.market[marketType]!.beacon;
-        const instrumentProxyByteCode = this.synfV3.config.instrumentProxyByteCode;
+        const beaconAddress = this.synfV3.conf.contractAddress.market[marketType]!.beacon;
+        const instrumentProxyByteCode = this.synfV3.conf.instrumentProxyByteCode;
         let salt: string;
 
         const { baseSymbol, quoteSymbol } = getTokenSymbol(base, quote);

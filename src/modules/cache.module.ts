@@ -99,7 +99,7 @@ export class CacheModule implements CacheInterface {
     }
 
     public async syncGateCacheWithAllQuotes(target: string): Promise<void> {
-        const quoteParamConfig = this.synfV3.config.quotesParam;
+        const quoteParamConfig = this.synfV3.conf.quotesParam;
         const quoteAddresses: string[] = [];
         for (const symbol in quoteParamConfig) {
             quoteAddresses.push(await this.synfV3.ctx.getAddress(symbol));
@@ -152,12 +152,12 @@ export class CacheModule implements CacheInterface {
             }
         }
         this.configState.openLiquidator = await this.synfV3.contracts.config.openLiquidator();
-        for (const [symbol, param] of Object.entries(this.synfV3.config.quotesParam)) {
+        for (const [symbol, param] of Object.entries(this.synfV3.conf.quotesParam)) {
             const quoteInfo = await this.synfV3.ctx.getTokenInfo(symbol);
             this.configState.setQuoteParam(quoteInfo.address, param ?? EMPTY_QUOTE_PARAM);
         }
 
-        for (const type of Object.keys(this.synfV3.config.marketConfig)) {
+        for (const type of Object.keys(this.synfV3.conf.marketConfig)) {
             const info = await this.synfV3.contracts.config.getMarketInfo(type);
             this.configState.marketsInfo.set(type as MarketType, {
                 addr: info.market,
