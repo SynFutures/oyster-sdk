@@ -14,6 +14,7 @@ import { PairModel, RangeModel, WrappedPositionModel } from './models';
 import { PERP_EXPIRY } from './constants';
 
 export async function main(): Promise<void> {
+    // TODO by jinxi: replace with new sdk and inverse module entry
     const sdk = SynFuturesV3.getInstance('base');
     const inverseDemoModule = new InverseModule(sdk) as InverseInterface;
 
