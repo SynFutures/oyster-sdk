@@ -54,13 +54,15 @@ export type MountedDefaultSynFuturesV3 = Combine<
 >;
 
 export class SynFuturesV3 {
-    private static instances = new Map<number, DefaultSynFuturesV3>();
+    private static instances = new Map<number, MountedDefaultSynFuturesV3>();
 
-    static getInstance(chanIdOrName: CHAIN_ID | string): DefaultSynFuturesV3 {
+    static getInstance(chanIdOrName: CHAIN_ID | string): MountedDefaultSynFuturesV3 {
         const chainId = ChainContext.getChainInfo(chanIdOrName).chainId;
+
         let instance = SynFuturesV3.instances.get(chainId);
+
         if (!instance) {
-            instance = new SynFuturesV3(chanIdOrName)
+            const _instance = new SynFuturesV3(chanIdOrName)
                 .use(cachePlugin())
                 .use(gatePlugin())
                 .use(observerPlugin())
@@ -71,14 +73,17 @@ export class SynFuturesV3 {
 
             // In order to be fully compatible with the old usage,
             // member functions and member variables are mounted on the SDK instance
-            mount(instance, CacheModule, instance.cache);
-            mount(instance, GateModule, instance.gate);
-            mount(instance, ObserverModule, instance.observer);
-            mount(instance, SimulateModule, instance.simulate);
-            mount(instance, InstrumentModule, instance.instrument);
-            mount(instance, TxModule, instance.tx);
-            mount(instance, ConfigModule, instance.config);
+            mount(_instance, CacheModule, _instance.cache);
+            mount(_instance, GateModule, _instance.gate);
+            mount(_instance, ObserverModule, _instance.observer);
+            mount(_instance, SimulateModule, _instance.simulate);
+            mount(_instance, InstrumentModule, _instance.instrument);
+            mount(_instance, TxModule, _instance.tx);
+            mount(_instance, ConfigModule, _instance.config);
+
+            SynFuturesV3.instances.set(chainId, (instance = _instance as unknown as MountedDefaultSynFuturesV3));
         }
+
         return instance;
     }
 
