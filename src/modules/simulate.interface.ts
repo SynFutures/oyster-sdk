@@ -1,7 +1,6 @@
 import { BigNumber, ethers, PayableOverrides, Signer } from 'ethers';
 import { PairLevelAccountModel, PairModel, PositionModel, RangeModel } from '../models';
 import {
-    BaseInterface,
     BatchOrderSizeDistribution,
     InstrumentIdentifier,
     Quotation,
@@ -10,6 +9,7 @@ import {
     SimulateTradeResult,
     TokenInfo,
 } from '../types';
+import { BaseInterface } from '../common';
 import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
 
 export interface SimulateInterface extends BaseInterface {

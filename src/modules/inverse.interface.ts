@@ -1,7 +1,8 @@
 import { CallOverrides } from 'ethers';
 import { TokenInfo } from '@derivation-tech/web3-core';
 import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
-import { FetchInstrumentParam, InstrumentInfo, BaseInterface } from '../types';
+import { FetchInstrumentParam, InstrumentInfo } from '../types';
+import { BaseInterface } from '../common';
 import { PairLevelAccountModel, WrappedInstrumentModel } from '../models';
 
 export interface InverseInterface extends BaseInterface {

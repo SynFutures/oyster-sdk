@@ -1,16 +1,8 @@
 import { BigNumber, CallOverrides } from 'ethers';
 import { BlockInfo, TokenInfo } from '@derivation-tech/web3-core';
+import { BaseInterface } from '../common';
 import { InstrumentLevelAccountModel, InstrumentModel, PairLevelAccountModel, PairModel } from '../models';
-import {
-    FetchInstrumentParam,
-    FundFlow,
-    InstrumentIdentifier,
-    Pending,
-    Position,
-    Quotation,
-    Side,
-    BaseInterface,
-} from '../types';
+import { FetchInstrumentParam, FundFlow, InstrumentIdentifier, Pending, Position, Quotation, Side } from '../types';
 import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
 
 export interface ObserverInterface extends BaseInterface {

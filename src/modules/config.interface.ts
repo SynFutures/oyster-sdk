@@ -1,5 +1,5 @@
 import { CallOverrides } from 'ethers';
-import { BaseInterface } from '../types';
+import { BaseInterface } from '../common';
 import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
 
 export interface ConfigInterface extends BaseInterface {

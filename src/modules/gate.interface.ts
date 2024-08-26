@@ -1,6 +1,6 @@
 import { BigNumber, CallOverrides, ethers, Overrides, Signer } from 'ethers';
 import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
-import { BaseInterface } from '../types';
+import { BaseInterface } from '../common';
 
 export interface GateInterface extends BaseInterface {
     /**

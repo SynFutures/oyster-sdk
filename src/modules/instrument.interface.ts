@@ -15,7 +15,7 @@ import {
 import { TokenInfo } from '@derivation-tech/web3-core';
 import { OrderModel, PairLevelAccountModel, PairModel, RangeModel } from '../models';
 import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
-import { BaseInterface } from '../types';
+import { BaseInterface } from '../common';
 
 export interface InstrumentInterface extends BaseInterface {
     //////////////////////////////////////////////////////////

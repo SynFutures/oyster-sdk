@@ -1,6 +1,6 @@
 import * as ethers from 'ethers';
 import { InterfaceImplementationMissingError } from '../errors/interfaceImplementationMissing.error';
-import { BaseInterface } from '../types';
+import { BaseInterface } from '../common';
 
 export interface TxInterface extends BaseInterface {
     /**
