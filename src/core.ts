@@ -101,15 +101,15 @@ export class SynFuturesV3 {
         let wrappedInstance = SynFuturesV3.wrappedInstances.get(chainId);
 
         if (!wrappedInstance) {
-            const instance = SynFuturesV3.getInstance(chainId).use(inversePlugin());
+            const _instance = SynFuturesV3.getInstance(chainId).use(inversePlugin());
 
             // In order to be fully compatible with the old usage,
             // member functions and member variables are mounted on the SDK instance
-            mount(instance, InverseModule, instance.inverse);
+            mount(_instance, InverseModule, _instance.inverse);
 
             SynFuturesV3.wrappedInstances.set(
                 chainId,
-                (wrappedInstance = instance as unknown as WrappedMountedDefaultSynFutureV3),
+                (wrappedInstance = _instance as unknown as WrappedMountedDefaultSynFutureV3),
             );
         }
 
