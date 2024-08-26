@@ -3,7 +3,8 @@ import { InterfaceImplementationMissingError } from '../errors/interfaceImplemen
 import { FetchInstrumentParam, InstrumentInfo } from '../types';
 import { PairLevelAccountModel, WrappedInstrumentModel } from '../models';
 import { TokenInfo } from '@derivation-tech/web3-core';
-import { CallOverrides } from 'ethers';
+import { CallOverrides, ContractTransaction, providers } from 'ethers';
+import { ITradeRequest, ISimulateTradeResult } from '../types/inverse';
 
 export interface InverseInterface extends BaseInterFace {
     get instrumentMap(): Map<string, WrappedInstrumentModel>;
@@ -28,6 +29,13 @@ export interface InverseInterface extends BaseInterFace {
      * @param overrides overrides with ethers types
      */
     updateInstrument(params: FetchInstrumentParam[], overrides?: CallOverrides): Promise<WrappedInstrumentModel[]>;
+
+    simulateTrade(params: ITradeRequest): ISimulateTradeResult;
+    // if simulate before, just pass the simulateResult
+    trade(
+        params: ITradeRequest,
+        simulateResult?: ISimulateTradeResult,
+    ): Promise<ContractTransaction | providers.TransactionReceipt>;
 }
 
 export function createNullInverseModule(): InverseInterface {
