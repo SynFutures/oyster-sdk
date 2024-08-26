@@ -1,3 +1,4 @@
+/* eslint-disable no-prototype-builtins */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { SynFuturesV3 } from '../core';
@@ -19,19 +20,42 @@ export function mount<T extends SynFuturesV3, U extends BaseInterface>(
     module: U,
 ): void {
     // mount member functions
-    Object.getOwnPropertyNames(moduleConstructor).forEach((prop) => {
+    Object.getOwnPropertyNames(moduleConstructor.prototype).forEach((prop) => {
         if (/^constructor$/.test(prop)) {
             // ignore
             return;
         }
 
-        let descriptor = Object.getOwnPropertyDescriptor(moduleConstructor, prop)!;
+        let descriptor = Object.getOwnPropertyDescriptor(moduleConstructor.prototype, prop)!;
 
         if (typeof descriptor.value === 'function') {
             descriptor = {
                 ...descriptor,
+                configurable: true,
                 value: descriptor.value.bind(module),
             };
+        }
+
+        if (typeof descriptor.get === 'function') {
+            descriptor = {
+                ...descriptor,
+                configurable: true,
+                get: descriptor.get.bind(module),
+            };
+        }
+
+        if (typeof descriptor.set === 'function') {
+            descriptor = {
+                ...descriptor,
+                configurable: true,
+                set: descriptor.set.bind(module),
+            };
+        }
+
+        // delete old property
+        const old = Object.getOwnPropertyDescriptor(sdk, prop);
+        if (old !== undefined) {
+            delete (sdk as any)[prop];
         }
 
         Object.defineProperty(sdk, prop, descriptor);
@@ -51,9 +75,14 @@ export function mount<T extends SynFuturesV3, U extends BaseInterface>(
             return;
         }
 
+        // delete old property
+        const old = Object.getOwnPropertyDescriptor(sdk, prop);
+        if (old !== undefined) {
+            delete (sdk as any)[prop];
+        }
+
         Object.defineProperty(sdk, prop, {
-            enumerable: false,
-            configurable: false,
+            configurable: true,
             get: function () {
                 return (module as any)[prop];
             },

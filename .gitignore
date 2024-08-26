@@ -132,3 +132,6 @@ dist
 # build
 build/*
 .idea
+
+# IDE
+.vscode
