@@ -43,7 +43,7 @@ export type DefaultSynFuturesV3 = Combine<
     [SynFuturesV3, CachePlugin, GatePlugin, ObserverPlugin, SimulatePlugin, InstrumentPlugin, TxPlugin, ConfigPlugin]
 >;
 
-export type MountedDefaultSynFuturesV3 = Combine<
+export type LegacySynFuturesV3 = Combine<
     [
         DefaultSynFuturesV3,
         CacheInterface,
@@ -56,28 +56,19 @@ export type MountedDefaultSynFuturesV3 = Combine<
     ]
 >;
 
-export type WrappedMountedDefaultSynFutureV3 = Combine<
-    [Omit<MountedDefaultSynFuturesV3, keyof InverseInterface>, InverseInterface]
->;
+export type WrappedSynFutureV3 = Combine<[Omit<LegacySynFuturesV3, keyof InverseInterface>, InverseInterface]>;
 
 export class SynFuturesV3 {
-    private static instances = new Map<number, MountedDefaultSynFuturesV3>();
-    private static wrappedInstances = new Map<number, WrappedMountedDefaultSynFutureV3>();
+    private static instances = new Map<number, LegacySynFuturesV3>();
+    private static wrappedInstances = new Map<number, WrappedSynFutureV3>();
 
-    static getInstance(chanIdOrName: CHAIN_ID | string): MountedDefaultSynFuturesV3 {
+    static getInstance(chanIdOrName: CHAIN_ID | string): LegacySynFuturesV3 {
         const chainId = ChainContext.getChainInfo(chanIdOrName).chainId;
 
         let instance = SynFuturesV3.instances.get(chainId);
 
         if (!instance) {
-            const _instance = new SynFuturesV3(chanIdOrName)
-                .use(cachePlugin())
-                .use(gatePlugin())
-                .use(observerPlugin())
-                .use(simulatePlugin())
-                .use(instrumentPlugin())
-                .use(txPlugin())
-                .use(configPlugin());
+            const _instance = new SynFuturesV3(chanIdOrName).useDefault();
 
             // In order to be fully compatible with the old usage,
             // member functions and member variables are mounted on the SDK instance
@@ -89,13 +80,13 @@ export class SynFuturesV3 {
             mount(_instance, TxModule, _instance.tx);
             mount(_instance, ConfigModule, _instance.config);
 
-            SynFuturesV3.instances.set(chainId, (instance = _instance as unknown as MountedDefaultSynFuturesV3));
+            SynFuturesV3.instances.set(chainId, (instance = _instance as unknown as LegacySynFuturesV3));
         }
 
         return instance;
     }
 
-    static getWrappedInstance(chanIdOrName: CHAIN_ID | string): WrappedMountedDefaultSynFutureV3 {
+    static getWrappedInstance(chanIdOrName: CHAIN_ID | string): WrappedSynFutureV3 {
         const chainId = ChainContext.getChainInfo(chanIdOrName).chainId;
 
         let wrappedInstance = SynFuturesV3.wrappedInstances.get(chainId);
@@ -107,10 +98,7 @@ export class SynFuturesV3 {
             // member functions and member variables are mounted on the SDK instance
             mount(_instance, InverseModule, _instance.inverse);
 
-            SynFuturesV3.wrappedInstances.set(
-                chainId,
-                (wrappedInstance = _instance as unknown as WrappedMountedDefaultSynFutureV3),
-            );
+            SynFuturesV3.wrappedInstances.set(chainId, (wrappedInstance = _instance as unknown as WrappedSynFutureV3));
         }
 
         return wrappedInstance;
@@ -129,5 +117,19 @@ export class SynFuturesV3 {
      */
     use<U>(plugin: SynFutureV3Plugin<this, U>): this & U {
         return plugin.install(this);
+    }
+
+    /**
+     * Use default plugins
+     * @returns Installed sdk instance
+     */
+    useDefault(): DefaultSynFuturesV3 {
+        return this.use(cachePlugin())
+            .use(gatePlugin())
+            .use(observerPlugin())
+            .use(simulatePlugin())
+            .use(instrumentPlugin())
+            .use(txPlugin())
+            .use(configPlugin()) as unknown as DefaultSynFuturesV3;
     }
 }
