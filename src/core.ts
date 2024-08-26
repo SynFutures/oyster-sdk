@@ -8,6 +8,7 @@ import {
     instrumentPlugin,
     txPlugin,
     configPlugin,
+    inversePlugin,
     CachePlugin,
     GatePlugin,
     ObserverPlugin,
@@ -22,6 +23,7 @@ import {
     InstrumentInterface,
     TxInterface,
     ConfigInterface,
+    InverseInterface,
     CacheModule,
     GateModule,
     ObserverModule,
@@ -29,6 +31,7 @@ import {
     InstrumentModule,
     TxModule,
     ConfigModule,
+    InverseModule,
 } from './modules';
 import { Combine, mount } from './common';
 
@@ -53,8 +56,13 @@ export type MountedDefaultSynFuturesV3 = Combine<
     ]
 >;
 
+export type WrappedMountedDefaultSynFutureV3 = Combine<
+    [Omit<MountedDefaultSynFuturesV3, keyof InverseInterface>, InverseInterface]
+>;
+
 export class SynFuturesV3 {
     private static instances = new Map<number, MountedDefaultSynFuturesV3>();
+    private static wrappedInstances = new Map<number, WrappedMountedDefaultSynFutureV3>();
 
     static getInstance(chanIdOrName: CHAIN_ID | string): MountedDefaultSynFuturesV3 {
         const chainId = ChainContext.getChainInfo(chanIdOrName).chainId;
@@ -85,6 +93,27 @@ export class SynFuturesV3 {
         }
 
         return instance;
+    }
+
+    static getWrappedInstance(chanIdOrName: CHAIN_ID | string): WrappedMountedDefaultSynFutureV3 {
+        const chainId = ChainContext.getChainInfo(chanIdOrName).chainId;
+
+        let wrappedInstance = SynFuturesV3.wrappedInstances.get(chainId);
+
+        if (!wrappedInstance) {
+            const instance = SynFuturesV3.getInstance(chainId).use(inversePlugin());
+
+            // In order to be fully compatible with the old usage,
+            // member functions and member variables are mounted on the SDK instance
+            mount(instance, InverseModule, instance.inverse);
+
+            SynFuturesV3.wrappedInstances.set(
+                chainId,
+                (wrappedInstance = instance as unknown as WrappedMountedDefaultSynFutureV3),
+            );
+        }
+
+        return wrappedInstance;
     }
 
     ctx: ChainContext;
