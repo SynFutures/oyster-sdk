@@ -15,6 +15,8 @@ export interface LocalGanacheOptions {
     accountNumber?: number;
 }
 
+let server: any = null;
+
 export function startLocal(opts: LocalGanacheOptions): string {
     if (!opts.accountNumber) {
         opts.accountNumber = 10;
@@ -40,9 +42,11 @@ export function startLocal(opts: LocalGanacheOptions): string {
         },
         mnemonic: opts.mnemonic || '',
     };
-    const server = Ganache.server(options);
-    server.listen(opts.localPort || 8545, () => {
-        console.log('Ganache forked chain is running on http://localhost:8545');
-    });
+    if (!server) {
+        server = Ganache.server(options);
+        server.listen(opts.localPort || 8545, () => {
+            console.log(`Ganache started at http://localhost:${opts.localPort || 8545}`);
+        });
+    }
     return `http://localhost:${opts.localPort || 8545}`;
 }

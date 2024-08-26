@@ -31,11 +31,8 @@ describe('Ganache Test', () => {
         const unsignedTx = await wallet.populateTransaction({
             to: toAddress,
             value: ethers.utils.parseEther('1'),
-            gasPrice: ethers.utils.parseUnits('1', 'gwei'),
-            gasLimit: 21000,
         });
         const res = await wallet.sendTransaction(unsignedTx);
-        const tx = await res.wait();
-        console.log(tx.transactionHash);
+        await res.wait();
     });
 });
