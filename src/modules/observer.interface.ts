@@ -28,6 +28,20 @@ export interface ObserverInterface extends BaseInterface {
     ): Promise<PairLevelAccountModel>;
 
     /**
+     * Update pair level account infos
+     * @param target the target address
+     * @param instrument the instrument address
+     * @param expiry the expiry
+     * @param overrides ethers overrides
+     */
+    updatePairLevelAccount(
+        target: string,
+        instrument: string,
+        expiry: number,
+        overrides?: CallOverrides,
+    ): Promise<PairLevelAccountModel>;
+
+    /**
      *Get all instruments
      * @param batchSize the batch size,default value is 10
      * @param overrides overrides with ethers types
