@@ -1,7 +1,8 @@
 import { BigNumber, Signer } from 'ethers';
 import { BatchOrderSizeDistribution, Side } from '../../src/types/enum';
-import { PairModel, PositionModel, RangeModel, WrappedPositionModel } from '../../src/models';
+import { PairModel, PositionModel, RangeModel, WrappedPositionModel, WrappedOrderModel } from '../../src/models';
 import { InstrumentIdentifier, SimulateOrderResult, SimulateTradeResult } from '../../src/types/params';
+import { Quotation } from '../../src/types';
 
 export interface ITradeRequest {
     signer: Signer;
@@ -55,6 +56,7 @@ export interface ISimulatePlaceOrderResult extends SimulateOrderResult {
     origin: SimulateOrderResult; // origin result
     marginRequired: BigNumber; // [add] equal to balance from SimulateOrderResult, TOOD by @jinxi, maybe rename old [balance]?
     estimatedTradeValue: BigNumber; // [add] estimated TradeValue for this order
+    limitPrice: BigNumber; // [add] TickMath.getWadAtTick(tickNumber)
 }
 
 export interface IAddLiquidityRequest {
@@ -207,4 +209,44 @@ export interface IBatchPlaceScaledLimitOrderResult extends BatchPlaceScaledLimit
         minOrderSize: BigNumber;
         tradeValue: BigNumber; // [add] tick price * baseSize
     }[];
+}
+
+export interface IBatchCancelOrderRequest {
+    signer: Signer;
+    pair: PairModel; // TODO by @jinxi, maybe WrappedPairModel?
+    ordersToCancel: WrappedOrderModel[];
+    deadline: number;
+}
+
+export interface ICrossMarketOrderRequest {
+    signer: Signer;
+    traderAddr: string;
+    position: WrappedPositionModel; // TODO by @jinxi: or pair?
+    side: Side;
+    leverage: BigNumber;
+    slippage: number;
+    deadline: number;
+
+    // [price] from website, input orderTick or orderPrice
+    orderTick?: number; // need align input price to tick
+    orderPrice?: BigNumber; // or pass price to sdk to calculate
+
+    // [size] from website, input baseAmount or quoteAmount
+    baseAmount?: BigNumber; // base size input from website
+    quoteAmount?: BigNumber; // input by quote will calculate base amount send to deep module
+}
+
+interface CrossMarketOrderResult {
+    canPlaceOrder: boolean;
+    tradeQuotation: Quotation;
+    tradeSize: BigNumber;
+    orderSize: BigNumber;
+    tradeSimulation: SimulateTradeResult;
+    orderSimulation: SimulateOrderResult;
+}
+export interface ICrossMarketOrderResult extends CrossMarketOrderResult {
+    origin: CrossMarketOrderResult; // origin result
+    tradeSimulation: ISimulateTradeResult; // [modify] inverse display
+    orderSimulation: ISimulatePlaceOrderResult; // [modify] inverse display
+    totalMinSize: BigNumber; // [add] tradeSize + orderSize
 }

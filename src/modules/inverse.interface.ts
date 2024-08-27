@@ -63,8 +63,17 @@ export interface InverseInterface extends BaseInterface {
 
     // simulateBatchPlaceScaledLimitOrder(params: IBatchPlaceScaledLimitOrderRequest): IBatchPlaceScaledLimitOrderResult;
 
-    // batchPlaceScaledLimitOrder(
+    //  batchPlaceScaledLimitOrder(
     //     params: IBatchPlaceScaledLimitOrderRequest,
     //     simulateResult?: IBatchPlaceScaledLimitOrderResult, // TODO: if not pass simulateResult, will simulate check before send tx
+    // ): Promise<ContractTransaction | providers.TransactionReceipt>;
+
+    // batchCancelOrder(params: IBatchCancelOrderRequest): Promise<ContractTransaction | providers.TransactionReceipt>;
+
+    // simulateCrossMarketOrder(params: ICrossMarketOrderRequest): ICrossMarketOrderResult;
+
+    // placeCrossMarketOrder(
+    //     params: ICrossMarketOrderRequest,
+    //     simulateResult?: ICrossMarketOrderResult, // TODO: if not pass simulateResult, will simulate check before send tx
     // ): Promise<ContractTransaction | providers.TransactionReceipt>;
 }
