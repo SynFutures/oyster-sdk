@@ -122,6 +122,7 @@ export class PairLevelAccountModel {
     }
 
     public getMainPosition(): PositionModel {
+        // TODO by @jinxi: add a cache and read from it?
         return PositionModel.fromRawPosition(this.rootPair, this.account.position);
     }
 
