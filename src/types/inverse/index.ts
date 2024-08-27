@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { BigNumber } from 'ethers';
-import { ONE, safeWDiv } from '../../math';
+import { ONE, safeWDiv, TickMath, wmul } from '../../math';
 import { WrappedPairModel, PairModel } from '../../models';
 import { Side } from '../enum';
 
@@ -105,5 +105,61 @@ export class WrappedPlaceOrderRequest extends PlaceOrderRequestBase<WrappedPairM
             price ? { price } : { tick: tick! },
             this._amountInfo,
         );
+    }
+}
+
+abstract class SimulateOrderResultBase {
+    constructor(
+        public readonly baseSize: BigNumber,
+        public readonly balance: BigNumber,
+        public readonly leverageWad: BigNumber,
+        public readonly marginToDepositWad: BigNumber,
+        public readonly minOrderValue: BigNumber,
+        public readonly minFeeRebate: BigNumber,
+        public readonly tick: number,
+    ) {}
+
+    get marginRequired(): BigNumber {
+        return this.balance;
+    }
+
+    get estimatedTradeValue(): BigNumber {
+        return wmul(TickMath.getWadAtTick(this.tick), this.baseSize);
+    }
+}
+
+export class SimulateOrderResult extends SimulateOrderResultBase {
+    get wrap(): WrappedSimulateOrderResult {
+        return new WrappedSimulateOrderResult(
+            this.baseSize,
+            this.balance,
+            this.leverageWad,
+            this.marginToDepositWad,
+            this.minOrderValue,
+            this.minFeeRebate,
+            this.tick,
+        );
+    }
+
+    get limitPrice(): BigNumber {
+        return TickMath.getWadAtTick(this.tick);
+    }
+}
+
+export class WrappedSimulateOrderResult extends SimulateOrderResultBase {
+    get unWrap(): SimulateOrderResult {
+        return new SimulateOrderResult(
+            this.baseSize,
+            this.balance,
+            this.leverageWad,
+            this.marginToDepositWad,
+            this.minOrderValue,
+            this.minFeeRebate,
+            this.tick,
+        );
+    }
+
+    get limitPrice(): BigNumber {
+        return safeWDiv(ONE, TickMath.getWadAtTick(this.tick));
     }
 }
