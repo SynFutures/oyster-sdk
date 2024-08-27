@@ -179,7 +179,7 @@ export class WrappedPositionModel extends PositionModel {
         throw new Error('invalid wrap');
     }
 
-    get unwrap(): PositionModel {
+    get unWrap(): PositionModel {
         return new PositionModel(this.data);
     }
 

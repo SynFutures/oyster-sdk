@@ -23,7 +23,7 @@ export interface ITradeRequest {
     referralCode?: string;
 }
 
-// TODO: Result class with unwrap()/wrap() @sam
+// TODO: Result class with unWrap()/wrap() @sam
 export interface ISimulateTradeResult extends SimulateTradeResult {
     origin: SimulateTradeResult; // origin result
     tradePrice: BigNumber; // [modify] inverse display
@@ -50,7 +50,7 @@ export interface IPlaceOrderRequest {
     referralCode?: string;
 }
 
-// TODO: Result class with unwrap()/wrap() @sam
+// TODO: Result class with unWrap()/wrap() @sam
 export interface ISimulatePlaceOrderResult extends SimulateOrderResult {
     origin: SimulateOrderResult; // origin result
     marginRequired: BigNumber; // [add] equal to balance from SimulateOrderResult, TOOD by @jinxi, maybe rename old [balance]?
@@ -89,7 +89,7 @@ export interface SimulateAddLiquidityResult {
     equivalentAlpha: BigNumber;
 }
 
-// TODO: Result class with unwrap()/wrap() @sam
+// TODO: Result class with unWrap()/wrap() @sam
 export interface ISimulateAddLiquidityResult extends SimulateAddLiquidityResult {
     origin: SimulateAddLiquidityResult; // origin result
     lowerPrice: BigNumber; // [modify] inverse display
@@ -124,7 +124,7 @@ interface AdjustMarginResult {
     leverageWad: BigNumber;
 }
 
-// TODO: Result class with unwrap()/wrap() @sam
+// TODO: Result class with unWrap()/wrap() @sam
 export interface ISimulateAdjustMarginResult extends AdjustMarginResult {
     origin: AdjustMarginResult; // origin result
     simulationMainPosition: WrappedPositionModel; // [modify] inverse display

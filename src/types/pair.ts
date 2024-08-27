@@ -45,7 +45,7 @@ export interface Amm {
 export const EMPTY_AMM: Amm = {
     expiry: 0,
     timestamp: 0,
-    status: 0,
+    status: Status.TRADING,
     tick: 0,
     sqrtPX96: ZERO,
     liquidity: ZERO,

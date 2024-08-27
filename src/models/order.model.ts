@@ -107,7 +107,7 @@ export class WrappedOrderModel extends OrderModel {
         throw new Error('invalid wrap');
     }
 
-    get unwrap(): OrderModel {
+    get unWrap(): OrderModel {
         return new OrderModel(this.data);
     }
 
