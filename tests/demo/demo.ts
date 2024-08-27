@@ -1,22 +1,21 @@
 import { BigNumber, Signer } from 'ethers';
-import { InverseInterface, InverseModule } from './modules';
-import { SynFuturesV3 } from './synfuturesV3Core';
+import { InverseInterface } from '../../src/modules';
+import { SynFuturesV3 } from '../../src/core';
+import { MarketType, Side } from '../../src/types';
 import {
     ITradeRequest,
-    Side,
     IPlaceOrderRequest,
     IAddLiquidityRequest,
-    MarketType,
     IAdjustMarginRequest,
     IRemoveLiquidityRequest,
-} from './types';
-import { PairModel, RangeModel, WrappedPositionModel } from './models';
-import { PERP_EXPIRY } from './constants';
+} from './params';
+import { PairModel, RangeModel, WrappedPositionModel } from '../../src/models';
+import { PERP_EXPIRY } from '../../src/constants';
 
 export async function main(): Promise<void> {
     // TODO by jinxi: replace with new sdk and inverse module entry
-    const sdk = SynFuturesV3.getInstance('base');
-    const inverseDemoModule = new InverseModule(sdk) as InverseInterface;
+    const sdk = SynFuturesV3.getWrappedInstance('base');
+    const inverseDemoModule = (sdk as any).inverse;
 
     await demoTrade(inverseDemoModule);
     await demoPlaceOrder(inverseDemoModule);

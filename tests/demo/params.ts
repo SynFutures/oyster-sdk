@@ -1,7 +1,7 @@
 import { BigNumber, Signer } from 'ethers';
-import { BatchOrderSizeDistribution, Side } from '../enum';
-import { PairModel, PositionModel, RangeModel, WrappedPositionModel } from '../../models';
-import { InstrumentIdentifier, SimulateOrderResult, SimulateTradeResult } from '../params';
+import { BatchOrderSizeDistribution, Side } from '../../src/types/enum';
+import { PairModel, PositionModel, RangeModel, WrappedPositionModel } from '../../src/models';
+import { InstrumentIdentifier, SimulateOrderResult, SimulateTradeResult } from '../../src/types/params';
 
 export interface ITradeRequest {
     signer: Signer;
