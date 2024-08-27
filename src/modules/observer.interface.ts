@@ -24,7 +24,7 @@ export interface ObserverInterface extends BaseInterface {
         target: string,
         instrument: string,
         expiry: number,
-        useCache: boolean,
+        useCache?: boolean,
     ): Promise<PairLevelAccountModel>;
 
     /**
