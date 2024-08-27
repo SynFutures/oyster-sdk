@@ -117,6 +117,7 @@ abstract class SimulateOrderResultBase {
         public readonly minOrderValue: BigNumber,
         public readonly minFeeRebate: BigNumber,
         public readonly tick: number,
+        public readonly isInverse: boolean,
     ) {}
 
     get marginRequired(): BigNumber {
@@ -138,6 +139,7 @@ export class SimulateOrderResult extends SimulateOrderResultBase {
             this.minOrderValue,
             this.minFeeRebate,
             this.tick,
+            this.isInverse,
         );
     }
 
@@ -156,10 +158,12 @@ export class WrappedSimulateOrderResult extends SimulateOrderResultBase {
             this.minOrderValue,
             this.minFeeRebate,
             this.tick,
+            this.isInverse,
         );
     }
 
     get limitPrice(): BigNumber {
-        return safeWDiv(ONE, TickMath.getWadAtTick(this.tick));
+        const limitPrice = TickMath.getWadAtTick(this.tick);
+        return this.isInverse ? safeWDiv(ONE, limitPrice) : limitPrice;
     }
 }
