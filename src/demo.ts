@@ -9,8 +9,10 @@ import {
     MarketType,
     IAdjustMarginRequest,
     IRemoveLiquidityRequest,
+    ICrossMarketOrderRequest,
+    IBatchCancelOrderRequest,
 } from './types';
-import { PairModel, RangeModel, WrappedPositionModel } from './models';
+import { PairModel, RangeModel, WrappedOrderModel, WrappedPositionModel } from './models';
 import { PERP_EXPIRY } from './constants';
 
 export async function main(): Promise<void> {
@@ -23,6 +25,8 @@ export async function main(): Promise<void> {
     await demoAddLiquidity(inverseDemoModule);
     await demoAdjustMargin(inverseDemoModule);
     await demoRemoveLiquidity(inverseDemoModule);
+    await demoBatchCancelOrder(inverseDemoModule);
+    await demoCrossMarketOrder(inverseDemoModule);
 }
 
 async function demoTrade(inverseModule: InverseInterface): Promise<void> {
@@ -181,6 +185,71 @@ async function demoRemoveLiquidity(inverseModule: InverseInterface): Promise<voi
     });
 
     const txResult = await inverseModule.removeLiquidity(paramsInput, simulateResult);
+
+    console.log('result tx:', txResult);
+}
+
+async function demoBatchCancelOrder(inverseModule: InverseInterface): Promise<void> {
+    // TODO: mock signer for testing, replace to the actual signer
+    const signer = null as unknown as Signer;
+    const pair = null as unknown as PairModel;
+    const ordersToCancel = null as unknown as WrappedOrderModel[];
+    // input like website
+    const paramsInput: IBatchCancelOrderRequest = {
+        signer,
+        pair,
+        ordersToCancel: ordersToCancel,
+        deadline: 5,
+    };
+
+    const txResult = await inverseModule.batchCancelOrder(paramsInput);
+
+    console.log('result tx:', txResult);
+}
+
+async function demoCrossMarketOrder(inverseModule: InverseInterface): Promise<void> {
+    // TODO: mock position for testing, replace to the actual position
+    const position = null as unknown as WrappedPositionModel;
+    const signer = null as unknown as Signer;
+
+    const side = Side.LONG;
+    // input like website
+    const paramsInput: ICrossMarketOrderRequest = {
+        signer,
+        side: side,
+        baseAmount: BigNumber.from(1),
+        leverage: BigNumber.from(5),
+        orderPrice: BigNumber.from(63573.183152),
+        position: position,
+        traderAddr: '0x0',
+        slippage: 10,
+        deadline: 5,
+    };
+    const simulateResult = inverseModule.simulateCrossMarketOrder(paramsInput);
+
+    // output like website
+    console.log(`simulate result:`, {
+        MarketTrade: {
+            Title: `A market trade for ${side} ${simulateResult.tradeSize} will be executed at ${simulateResult.tradeSimulation.tradePrice}.`,
+            'Margin Required': `${simulateResult.tradeSimulation.margin}`,
+            'Est. P&L': simulateResult.tradeSimulation.realized,
+            'Price Impact': simulateResult.tradeSimulation.priceImpactWad,
+            'Est. Trade Value': simulateResult.tradeSimulation.estimatedTradeValue,
+            'Trading Fee': simulateResult.tradeSimulation.tradingFee,
+            'Additional Fee': simulateResult.tradeSimulation.stabilityFee,
+            marginToDeposit: simulateResult.tradeSimulation.marginToDepositWad,
+        },
+        OrderTrade: {
+            Title: `A limit order for ${side} ${simulateResult.orderSize} will be placed at ${simulateResult.orderSimulation.limitPrice}.`,
+            'Margin Required': `${simulateResult.orderSimulation.marginRequired}`,
+            'Est. Trade Value': simulateResult.orderSimulation.estimatedTradeValue,
+            'Fee Rebate': simulateResult.orderSimulation.minFeeRebate,
+            marginToDeposit: simulateResult.orderSimulation.marginToDepositWad,
+        },
+        // ...
+    });
+
+    const txResult = await inverseModule.placeCrossMarketOrder(paramsInput, simulateResult);
 
     console.log('result tx:', txResult);
 }
