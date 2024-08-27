@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { BigNumber } from 'ethers';
 import { BlockInfo, ZERO } from '@derivation-tech/web3-core';
-import { Amm, ContractRecord, Pearl, Status } from '../types';
-import { Q96, r2w, sqrtX96ToWad, TickMath, wadToSqrtX96, wmul } from '../math';
+import { Amm, ContractRecord, Pearl, EMPTY_AMM } from '../types';
+import { Q96, r2w, sqrtX96ToWad, TickMath, wadToSqrtX96, wmul, safeWDiv, ONE } from '../math';
 import { formatExpiry, withinOrderLimit } from '../common';
 import { ORDER_SPACING } from '../constants';
 
@@ -47,44 +47,41 @@ export class PairState {
     }
 }
 
-export class PairModel {
-    public readonly rootInstrument: InstrumentModel;
+export interface PairData {
+    rootInstrument: InstrumentModel;
     state: PairState;
-
     markPrice: BigNumber;
+}
 
-    constructor(rootInstrument: InstrumentModel, amm: Amm, markPrice: BigNumber, blockInfo?: BlockInfo) {
-        this.rootInstrument = rootInstrument;
-        this.state = new PairState(amm, blockInfo);
-        this.markPrice = markPrice;
-    }
+export class PairModel {
+    constructor(protected readonly data: PairData) {}
 
     public static minimalPairWithAmm(instrumentModel: InstrumentModel, initPairPrice: BigNumber): PairModel {
-        const amm = {
-            expiry: 0,
-            timestamp: 0,
-            status: Status.TRADING,
-            tick: 0,
-            sqrtPX96: ZERO,
-            liquidity: ZERO,
-            totalLiquidity: ZERO,
-            involvedFund: ZERO,
-            insuranceFund: ZERO,
-            openInterests: ZERO,
-            feeIndex: ZERO,
-            protocolFee: ZERO,
-            totalLong: ZERO,
-            totalShort: ZERO,
-            longSocialLossIndex: ZERO,
-            shortSocialLossIndex: ZERO,
-            longFundingIndex: ZERO,
-            shortFundingIndex: ZERO,
-            settlementPrice: ZERO,
-        };
+        const amm = { ...EMPTY_AMM };
         amm.sqrtPX96 = wadToSqrtX96(initPairPrice);
         amm.tick = TickMath.getTickAtPWad(initPairPrice);
 
-        return new PairModel(instrumentModel, amm, ZERO);
+        return new PairModel({
+            rootInstrument: instrumentModel,
+            state: new PairState(amm),
+            markPrice: ZERO,
+        });
+    }
+
+    get wrap(): WrappedPairModel {
+        return new WrappedPairModel(this.data);
+    }
+
+    get rootInstrument(): InstrumentModel {
+        return this.data.rootInstrument;
+    }
+
+    get state(): PairState {
+        return this.data.state;
+    }
+
+    get markPrice(): BigNumber {
+        return this.data.markPrice;
     }
 
     get isInverse(): boolean {
@@ -112,6 +109,7 @@ export class PairModel {
         return this.amm.openInterests;
     }
 
+    // TODO: @samlior inverse?
     get placeOrderLimit(): {
         upperTick: number;
         lowerTick: number;
@@ -138,5 +136,27 @@ export class PairModel {
     getMinLiquidity(px96?: BigNumber): BigNumber {
         const sqrtPX96 = px96 ? px96 : this.amm.sqrtPX96;
         return this.rootInstrument.minRangeValue.mul(Q96).div(sqrtPX96.mul(2));
+    }
+}
+
+export class WrappedPairModel extends PairModel {
+    get wrap(): WrappedPairModel {
+        throw new Error('invalid wrap');
+    }
+
+    get unWrap(): PairModel {
+        return new PairModel(this.data);
+    }
+
+    get markPrice(): BigNumber {
+        return this.isInverse ? safeWDiv(ONE, super.markPrice) : super.markPrice;
+    }
+
+    get fairPriceWad(): BigNumber {
+        return this.isInverse ? safeWDiv(ONE, super.fairPriceWad) : super.fairPriceWad;
+    }
+
+    get benchmarkPrice(): BigNumber {
+        return this.isInverse ? safeWDiv(ONE, super.benchmarkPrice) : super.benchmarkPrice;
     }
 }

@@ -222,7 +222,7 @@ export class ObserverModule implements ObserverInterface {
         target: string,
         instrument: string,
         expiry: number,
-        useCache: boolean,
+        useCache = false,
     ): Promise<PairLevelAccountModel> {
         instrument = instrument.toLowerCase();
         target = target.toLowerCase();

@@ -10,7 +10,8 @@
         "prebuild": "rimraf build",
         "build": "tsc -p tsconfig.json",
         "prepack": "npm run build",
-        "typedoc": "rimraf docs && npx typedoc --options typedoc.json"
+        "typedoc": "rimraf docs && npx typedoc --options typedoc.json",
+        "test": "jest"
     },
     "homepage": "https://oyster.synfutures.com/",
     "repository": {

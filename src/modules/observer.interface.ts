@@ -24,7 +24,21 @@ export interface ObserverInterface extends BaseInterface {
         target: string,
         instrument: string,
         expiry: number,
-        useCache: boolean,
+        useCache?: boolean,
+    ): Promise<PairLevelAccountModel>;
+
+    /**
+     * Update pair level account infos
+     * @param target the target address
+     * @param instrument the instrument address
+     * @param expiry the expiry
+     * @param overrides ethers overrides
+     */
+    updatePairLevelAccount(
+        target: string,
+        instrument: string,
+        expiry: number,
+        overrides?: CallOverrides,
     ): Promise<PairLevelAccountModel>;
 
     /**

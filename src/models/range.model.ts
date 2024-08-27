@@ -131,7 +131,7 @@ export class WrappedRangeModel extends RangeModel {
         throw new Error('invalid wrap');
     }
 
-    get unwrap(): RangeModel {
+    get unWrap(): RangeModel {
         return new RangeModel(this.data);
     }
 

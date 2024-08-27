@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { BigNumber } from 'ethers';
 import { BlockInfo } from '@derivation-tech/web3-core';
 import {
@@ -67,6 +68,7 @@ export interface InstrumentData {
     markPrices: Map<number, BigNumber>;
     spotPrice: BigNumber;
 }
+
 export class InstrumentModel {
     constructor(protected readonly data: InstrumentData) {}
 
@@ -141,7 +143,14 @@ export class InstrumentModel {
     get pairs(): Map<number, PairModel> {
         const pairs = new Map<number, PairModel>();
         for (const [k, v] of this.state.pairStates) {
-            pairs.set(k, new PairModel(this, v.amm, this.markPrices.get(k) ?? ZERO, v.blockInfo));
+            pairs.set(
+                k,
+                new PairModel({
+                    rootInstrument: this,
+                    state: v,
+                    markPrice: this.markPrices.get(k) ?? ZERO,
+                }),
+            );
         }
         return pairs;
     }
@@ -152,12 +161,11 @@ export class InstrumentModel {
 
     getPairModel(expiry: number): PairModel {
         const state = this.state.pairStates.get(expiry);
-        return new PairModel(
-            this,
-            state ? state.amm : EMPTY_AMM,
-            this.markPrices.get(expiry) ?? ZERO,
-            state ? state.blockInfo : undefined,
-        );
+        return new PairModel({
+            rootInstrument: this,
+            state: state ? state : new PairState(EMPTY_AMM),
+            markPrice: this.markPrices.get(expiry) ?? ZERO,
+        });
     }
 
     updateInstrumentState(state: InstrumentState, spotPrice: BigNumber): void {
