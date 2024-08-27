@@ -1,6 +1,6 @@
 import { BigNumber, Signer } from 'ethers';
 import { BatchOrderSizeDistribution, Side } from '../enum';
-import { PairModel, PositionModel, RangeModel, WrappedPositionModel } from '../../models';
+import { PairModel, PositionModel, RangeModel, WrappedOrderModel, WrappedPositionModel } from '../../models';
 import { InstrumentIdentifier, SimulateOrderResult, SimulateTradeResult } from '../params';
 
 export interface ITradeRequest {
@@ -207,4 +207,11 @@ export interface IBatchPlaceScaledLimitOrderResult extends BatchPlaceScaledLimit
         minOrderSize: BigNumber;
         tradeValue: BigNumber; // [add] tick price * baseSize
     }[];
+}
+
+export interface IBatchCancelOrderRequest {
+    signer: Signer;
+    pair: PairModel; // TODO by @jinxi, maybe WrappedPairModel?
+    ordersToCancel: WrappedOrderModel[];
+    deadline: number;
 }

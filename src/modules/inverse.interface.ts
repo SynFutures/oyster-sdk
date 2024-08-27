@@ -16,6 +16,7 @@ import {
     IRemoveLiquidityRequest,
     IBatchPlaceScaledLimitOrderRequest,
     IBatchPlaceScaledLimitOrderResult,
+    IBatchCancelOrderRequest,
 } from '../types/inverse';
 
 export interface InverseInterface extends BaseInterface {
@@ -81,4 +82,6 @@ export interface InverseInterface extends BaseInterface {
         params: IBatchPlaceScaledLimitOrderRequest,
         simulateResult?: IBatchPlaceScaledLimitOrderResult, // TODO: if not pass simulateResult, will simulate check before send tx
     ): Promise<ContractTransaction | providers.TransactionReceipt>;
+
+    batchCancelOrder(params: IBatchCancelOrderRequest): Promise<ContractTransaction | providers.TransactionReceipt>;
 }
