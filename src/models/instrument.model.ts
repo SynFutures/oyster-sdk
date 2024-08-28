@@ -20,7 +20,7 @@ import {
     PERP_EXPIRY,
     RATIO_BASE,
 } from '../constants';
-import { ONE, r2w, safeWDiv, WAD, wdiv, wmulDown, ZERO } from '../math';
+import { WAD, r2w, safeWDiv, wdiv, wmulDown, ZERO } from '../math';
 
 import { AccountState } from './account.model';
 import { PairModel, PairState } from './pair.model';
@@ -227,7 +227,7 @@ export class WrappedInstrumentModel extends InstrumentModel {
     }
 
     get spotPrice(): BigNumber {
-        return this.isInverse ? safeWDiv(ONE, super.spotPrice) : super.spotPrice;
+        return this.isInverse ? safeWDiv(WAD, super.spotPrice) : super.spotPrice;
     }
 
     get markPrices(): Map<number, BigNumber> {
@@ -236,7 +236,7 @@ export class WrappedInstrumentModel extends InstrumentModel {
         }
         const markPrices = new Map<number, BigNumber>();
         for (const key of super.markPrices.keys()) {
-            markPrices.set(key, safeWDiv(ONE, super.markPrices.get(key)!));
+            markPrices.set(key, safeWDiv(WAD, super.markPrices.get(key)!));
         }
         return markPrices;
     }
@@ -259,6 +259,6 @@ export class WrappedInstrumentModel extends InstrumentModel {
     }
 
     getBenchmarkPrice(expiry: number): BigNumber {
-        return this.isInverse ? safeWDiv(ONE, super.getBenchmarkPrice(expiry)) : super.getBenchmarkPrice(expiry);
+        return this.isInverse ? safeWDiv(WAD, super.getBenchmarkPrice(expiry)) : super.getBenchmarkPrice(expiry);
     }
 }

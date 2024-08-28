@@ -1,7 +1,7 @@
 import { BigNumber } from 'ethers';
 import { Order, Side } from '../types';
 import { orderKey, parseOrderTickNonce } from '../common';
-import { TickMath, wdiv, wmul, ZERO, ONE, safeWDiv } from '../math';
+import { TickMath, wdiv, wmul, ZERO, WAD, safeWDiv } from '../math';
 
 import { PositionModel } from './position.model';
 import { PairModel } from './pair.model';
@@ -126,6 +126,6 @@ export class WrappedOrderModel extends OrderModel {
     }
 
     get limitPrice(): BigNumber {
-        return this.isInverse ? safeWDiv(ONE, super.limitPrice) : super.limitPrice;
+        return this.isInverse ? safeWDiv(WAD, super.limitPrice) : super.limitPrice;
     }
 }

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { BigNumber } from 'ethers';
-import { ONE, safeWDiv, TickMath, wmul } from '../../math';
+import { WAD, safeWDiv, TickMath, wmul } from '../../math';
 import { WrappedPairModel, PairModel } from '../../models';
 import { Side } from '../enum';
 
@@ -44,7 +44,7 @@ export class PlaceOrderRequest extends PlaceOrderRequestBase<PairModel> {
             'tick' in this.priceInfo
                 ? { ...this.priceInfo }
                 : {
-                      price: this.isInverse ? safeWDiv(ONE, this.priceInfo.price) : this.priceInfo.price,
+                      price: this.isInverse ? safeWDiv(WAD, this.priceInfo.price) : this.priceInfo.price,
                   };
 
         return new WrappedPlaceOrderRequest(
@@ -72,7 +72,7 @@ export class WrappedPlaceOrderRequest extends PlaceOrderRequestBase<WrappedPairM
             'tick' in this.priceInfo
                 ? { ...this.priceInfo }
                 : {
-                      price: this.isInverse ? safeWDiv(ONE, this.priceInfo.price) : this.priceInfo.price,
+                      price: this.isInverse ? safeWDiv(WAD, this.priceInfo.price) : this.priceInfo.price,
                   };
 
         return new PlaceOrderRequest(
@@ -150,6 +150,6 @@ export class WrappedSimulateOrderResult extends SimulateOrderResultBase {
 
     get limitPrice(): BigNumber {
         const limitPrice = TickMath.getWadAtTick(this.tick);
-        return this.isInverse ? safeWDiv(ONE, limitPrice) : limitPrice;
+        return this.isInverse ? safeWDiv(WAD, limitPrice) : limitPrice;
     }
 }
