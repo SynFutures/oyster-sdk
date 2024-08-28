@@ -214,26 +214,61 @@ export class WrapppedPairLevelAccount extends PairLevelAccountModelBase<WrappedI
     }
 }
 
-export class InstrumentLevelAccountModel {
-    public readonly rootInstrument: InstrumentModel;
-
+export interface InstrumentLevelAccountModelData {
+    rootInstrument: InstrumentModel;
     // address of instrument
     instrumentAddr: string;
     // address of trader
     traderAddr: string;
-
     // expiry => portfolio
     portfolios: Map<number, PairLevelAccountModel>;
+}
 
-    constructor(rootInstrument: InstrumentModel, instrumentAddr: string, traderAddr: string) {
-        this.rootInstrument = rootInstrument;
-        this.instrumentAddr = instrumentAddr.toLowerCase();
-        this.traderAddr = traderAddr.toLowerCase();
-        this.portfolios = new Map();
+abstract class InstrumentLevelAccountModelBase<T extends InstrumentModelBase> {
+    constructor(protected readonly data: InstrumentLevelAccountModelData) {
+        this.data.instrumentAddr = this.data.instrumentAddr.toLowerCase();
+        this.data.traderAddr = this.data.traderAddr.toLowerCase();
     }
 
-    public addPairLevelAccount(pair: PairModel, portfolio: Portfolio, blockInfo?: BlockInfo): void {
+    abstract get rootInstrument(): T;
+
+    get instrumentAddr(): string {
+        return this.data.instrumentAddr;
+    }
+
+    get traderAddr(): string {
+        return this.data.traderAddr;
+    }
+
+    get portfolios(): Map<number, PairLevelAccountModel> {
+        return this.data.portfolios;
+    }
+}
+
+export class InstrumentLevelAccountModel extends InstrumentLevelAccountModelBase<InstrumentModel> {
+    get rootInstrument(): InstrumentModel {
+        return this.data.rootInstrument;
+    }
+
+    addPairLevelAccount(pair: PairModel, portfolio: Portfolio, blockInfo?: BlockInfo): void {
         const pairLevelAccount = PairLevelAccountModel.fromRawPortfolio(pair, this.traderAddr, portfolio, blockInfo);
+        this.rootInstrument.state.setAccountState(this.traderAddr, pair.amm.expiry, pairLevelAccount.account);
+        this.portfolios.set(pair.amm.expiry, pairLevelAccount);
+    }
+}
+
+export class WrappedInstrumentLevelAccountModel extends InstrumentLevelAccountModelBase<WrappedInstrumentModel> {
+    get rootInstrument(): WrappedInstrumentModel {
+        return this.data.rootInstrument.wrap;
+    }
+
+    addPairLevelAccount(pair: WrappedPairModel, portfolio: Portfolio, blockInfo?: BlockInfo): void {
+        const pairLevelAccount = PairLevelAccountModel.fromRawPortfolio(
+            pair.unWrap,
+            this.traderAddr,
+            portfolio,
+            blockInfo,
+        );
         this.rootInstrument.state.setAccountState(this.traderAddr, pair.amm.expiry, pairLevelAccount.account);
         this.portfolios.set(pair.amm.expiry, pairLevelAccount);
     }
