@@ -28,6 +28,15 @@ export interface InverseInterface extends BaseInterface {
      */
     updateInstrument(params: FetchInstrumentParam[], overrides?: CallOverrides): Promise<WrappedInstrumentModel[]>;
 
+    // getInstrumentLevelAccounts(target: string, overrides?: CallOverrides): Promise<WrappedInstrumentLevelAccountModel[]>;
+
+    // updatePairLevelAccount(
+    //     target: string,
+    //     instrument: string,
+    //     expiry: number,
+    //     overrides?: CallOverrides,
+    // ): Promise<WrappedPairLevelAccountModel>;
+
     // simulateTrade(params: ITradeRequest): ISimulateTradeResult;
     // // if simulate before, just pass the simulateResult
     // trade(
@@ -76,4 +85,8 @@ export interface InverseInterface extends BaseInterface {
     //     params: ICrossMarketOrderRequest,
     //     simulateResult?: ICrossMarketOrderResult, // TODO: if not pass simulateResult, will simulate check before send tx
     // ): Promise<ContractTransaction | providers.TransactionReceipt>;
+
+    graph: {
+        // getVirtualTrades(param: QueryParam): Promise<IVirtualTrade[]>;
+    };
 }

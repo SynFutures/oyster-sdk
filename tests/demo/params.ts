@@ -250,3 +250,40 @@ export interface ICrossMarketOrderResult extends CrossMarketOrderResult {
     orderSimulation: ISimulatePlaceOrderResult; // [modify] inverse display
     totalMinSize: BigNumber; // [add] tradeSize + orderSize
 }
+
+export interface Pagination {
+    page?: number;
+    size?: number;
+}
+export interface QueryParam extends Pagination {
+    traders?: string[];
+    instrumentAddr?: string;
+    expiry?: number;
+    startTs?: number;
+    endTs?: number;
+    referralCode?: string;
+}
+
+export interface VirtualTrade {
+    txHash: string;
+    timestamp: number;
+    blockNumber: number;
+    logIndex: number;
+    trader: string;
+    instrumentAddr: string;
+    expiry: number;
+    size: BigNumber;
+    price: BigNumber;
+    tradeValue: BigNumber;
+    fee: BigNumber;
+    stablityFee: BigNumber;
+    // type: VirtualTradeType;
+    isRangeLiquidated?: boolean;
+    referralCode?: string;
+}
+
+export interface IVirtualTrade extends VirtualTrade {
+    origin: VirtualTrade; // origin result
+    size: BigNumber; // [modify] inverse display
+    price: BigNumber; // [modify] inverse display
+}
