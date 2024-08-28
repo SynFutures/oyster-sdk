@@ -55,6 +55,16 @@ export interface SimulateInterface extends BaseInterface {
         leverageWad: BigNumber,
     ): SimulateOrderResult;
 
+    // TODO: @samlior rename symbol
+    simulateOrder2(
+        pairModel: PairModel,
+        traderAddr: string,
+        targetTick: number,
+        baseSize: BigNumber,
+        side: Side,
+        leverageWad: BigNumber,
+    ): SimulateOrderResult;
+
     simulateBatchPlace(
         pairAccountModel: PairLevelAccountModel,
         targetTicks: number[],
