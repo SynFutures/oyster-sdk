@@ -1,7 +1,7 @@
 import { BigNumber } from 'ethers';
 import { Amm, Position, Range, rangeToPosition, tally } from '../types';
 import { parseTicks, rangeKey } from '../common';
-import { TickMath, wmulDown, ONE, safeWDiv } from '../math';
+import { TickMath, wmulDown, WAD, safeWDiv } from '../math';
 
 import { PositionModel } from './position.model';
 import { PairModel } from './pair.model';
@@ -144,11 +144,11 @@ export class WrappedRangeModel extends RangeModel {
     }
 
     get lowerPrice(): BigNumber {
-        return this.isInverse ? safeWDiv(ONE, super.upperPrice) : super.lowerPrice;
+        return this.isInverse ? safeWDiv(WAD, super.upperPrice) : super.lowerPrice;
     }
 
     get upperPrice(): BigNumber {
-        return this.isInverse ? safeWDiv(ONE, super.lowerPrice) : super.upperPrice;
+        return this.isInverse ? safeWDiv(WAD, super.lowerPrice) : super.upperPrice;
     }
 
     get lowerPositionModelIfRemove(): PositionModel {

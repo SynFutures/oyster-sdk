@@ -2,7 +2,7 @@
 import { BigNumber } from 'ethers';
 import { BlockInfo, ZERO } from '@derivation-tech/web3-core';
 import { Amm, ContractRecord, Pearl, EMPTY_AMM } from '../types';
-import { Q96, r2w, sqrtX96ToWad, TickMath, wadToSqrtX96, wmul, safeWDiv, ONE } from '../math';
+import { Q96, r2w, sqrtX96ToWad, TickMath, wadToSqrtX96, wmul, safeWDiv, WAD } from '../math';
 import { formatExpiry, withinOrderLimit } from '../common';
 import { ORDER_SPACING } from '../constants';
 
@@ -149,14 +149,14 @@ export class WrappedPairModel extends PairModel {
     }
 
     get markPrice(): BigNumber {
-        return this.isInverse ? safeWDiv(ONE, super.markPrice) : super.markPrice;
+        return this.isInverse ? safeWDiv(WAD, super.markPrice) : super.markPrice;
     }
 
     get fairPriceWad(): BigNumber {
-        return this.isInverse ? safeWDiv(ONE, super.fairPriceWad) : super.fairPriceWad;
+        return this.isInverse ? safeWDiv(WAD, super.fairPriceWad) : super.fairPriceWad;
     }
 
     get benchmarkPrice(): BigNumber {
-        return this.isInverse ? safeWDiv(ONE, super.benchmarkPrice) : super.benchmarkPrice;
+        return this.isInverse ? safeWDiv(WAD, super.benchmarkPrice) : super.benchmarkPrice;
     }
 }

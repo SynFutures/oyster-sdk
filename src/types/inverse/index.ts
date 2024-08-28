@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { BigNumber } from 'ethers';
-import { ONE, safeWDiv, TickMath, wmul } from '../../math';
+import { WAD, safeWDiv, TickMath, wmul } from '../../math';
 import { WrappedPairModel, PairModel } from '../../models';
 import { Side } from '../enum';
 
@@ -13,7 +13,7 @@ abstract class PlaceOrderRequestBase<T extends { isInverse: boolean }> {
         public readonly deadline: number,
 
         // [price] from website, input orderTick or orderPrice
-        protected readonly _priceInfo:
+        public readonly priceInfo:
             | {
                   tick: number; // need align input price to tick
               }
@@ -22,46 +22,30 @@ abstract class PlaceOrderRequestBase<T extends { isInverse: boolean }> {
               },
 
         // [size] from website, input baseAmount or quoteAmount
-        protected readonly _amountInfo:
+        public readonly amountInfo:
             | {
                   base: BigNumber; // base size input from website
               }
             | {
                   quote: BigNumber; // input by quote will calculate base amount send to deep module
               },
+
+        public readonly referralCode?: string,
     ) {}
 
     get isInverse(): boolean {
         return this.pair.isInverse;
     }
-
-    get priceInfo(): { tick: number; price: undefined } | { tick: undefined; price: BigNumber } {
-        const tick = 'tick' in this._priceInfo ? this._priceInfo.tick : undefined;
-        const price = 'price' in this._priceInfo ? this._priceInfo.price : undefined;
-
-        return { tick, price } as { tick: number; price: undefined } | { tick: undefined; price: BigNumber };
-    }
-
-    get amountInfo():
-        | { baseAmount: BigNumber; quoteAmount: undefined }
-        | { baseAmount: undefined; quoteAmount: BigNumber } {
-        const baseAmount = 'base' in this._amountInfo ? this._amountInfo.base : undefined;
-        const quoteAmount = 'quote' in this._priceInfo ? this._priceInfo.quote : undefined;
-
-        return { baseAmount, quoteAmount } as
-            | { baseAmount: BigNumber; quoteAmount: undefined }
-            | { baseAmount: undefined; quoteAmount: BigNumber };
-    }
 }
 
 export class PlaceOrderRequest extends PlaceOrderRequestBase<PairModel> {
     get wrap(): WrappedPlaceOrderRequest {
-        // eslint-disable-next-line prefer-const
-        let { tick, price } = this.priceInfo;
-
-        if (price) {
-            price = safeWDiv(ONE, price);
-        }
+        const priceInfo =
+            'tick' in this.priceInfo
+                ? { ...this.priceInfo }
+                : {
+                      price: this.isInverse ? safeWDiv(WAD, this.priceInfo.price) : this.priceInfo.price,
+                  };
 
         return new WrappedPlaceOrderRequest(
             this.pair.wrap,
@@ -75,23 +59,24 @@ export class PlaceOrderRequest extends PlaceOrderRequestBase<PairModel> {
                 : this.side,
             this.leverage,
             this.deadline,
-            price ? { price } : { tick: tick! },
-            this._amountInfo,
+            priceInfo,
+            this.amountInfo,
+            this.referralCode,
         );
     }
 }
 
 export class WrappedPlaceOrderRequest extends PlaceOrderRequestBase<WrappedPairModel> {
     get unWrap(): PlaceOrderRequest {
-        // eslint-disable-next-line prefer-const
-        let { tick, price } = this.priceInfo;
-
-        if (price) {
-            price = safeWDiv(ONE, price);
-        }
+        const priceInfo =
+            'tick' in this.priceInfo
+                ? { ...this.priceInfo }
+                : {
+                      price: this.isInverse ? safeWDiv(WAD, this.priceInfo.price) : this.priceInfo.price,
+                  };
 
         return new PlaceOrderRequest(
-            this.pair.wrap,
+            this.pair.unWrap,
             this.traderAddr,
             this.isInverse
                 ? this.side === Side.LONG
@@ -102,8 +87,9 @@ export class WrappedPlaceOrderRequest extends PlaceOrderRequestBase<WrappedPairM
                 : this.side,
             this.leverage,
             this.deadline,
-            price ? { price } : { tick: tick! },
-            this._amountInfo,
+            priceInfo,
+            this.amountInfo,
+            this.referralCode,
         );
     }
 }
@@ -164,6 +150,6 @@ export class WrappedSimulateOrderResult extends SimulateOrderResultBase {
 
     get limitPrice(): BigNumber {
         const limitPrice = TickMath.getWadAtTick(this.tick);
-        return this.isInverse ? safeWDiv(ONE, limitPrice) : limitPrice;
+        return this.isInverse ? safeWDiv(WAD, limitPrice) : limitPrice;
     }
 }

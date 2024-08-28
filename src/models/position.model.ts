@@ -1,6 +1,6 @@
 import { BigNumber } from 'ethers';
 import { calcFundingFee, calcLiquidationPrice, calcPnl, Position, Side } from '../types';
-import { r2w, wdiv, safeWDiv, wmul, wmulUp, ZERO, ONE } from '../math';
+import { r2w, wdiv, safeWDiv, wmul, wmulUp, ZERO, WAD } from '../math';
 import { ONE_RATIO, PERP_EXPIRY } from '../constants';
 
 import { PairModel } from './pair.model';
@@ -198,10 +198,10 @@ export class WrappedPositionModel extends PositionModel {
     }
 
     get entryPrice(): BigNumber {
-        return this.isInverse ? safeWDiv(ONE, super.entryPrice) : super.entryPrice;
+        return this.isInverse ? safeWDiv(WAD, super.entryPrice) : super.entryPrice;
     }
 
     get liquidationPrice(): BigNumber {
-        return this.isInverse ? safeWDiv(ONE, super.liquidationPrice) : super.liquidationPrice;
+        return this.isInverse ? safeWDiv(WAD, super.liquidationPrice) : super.liquidationPrice;
     }
 }

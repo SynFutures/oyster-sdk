@@ -1,5 +1,6 @@
 import Ganache from 'ganache';
-import { Wallet } from 'ethers';
+import { ethers, Wallet } from 'ethers';
+
 const mnemonic = 'candy treat cake treat pudding treat honey rich treat crumble treat treat';
 
 export function getWalletForIndex(index: number): Wallet {
@@ -9,7 +10,7 @@ export function getWalletForIndex(index: number): Wallet {
 export interface LocalGanacheOptions {
     rpc: string;
     chainId: number;
-    startBlockNumber: number;
+    startBlockNumber?: number;
     localPort?: number;
     mnemonic?: string;
     accountNumber?: number;
@@ -17,7 +18,10 @@ export interface LocalGanacheOptions {
 
 let server: any = null;
 
-export function startLocal(opts: LocalGanacheOptions): string {
+export async function startLocal(opts: LocalGanacheOptions): Promise<string> {
+    if (!opts.startBlockNumber) {
+        opts.startBlockNumber = await new ethers.providers.JsonRpcProvider(opts.rpc).getBlockNumber();
+    }
     if (!opts.accountNumber) {
         opts.accountNumber = 10;
     }

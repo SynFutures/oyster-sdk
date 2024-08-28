@@ -273,6 +273,34 @@ export class SimulateModule implements SimulateInterface {
         return this._simulateOrder(pairAccountModel, targetTick, baseSize, leverageWad);
     }
 
+    // TODO: @samlior rename symbol
+    simulateOrder2(
+        pairModel: PairModel,
+        traderAddr: string,
+        targetTick: number,
+        baseSize: BigNumber,
+        side: Side,
+        leverageWad: BigNumber,
+    ): SimulateOrderResult {
+        const currentTick = pairModel.amm.tick;
+        if (currentTick === targetTick) throw new Error('Invalid price');
+        const isLong = targetTick < currentTick;
+        const targetPrice = TickMath.getWadAtTick(targetTick);
+
+        if ((side === Side.LONG && !isLong) || (side === Side.SHORT && isLong)) throw new Error('Invalid price');
+
+        const maxLeverage = getMaxLeverage(pairModel.rootInstrument.setting.initialMarginRatio);
+        if (leverageWad.gt(ethers.utils.parseEther(maxLeverage + ''))) {
+            throw new Error('Insufficient margin to open position');
+        }
+
+        if (!withinOrderLimit(targetPrice, pairModel.markPrice, pairModel.rootInstrument.setting.initialMarginRatio)) {
+            throw new Error('Limit order price is too far away from mark price');
+        }
+
+        return this._simulateOrder2(pairModel, traderAddr, targetTick, baseSize, leverageWad);
+    }
+
     private _simulateOrder(
         pairAccountModel: PairLevelAccountModel,
         targetTick: number,
@@ -304,6 +332,50 @@ export class SimulateModule implements SimulateInterface {
             leverageWad: leverageWad,
             marginToDepositWad: this.marginToDepositWad(
                 pairAccountModel.traderAddr,
+                pairModel.rootInstrument.info.quote,
+                margin,
+                balanceInVaultWadOverride,
+            ),
+            minOrderValue: pairModel.rootInstrument.minOrderValue,
+            minFeeRebate: wmul(
+                wmul(targetPrice, baseSize),
+                r2w(pairModel.rootInstrument.setting.quoteParam.tradingFeeRatio),
+            ),
+        };
+    }
+
+    // TODO: @samlior rename symbol
+    private _simulateOrder2(
+        pairModel: PairModel,
+        traderAddr: string,
+        targetTick: number,
+        baseSize: BigNumber,
+        leverageWad: BigNumber,
+        balanceInVaultWadOverride?: BigNumber,
+    ): SimulateOrderResult {
+        baseSize = baseSize.abs();
+        const targetPrice = TickMath.getWadAtTick(targetTick);
+        const markPrice = pairModel.markPrice;
+        let margin = wdivUp(wmulUp(targetPrice, baseSize), leverageWad);
+        const minMargin = wmulUp(
+            r2w(pairModel.rootInstrument.setting.initialMarginRatio),
+            wmulUp(
+                max(
+                    markPrice
+                        .mul(ONE_RATIO + 50) // add 0.5% slippage
+                        .div(ONE_RATIO),
+                    targetPrice,
+                ),
+                baseSize,
+            ),
+        );
+        if (margin.lt(minMargin)) margin = minMargin;
+        return {
+            baseSize: baseSize,
+            balance: margin,
+            leverageWad: leverageWad,
+            marginToDepositWad: this.marginToDepositWad(
+                traderAddr,
                 pairModel.rootInstrument.info.quote,
                 margin,
                 balanceInVaultWadOverride,

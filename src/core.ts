@@ -31,6 +31,7 @@ import {
     InstrumentPlugin,
     TxPlugin,
     ConfigPlugin,
+    InversePlugin,
     CacheInterface,
     GateInterface,
     ObserverInterface,
@@ -79,7 +80,9 @@ export type LegacySynFuturesV3 = Combine<
     ]
 >;
 
-export type WrappedSynFutureV3 = Combine<[Omit<LegacySynFuturesV3, keyof InverseInterface>, InverseInterface]>;
+export type WrappedSynFutureV3 = Combine<
+    [Omit<LegacySynFuturesV3, keyof InverseInterface>, InverseInterface, InversePlugin]
+>;
 
 export class SynFuturesV3 {
     private static instances = new Map<number, LegacySynFuturesV3>();

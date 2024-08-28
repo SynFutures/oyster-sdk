@@ -4,4 +4,5 @@
         "rootDir": "../",
         "outDir": "./build",
     },
+    "include": ["./**/*", "../node_modules/jest-extended/types/**/*.ts"]
 }

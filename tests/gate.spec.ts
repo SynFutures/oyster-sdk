@@ -1,19 +1,10 @@
 import { ethers } from 'ethers';
 import { SynFuturesV3 } from '../src';
-import { getWalletForIndex, startLocal } from './utils';
+import { getWalletForIndex } from './utils';
 import { WrappedNative__factory } from '@derivation-tech/web3-core';
 
 jest.setTimeout(100000);
 describe('Gate plugin Test', () => {
-    beforeAll(async () => {
-        startLocal({
-            rpc: 'https://rpc.ankr.com/blast/2219ac21908239838622dff2c3c105f4a7e7c487ce2591fb5af2ac09e988ebeb',
-            chainId: 81457,
-            startBlockNumber: 7915870,
-            localPort: 8545,
-        });
-    });
-
     it('Test get positions', async () => {
         const address = '0x5886dc296336cc01e6c7257676171170795e8cbc';
         const provider = new ethers.providers.JsonRpcProvider('http://localhost:8545');
