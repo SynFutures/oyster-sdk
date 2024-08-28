@@ -1,5 +1,5 @@
-import { BigNumber, ethers, PayableOverrides, Signer } from 'ethers';
-import { PairLevelAccountModel, PairModel, PositionModel, RangeModel } from '../models';
+import { BigNumber } from 'ethers';
+import { PairLevelAccountModel, PairModel, RangeModel } from '../models';
 import {
     BatchOrderSizeDistribution,
     InstrumentIdentifier,
@@ -10,27 +10,17 @@ import {
     TokenInfo,
 } from '../types';
 import { BaseInterface } from '../common';
+import {
+    SimulateAddLiquidityResult,
+    SimulateAddLiquidityWithAsymmetricRangeResult,
+    SimulateAdjustMarginResult,
+    SimulateBatchOrderResult,
+    SimulateBatchPlaceResult,
+    SimulateCrossMarketOrderResult,
+    SimulateRemoveLiquidityResult,
+} from '../types/simulate';
 
 export interface SimulateInterface extends BaseInterface {
-    placeCrossMarketOrder(
-        signer: Signer,
-        pair: PairModel,
-        side: Side,
-
-        swapSize: BigNumber,
-        swapMargin: BigNumber,
-        swapTradePrice: BigNumber,
-
-        orderTickNumber: number,
-        orderBaseWad: BigNumber,
-        orderMargin: BigNumber,
-
-        slippage: number,
-        deadline: number,
-        referralCode?: string,
-        overrides?: PayableOverrides,
-    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt>;
-
     simulateCrossMarketOrder(
         pairAccountModel: PairLevelAccountModel,
         targetTick: number,
@@ -38,14 +28,7 @@ export interface SimulateInterface extends BaseInterface {
         baseSize: BigNumber,
         leverageWad: BigNumber,
         slippage: number,
-    ): Promise<{
-        canPlaceOrder: boolean;
-        tradeQuotation: Quotation;
-        tradeSize: BigNumber;
-        orderSize: BigNumber;
-        tradeSimulation: SimulateTradeResult;
-        orderSimulation: SimulateOrderResult;
-    }>;
+    ): Promise<SimulateCrossMarketOrderResult>;
 
     simulateOrder(
         pairAccountModel: PairLevelAccountModel,
@@ -72,16 +55,7 @@ export interface SimulateInterface extends BaseInterface {
         baseSize: BigNumber,
         side: Side,
         leverageWad: BigNumber,
-    ): {
-        orders: {
-            baseSize: BigNumber;
-            balance: BigNumber;
-            leverageWad: BigNumber;
-            minFeeRebate: BigNumber;
-        }[];
-        marginToDepositWad: BigNumber;
-        minOrderValue: BigNumber;
-    };
+    ): SimulateBatchPlaceResult;
 
     simulateBatchOrder(
         pairAccountModel: PairLevelAccountModel,
@@ -92,20 +66,7 @@ export interface SimulateInterface extends BaseInterface {
         baseSize: BigNumber,
         side: Side,
         leverageWad: BigNumber,
-    ): {
-        orders: {
-            tick: number;
-            baseSize: BigNumber;
-            ratio: number;
-            balance: BigNumber;
-            leverageWad: BigNumber;
-            minFeeRebate: BigNumber;
-            minOrderSize: BigNumber;
-        }[];
-        marginToDepositWad: BigNumber;
-        minOrderValue: BigNumber;
-        totalMinSize: BigNumber;
-    };
+    ): SimulateBatchOrderResult;
 
     simulateTrade(
         pairAccountModel: PairLevelAccountModel,
@@ -121,12 +82,7 @@ export interface SimulateInterface extends BaseInterface {
         pairAccountModel: PairLevelAccountModel,
         transferAmount: BigNumber | undefined,
         leverageWad: BigNumber | undefined,
-    ): {
-        transferAmount: BigNumber;
-        simulationMainPosition: PositionModel;
-        marginToDepositWad: BigNumber;
-        leverageWad: BigNumber;
-    };
+    ): SimulateAdjustMarginResult;
 
     simulateBenchmarkPrice(instrumentIdentifier: InstrumentIdentifier, expiry: number): Promise<BigNumber>;
 
@@ -138,22 +94,7 @@ export interface SimulateInterface extends BaseInterface {
         margin: BigNumber,
         slippage: number,
         currentSqrtPX96?: BigNumber,
-    ): Promise<{
-        tickDelta: number;
-        liquidity: BigNumber;
-        upperPrice: BigNumber;
-        lowerPrice: BigNumber;
-        lowerPosition: PositionModel;
-        lowerLeverageWad: BigNumber;
-        upperPosition: PositionModel;
-        upperLeverageWad: BigNumber;
-        sqrtStrikeLowerPX96: BigNumber;
-        sqrtStrikeUpperPX96: BigNumber;
-        marginToDepositWad: BigNumber;
-        minMargin: BigNumber;
-        minEffectiveQuoteAmount: BigNumber;
-        equivalentAlpha: BigNumber;
-    }>;
+    ): Promise<SimulateAddLiquidityResult>;
 
     simulateAddLiquidityWithAsymmetricRange(
         targetAddress: string,
@@ -164,35 +105,13 @@ export interface SimulateInterface extends BaseInterface {
         margin: BigNumber,
         slippage: number,
         currentSqrtPX96?: BigNumber,
-    ): Promise<{
-        tickDeltaLower: number;
-        tickDeltaUpper: number;
-        liquidity: BigNumber;
-        upperPrice: BigNumber;
-        lowerPrice: BigNumber;
-        lowerPosition: PositionModel;
-        lowerLeverageWad: BigNumber;
-        upperPosition: PositionModel;
-        upperLeverageWad: BigNumber;
-        sqrtStrikeLowerPX96: BigNumber;
-        sqrtStrikeUpperPX96: BigNumber;
-        marginToDepositWad: BigNumber;
-        minMargin: BigNumber;
-        minEffectiveQuoteAmount: BigNumber;
-        equivalentAlphaLower: BigNumber;
-        equivalentAlphaUpper: BigNumber;
-    }>;
+    ): Promise<SimulateAddLiquidityWithAsymmetricRangeResult>;
 
     simulateRemoveLiquidity(
         pairAccountModel: PairLevelAccountModel,
         rangeModel: RangeModel,
         slippage: number,
-    ): {
-        simulatePositionRemoved: PositionModel;
-        simulationMainPosition: PositionModel;
-        sqrtStrikeLowerPX96: BigNumber;
-        sqrtStrikeUpperPX96: BigNumber;
-    };
+    ): SimulateRemoveLiquidityResult;
 
     marginToDepositWad(
         traderAddress: string,

@@ -1,13 +1,14 @@
 import { addedDeadline, getWalletForIndex } from './utils';
 import { ethers } from 'ethers';
 import { WrappedNative__factory } from '@derivation-tech/web3-core';
-import { InstrumentModel, SynFuturesV3 } from '../src';
+import { SynFuturesV3 } from '../src';
+import { PERP_EXPIRY } from '../build';
 
 jest.setTimeout(200000);
 describe('Gate plugin Test', () => {
     const wallet = getWalletForIndex(1);
     async function addWthToMockAccount(): Promise<void> {
-        const provider = new ethers.providers.JsonRpcProvider('http://34.92.80.193:8545');
+        const provider = new ethers.providers.JsonRpcProvider('http://localhost:8545');
         const synf = SynFuturesV3.getInstance(81457);
         synf.setProvider(provider);
         const wallet1 = wallet.connect(provider);
@@ -23,19 +24,24 @@ describe('Gate plugin Test', () => {
     });
 
     it('Add liquidity', async () => {
-        const provider = new ethers.providers.JsonRpcProvider('http://34.92.80.193:8545');
+        const provider = new ethers.providers.JsonRpcProvider('http://localhost:8545');
         const wallet1 = wallet.connect(provider);
         const synf = SynFuturesV3.getInstance(81457);
         synf.setProvider(provider);
-        await synf.init();
-        const ins = synf.cache.instrumentMap.get('0x379226d215509de2089103e0d5c425e54889830e') as InstrumentModel;
+        const instruments = await synf.fetchInstrumentBatch([
+            {
+                instrument: '0x379226d215509de2089103e0d5c425e54889830e',
+                expiries: [PERP_EXPIRY],
+            },
+        ]);
+        const ins = instruments[0];
         await synf.syncGateCache(wallet1.address, [ins?.info.quote.address]);
         const instrumentIdentifier = {
             marketType: ins?.marketType,
             baseSymbol: ins?.info.base,
             quoteSymbol: ins?.info.quote,
         };
-        const simRes = await synf.simulate.simulateAddLiquidity(
+        const simRes = await synf.simulateAddLiquidity(
             wallet1.address,
             instrumentIdentifier,
             4294967295,
@@ -58,7 +64,7 @@ describe('Gate plugin Test', () => {
     });
 
     it('Get position', async () => {
-        const provider = new ethers.providers.JsonRpcProvider('http://34.92.80.193:8545');
+        const provider = new ethers.providers.JsonRpcProvider('http://localhost:8545');
         const wallet1 = wallet.connect(provider);
         const synf = SynFuturesV3.getInstance(81457);
         synf.setProvider(provider);

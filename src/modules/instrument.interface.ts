@@ -342,6 +342,25 @@ export interface InstrumentInterface extends BaseInterface {
         overrides?: PayableOverrides,
     ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt>;
 
+    placeCrossMarketOrder(
+        signer: Signer,
+        pair: PairModel,
+        side: Side,
+
+        swapSize: BigNumber,
+        swapMargin: BigNumber,
+        swapTradePrice: BigNumber,
+
+        orderTickNumber: number,
+        orderBaseWad: BigNumber,
+        orderMargin: BigNumber,
+
+        slippage: number,
+        deadline: number,
+        referralCode?: string,
+        overrides?: PayableOverrides,
+    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt>;
+
     //////////////////////////////////////////////////////////
     // Utility Api
     //////////////////////////////////////////////////////////
