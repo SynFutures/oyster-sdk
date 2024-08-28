@@ -287,3 +287,108 @@ export interface IVirtualTrade extends VirtualTrade {
     size: BigNumber; // [modify] inverse display
     price: BigNumber; // [modify] inverse display
 }
+export interface FundingHistory {
+  timestamp?: number;
+  instrumentAddr?: string;
+  expiry?: number;
+  trader: string;
+  funding: BigNumber;
+  type: 'Receive' | 'Pay';
+  txHash: string;
+//   pair?: WrappedPair;
+  logIndex: number;
+}
+export interface IFundingHistory {
+  origin: FundingHistory  
+  funding: BigNumber; // [modify] inverse display
+}
+export interface TransferHistory {
+  timestamp?: number;
+  instrumentAddr?: string;
+  expiry?: number;
+  quoteAddr: string;
+  trader: string;
+  amount: BigNumber;
+  isTransferIn: boolean;
+  txHash: string;
+//   pair?: WrappedPair;
+  logIndex: number;
+}
+export interface ITransferHistory {
+  origin: TransferHistory;
+  amount: BigNumber; // [modify] inverse display
+}
+export interface UserOrder {
+    trader: string;
+    instrumentAddr: string;
+    expiry: number;
+    tick: number;
+    size: BigNumber;
+    filledSize: BigNumber;
+    price: BigNumber;
+    fee: BigNumber;
+    createdTimestamp: number;
+    timestamp: number;
+    // status: OrderStatus;
+    placeTxHash: string;
+    placeTxLogIndex: number;
+    fillTxHash?: string;
+    fillTxLogIndex?: number;
+    cancelTxHash?: string;
+    cancelTxLogIndex?: number;
+    referralCode?: string;
+     txHash: string;
+//   pair?: WrappedPair;
+    logIndex?: number;
+}
+export interface IOrderHistory  {
+    origin: UserOrder;
+    size: BigNumber; // [modify] inverse display
+    filledSize: BigNumber; // [modify] inverse display
+    price: BigNumber; // [modify] inverse display
+    fee: BigNumber; // [modify] inverse display
+}
+
+export interface LiquidityHistory {
+  timestamp?: number;
+  instrumentAddr?: string;
+  expiry?: number;
+  trader: string;
+  priceRangeMin: BigNumber;
+  priceRangeMax: BigNumber;
+  amount: BigNumber;
+  feeEarned?: BigNumber;
+  logIndex: number;
+  type: 'Add' | 'Remove';
+//   pair?: WrappedPair;
+  fairPrice: BigNumber;
+  txHash: string;
+  operator: string;
+}
+export interface ILiquidityHistory {
+  origin: LiquidityHistory;
+  priceRangeMin: BigNumber; // [modify] inverse display
+  priceRangeMax: BigNumber; // [modify] inverse display
+  amount: BigNumber; // [modify] inverse display
+  feeEarned?: BigNumber; // [modify] inverse display
+//   pair?: WrappedPair;
+  fairPrice: BigNumber; // [modify] inverse display
+}
+
+export interface AccountBalanceHistory {
+  timestamp?: number;
+  quoteAddr: string;
+  trader: string;
+  amount: BigNumber;
+//   type: BALANCE_TYPE;
+  txHash: string;
+  logIndex: number;
+//   pair?: WrappedPair;
+//   quote: TokenInfo;
+//   chainId: CHAIN_ID;
+}
+export interface IAccountBalanceHistory {
+  origin: AccountBalanceHistory;
+  amount: BigNumber; // [modify] inverse display
+
+}

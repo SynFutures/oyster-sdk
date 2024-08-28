@@ -88,5 +88,10 @@ export interface InverseInterface extends BaseInterface {
 
     graph: {
         // getVirtualTrades(param: QueryParam): Promise<IVirtualTrade[]>;
+        // getFundingHistory(param: QueryParam): Promise<IFundingHistory[]>;
+        // getOrderHistory(param: QueryParam): Promise<IOrderHistory[]>;
+        // getTransferHistory(param: QueryParam): Promise<ITransferHistory[]>;
+        // getLiquidityHistory(param: QueryParam): Promise<ILiquidityHistory[]>;
+        // getAccountBalanceHistory(param: QueryParam): Promise<IAccountBalanceHistory[]>;
     };
 }
