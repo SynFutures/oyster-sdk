@@ -86,6 +86,8 @@ export interface InverseInterface extends BaseInterface {
             params: IAdjustMarginRequest,
             simulateResult?: ISimulateAdjustMarginResult, // TODO: if not pass simulateResult, will simulate check before send tx)
         ): Promise<ContractTransaction | providers.TransactionReceipt>;
+
+        closePosition(params: Omit<ITradeRequest,'quoteAmount'|'leverage'|'margin'>): Promise<ContractTransaction | providers.TransactionReceipt>;;
     };
 
     order: {
