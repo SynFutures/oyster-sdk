@@ -37,6 +37,8 @@ import {
     ISimulatePlaceOrderResult,
     IAdjustMarginRequest,
     ISimulateAdjustMarginResult,
+    IVirtualTrade,
+    QueryParam,
 } from '../../tests/demo/params';
 
 export interface InverseInterface extends BaseInterface {
@@ -136,7 +138,7 @@ export interface InverseInterface extends BaseInterface {
     };
 
     graph: {
-        // getVirtualTrades(param: QueryParam): Promise<IVirtualTrade[]>;
+        getTradeHistory(param: QueryParam): Promise<IVirtualTrade[]>;
     };
 
     odyssey: {
