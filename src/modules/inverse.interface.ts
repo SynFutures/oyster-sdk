@@ -81,12 +81,6 @@ export interface InverseInterface extends BaseInterface {
             params: ITradeRequest,
             simulateResult?: ISimulateTradeResult, // TODO: if not pass simulateResult, will simulate check before send tx
         ): Promise<ContractTransaction | providers.TransactionReceipt>;
-        simulatePlaceOrder(params: IPlaceOrderRequest): ISimulatePlaceOrderResult;
-        // if simulate before, just pass the simulateResult
-        placeOrder(
-            params: IPlaceOrderRequest,
-            simulateResult?: ISimulatePlaceOrderResult, // TODO: if not pass simulateResult, will simulate check before send tx
-        ): Promise<ContractTransaction | providers.TransactionReceipt>;
         simulateAdjustMargin(params: IAdjustMarginRequest): ISimulateAdjustMarginResult;
         adjustMargin(
             params: IAdjustMarginRequest,
@@ -95,6 +89,12 @@ export interface InverseInterface extends BaseInterface {
     };
 
     order: {
+        simulatePlaceOrder(params: IPlaceOrderRequest): ISimulatePlaceOrderResult;
+        // if simulate before, just pass the simulateResult
+        placeOrder(
+            params: IPlaceOrderRequest,
+            simulateResult?: ISimulatePlaceOrderResult, // TODO: if not pass simulateResult, will simulate check before send tx
+        ): Promise<ContractTransaction | providers.TransactionReceipt>;
         simulateBatchPlaceScaledLimitOrder(
             params: IBatchPlaceScaledLimitOrderRequest,
         ): IBatchPlaceScaledLimitOrderResult;
