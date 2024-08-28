@@ -23,7 +23,7 @@ import {
 import { WAD, r2w, safeWDiv, wdiv, wmulDown, ZERO } from '../math';
 
 import { AccountState } from './account.model';
-import { PairModel, PairState } from './pair.model';
+import { PairModel, PairState, WrappedPairModel } from './pair.model';
 import { ConfigManager } from '../config';
 
 export class InstrumentState {
@@ -69,28 +69,8 @@ export interface InstrumentData {
     spotPrice: BigNumber;
 }
 
-export class InstrumentModel {
+export abstract class InstrumentModelBase {
     constructor(protected readonly data: InstrumentData) {}
-
-    //todo fixme info should be a param
-    public static minimumInstrumentWithParam(param: QuoteParam): InstrumentModel {
-        return new InstrumentModel({
-            info: {} as InstrumentInfo,
-            market: {} as InstrumentMarket,
-            markPrices: new Map<number, BigNumber>(),
-            spotPrice: ZERO,
-            state: new InstrumentState(
-                InstrumentCondition.NORMAL,
-                INITIAL_MARGIN_RATIO,
-                MAINTENANCE_MARGIN_RATIO,
-                param,
-            ),
-        });
-    }
-
-    get wrap(): WrappedInstrumentModel {
-        return new WrappedInstrumentModel(this.data);
-    }
 
     get spotPrice(): BigNumber {
         return this.data.spotPrice;
@@ -140,50 +120,26 @@ export class InstrumentModel {
         return this.minTradeValue.mul(MIN_RANGE_MULTIPLIER);
     }
 
-    get pairs(): Map<number, PairModel> {
-        const pairs = new Map<number, PairModel>();
-        for (const [k, v] of this.state.pairStates) {
-            pairs.set(
-                k,
-                new PairModel({
-                    rootInstrument: this,
-                    state: v,
-                    markPrice: this.markPrices.get(k) ?? ZERO,
-                }),
-            );
-        }
-        return pairs;
-    }
-
     getMarkPrice(expiry: number): BigNumber {
-        return this.markPrices.get(expiry) ?? ZERO;
-    }
-
-    getPairModel(expiry: number): PairModel {
-        const state = this.state.pairStates.get(expiry);
-        return new PairModel({
-            rootInstrument: this,
-            state: state ? state : new PairState(EMPTY_AMM),
-            markPrice: this.markPrices.get(expiry) ?? ZERO,
-        });
+        return this.data.markPrices.get(expiry) ?? ZERO;
     }
 
     updateInstrumentState(state: InstrumentState, spotPrice: BigNumber): void {
-        if (state.blockInfo) this.state.blockInfo = state.blockInfo;
-        this.state.condition = state.condition;
-        this.state.setting = state.setting;
+        if (state.blockInfo) this.data.state.blockInfo = state.blockInfo;
+        this.data.state.condition = state.condition;
+        this.data.state.setting = state.setting;
         this.data.spotPrice = spotPrice;
     }
 
     updatePair(amm: Amm, markPrice: BigNumber, blockInfo?: BlockInfo): void {
-        this.markPrices.set(amm.expiry, markPrice);
-        const pair = this.state.pairStates.get(amm.expiry);
+        this.data.markPrices.set(amm.expiry, markPrice);
+        const pair = this.data.state.pairStates.get(amm.expiry);
         if (pair) {
             pair.amm = amm;
             pair.amm.blockInfo = blockInfo;
             pair.blockInfo = blockInfo;
         } else {
-            this.state.pairStates.set(amm.expiry, new PairState(amm, blockInfo));
+            this.data.state.pairStates.set(amm.expiry, new PairState(amm, blockInfo));
         }
     }
 
@@ -217,11 +173,53 @@ export class InstrumentModel {
     }
 }
 
-export class WrappedInstrumentModel extends InstrumentModel {
-    get wrap(): WrappedInstrumentModel {
-        throw new Error('invalid wrap');
+export class InstrumentModel extends InstrumentModelBase {
+    //todo fixme info should be a param
+    public static minimumInstrumentWithParam(param: QuoteParam): InstrumentModel {
+        return new InstrumentModel({
+            info: {} as InstrumentInfo,
+            market: {} as InstrumentMarket,
+            markPrices: new Map<number, BigNumber>(),
+            spotPrice: ZERO,
+            state: new InstrumentState(
+                InstrumentCondition.NORMAL,
+                INITIAL_MARGIN_RATIO,
+                MAINTENANCE_MARGIN_RATIO,
+                param,
+            ),
+        });
     }
 
+    get wrap(): WrappedInstrumentModel {
+        return new WrappedInstrumentModel(this.data);
+    }
+
+    get pairs(): Map<number, PairModel> {
+        const pairs = new Map<number, PairModel>();
+        for (const [k, v] of this.state.pairStates) {
+            pairs.set(
+                k,
+                new PairModel({
+                    rootInstrument: this,
+                    state: v,
+                    markPrice: this.markPrices.get(k) ?? ZERO,
+                }),
+            );
+        }
+        return pairs;
+    }
+
+    getPairModel(expiry: number): PairModel {
+        const state = this.state.pairStates.get(expiry);
+        return new PairModel({
+            rootInstrument: this,
+            state: state ? state : new PairState(EMPTY_AMM),
+            markPrice: this.markPrices.get(expiry) ?? ZERO,
+        });
+    }
+}
+
+export class WrappedInstrumentModel extends InstrumentModelBase {
     get unWrap(): InstrumentModel {
         return new InstrumentModel(this.data);
     }
@@ -230,6 +228,7 @@ export class WrappedInstrumentModel extends InstrumentModel {
         return this.isInverse ? safeWDiv(WAD, super.spotPrice) : super.spotPrice;
     }
 
+    // TODO: @samlior mock map
     get markPrices(): Map<number, BigNumber> {
         if (!this.isInverse) {
             return super.markPrices;
@@ -254,8 +253,44 @@ export class WrappedInstrumentModel extends InstrumentModel {
         };
     }
 
+    get pairs(): Map<number, WrappedPairModel> {
+        const pairs = new Map<number, WrappedPairModel>();
+        for (const [k, v] of this.state.pairStates) {
+            pairs.set(
+                k,
+                new WrappedPairModel({
+                    rootInstrument: this.unWrap,
+                    state: v,
+                    markPrice: this.markPrices.get(k) ?? ZERO,
+                }),
+            );
+        }
+        return pairs;
+    }
+
+    getPairModel(expiry: number): WrappedPairModel {
+        const state = this.state.pairStates.get(expiry);
+        return new WrappedPairModel({
+            rootInstrument: this.unWrap,
+            state: state ? state : new PairState(EMPTY_AMM),
+            markPrice: this.markPrices.get(expiry) ?? ZERO,
+        });
+    }
+
     getMarkPrice(expiry: number): BigNumber {
         return this.markPrices.get(expiry) ?? ZERO;
+    }
+
+    updateInstrumentState(state: InstrumentState, spotPrice: BigNumber): void {
+        return this.isInverse
+            ? super.updateInstrumentState(state, safeWDiv(WAD, spotPrice))
+            : super.updateInstrumentState(state, spotPrice);
+    }
+
+    updatePair(amm: Amm, markPrice: BigNumber, blockInfo?: BlockInfo): void {
+        return this.isInverse
+            ? super.updatePair(amm, safeWDiv(WAD, markPrice), blockInfo)
+            : super.updatePair(amm, markPrice, blockInfo);
     }
 
     getBenchmarkPrice(expiry: number): BigNumber {

@@ -6,7 +6,7 @@ import { Q96, r2w, sqrtX96ToWad, TickMath, wadToSqrtX96, wmul, safeWDiv, WAD } f
 import { formatExpiry, withinOrderLimit } from '../common';
 import { ORDER_SPACING } from '../constants';
 
-import { InstrumentModel } from './instrument.model';
+import { InstrumentModel, InstrumentModelBase, WrappedInstrumentModel } from './instrument.model';
 
 export class PairState {
     amm: Amm;
@@ -53,28 +53,10 @@ export interface PairData {
     markPrice: BigNumber;
 }
 
-export class PairModel {
+abstract class PairModelBase<T extends InstrumentModelBase> {
     constructor(protected readonly data: PairData) {}
 
-    public static minimalPairWithAmm(instrumentModel: InstrumentModel, initPairPrice: BigNumber): PairModel {
-        const amm = { ...EMPTY_AMM };
-        amm.sqrtPX96 = wadToSqrtX96(initPairPrice);
-        amm.tick = TickMath.getTickAtPWad(initPairPrice);
-
-        return new PairModel({
-            rootInstrument: instrumentModel,
-            state: new PairState(amm),
-            markPrice: ZERO,
-        });
-    }
-
-    get wrap(): WrappedPairModel {
-        return new WrappedPairModel(this.data);
-    }
-
-    get rootInstrument(): InstrumentModel {
-        return this.data.rootInstrument;
-    }
+    abstract get rootInstrument(): T;
 
     get state(): PairState {
         return this.data.state;
@@ -139,13 +121,35 @@ export class PairModel {
     }
 }
 
-export class WrappedPairModel extends PairModel {
-    get wrap(): WrappedPairModel {
-        throw new Error('invalid wrap');
+export class PairModel extends PairModelBase<InstrumentModel> {
+    public static minimalPairWithAmm(instrumentModel: InstrumentModel, initPairPrice: BigNumber): PairModel {
+        const amm = { ...EMPTY_AMM };
+        amm.sqrtPX96 = wadToSqrtX96(initPairPrice);
+        amm.tick = TickMath.getTickAtPWad(initPairPrice);
+
+        return new PairModel({
+            rootInstrument: instrumentModel,
+            state: new PairState(amm),
+            markPrice: ZERO,
+        });
     }
 
+    get wrap(): WrappedPairModel {
+        return new WrappedPairModel(this.data);
+    }
+
+    get rootInstrument(): InstrumentModel {
+        return this.data.rootInstrument;
+    }
+}
+
+export class WrappedPairModel extends PairModelBase<WrappedInstrumentModel> {
     get unWrap(): PairModel {
         return new PairModel(this.data);
+    }
+
+    get rootInstrument(): WrappedInstrumentModel {
+        return this.data.rootInstrument.wrap;
     }
 
     get markPrice(): BigNumber {
