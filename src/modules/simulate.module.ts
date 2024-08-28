@@ -17,7 +17,7 @@ import {
     SimulateTradeResult,
     TokenInfo,
 } from '../types';
-import { BigNumber, ethers, PayableOverrides, Signer } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import {
     getMaxLeverage,
     max,
@@ -33,7 +33,6 @@ import {
     ZERO,
 } from '../math';
 import {
-    DEFAULT_REFERRAL_CODE,
     MAX_BATCH_ORDER_COUNT,
     MIN_BATCH_ORDER_COUNT,
     ONE_RATIO,
@@ -47,8 +46,6 @@ import {
     Combine,
     alignTick,
     alphaWadToTickDelta,
-    encodePlaceWithReferralParam,
-    encodeTradeWithReferralParam,
     getBatchOrderRatios,
     getTokenInfo,
     inquireTransferAmountFromTargetLeverage,
@@ -61,6 +58,15 @@ import { SimulateInterface } from './simulate.interface';
 import { CachePlugin } from './cache.plugin';
 import { InstrumentPlugin } from './instrument.plugin';
 import { ObserverPlugin } from './observer.plugin';
+import {
+    SimulateAddLiquidityResult,
+    SimulateAddLiquidityWithAsymmetricRangeResult,
+    SimulateAdjustMarginResult,
+    SimulateBatchOrderResult,
+    SimulateBatchPlaceResult,
+    SimulateCrossMarketOrderResult,
+    SimulateRemoveLiquidityResult,
+} from '../types/simulate';
 
 type SynFuturesV3 = Combine<[SynFuturesV3Core, CachePlugin, InstrumentPlugin, ObserverPlugin]>;
 
@@ -88,57 +94,6 @@ export class SimulateModule implements SimulateInterface {
         return ticks;
     }
 
-    async placeCrossMarketOrder(
-        signer: Signer,
-        pair: PairModel,
-        side: Side,
-
-        swapSize: BigNumber,
-        swapMargin: BigNumber,
-        swapTradePrice: BigNumber,
-
-        orderTickNumber: number,
-        orderBaseWad: BigNumber,
-        orderMargin: BigNumber,
-
-        slippage: number,
-        deadline: number,
-        referralCode = DEFAULT_REFERRAL_CODE,
-        overrides?: PayableOverrides,
-    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const sign = signOfSide(side);
-        const instrument = this.synfV3.cache.getInstrumentContract(pair.rootInstrument.info.addr);
-        const swapLimitTick = TickMath.getLimitTick(swapTradePrice, slippage, side);
-        const callData = [];
-        callData.push(
-            instrument.interface.encodeFunctionData('trade', [
-                encodeTradeWithReferralParam(
-                    pair.amm.expiry,
-                    swapSize.mul(sign),
-                    swapMargin,
-                    swapLimitTick,
-                    deadline,
-                    referralCode,
-                ),
-            ]),
-        );
-
-        callData.push(
-            instrument.interface.encodeFunctionData('place', [
-                encodePlaceWithReferralParam(
-                    pair.amm.expiry,
-                    orderBaseWad.mul(sign),
-                    orderMargin,
-                    orderTickNumber,
-                    deadline,
-                    referralCode,
-                ),
-            ]),
-        );
-        const tx = await instrument.populateTransaction.multicall(callData, overrides ?? {});
-        return await this.synfV3.ctx.sendTx(signer, tx);
-    }
-
     async simulateCrossMarketOrder(
         pairAccountModel: PairLevelAccountModel,
         targetTick: number,
@@ -146,14 +101,7 @@ export class SimulateModule implements SimulateInterface {
         baseSize: BigNumber,
         leverageWad: BigNumber,
         slippage: number,
-    ): Promise<{
-        canPlaceOrder: boolean;
-        tradeQuotation: Quotation;
-        tradeSize: BigNumber;
-        orderSize: BigNumber;
-        tradeSimulation: SimulateTradeResult;
-        orderSimulation: SimulateOrderResult;
-    }> {
+    ): Promise<SimulateCrossMarketOrderResult> {
         const sign = signOfSide(side);
         const pair = pairAccountModel.rootPair;
         const long = sign > 0;
@@ -395,16 +343,7 @@ export class SimulateModule implements SimulateInterface {
         baseSize: BigNumber,
         side: Side,
         leverageWad: BigNumber,
-    ): {
-        orders: {
-            baseSize: BigNumber;
-            balance: BigNumber;
-            leverageWad: BigNumber;
-            minFeeRebate: BigNumber;
-        }[];
-        marginToDepositWad: BigNumber;
-        minOrderValue: BigNumber;
-    } {
+    ): SimulateBatchPlaceResult {
         if (targetTicks.length < MIN_BATCH_ORDER_COUNT || targetTicks.length > MAX_BATCH_ORDER_COUNT)
             throw new Error(`order count should be between ${MIN_BATCH_ORDER_COUNT} and ${MAX_BATCH_ORDER_COUNT}`);
         if (targetTicks.length !== ratios.length) throw new Error('ticks and ratios length not equal');
@@ -465,20 +404,7 @@ export class SimulateModule implements SimulateInterface {
         baseSize: BigNumber,
         side: Side,
         leverageWad: BigNumber,
-    ): {
-        orders: {
-            tick: number;
-            baseSize: BigNumber;
-            ratio: number;
-            balance: BigNumber;
-            leverageWad: BigNumber;
-            minFeeRebate: BigNumber;
-            minOrderSize: BigNumber;
-        }[];
-        marginToDepositWad: BigNumber;
-        minOrderValue: BigNumber;
-        totalMinSize: BigNumber;
-    } {
+    ): SimulateBatchOrderResult {
         if (orderCount < MIN_BATCH_ORDER_COUNT || orderCount > MAX_BATCH_ORDER_COUNT)
             throw new Error(`order count should be between ${MIN_BATCH_ORDER_COUNT} and ${MAX_BATCH_ORDER_COUNT}`);
         const targetTicks = this.getBatchOrderTicks(lowerTick, upperTick, orderCount);
@@ -665,12 +591,7 @@ export class SimulateModule implements SimulateInterface {
         pairAccountModel: PairLevelAccountModel,
         transferAmount: BigNumber | undefined,
         leverageWad: BigNumber | undefined,
-    ): {
-        transferAmount: BigNumber;
-        simulationMainPosition: PositionModel;
-        marginToDepositWad: BigNumber;
-        leverageWad: BigNumber;
-    } {
+    ): SimulateAdjustMarginResult {
         const position = PositionModel.fromRawPosition(pairAccountModel.rootPair, pairAccountModel.getMainPosition());
         const vaultBalance = this.synfV3.cache.getCachedGateBalance(
             pairAccountModel.rootPair.rootInstrument.info.quote.address,
@@ -726,22 +647,7 @@ export class SimulateModule implements SimulateInterface {
         margin: BigNumber,
         slippage: number,
         currentSqrtPX96?: BigNumber,
-    ): Promise<{
-        tickDelta: number;
-        liquidity: BigNumber;
-        upperPrice: BigNumber;
-        lowerPrice: BigNumber;
-        lowerPosition: PositionModel;
-        lowerLeverageWad: BigNumber;
-        upperPosition: PositionModel;
-        upperLeverageWad: BigNumber;
-        sqrtStrikeLowerPX96: BigNumber;
-        sqrtStrikeUpperPX96: BigNumber;
-        marginToDepositWad: BigNumber;
-        minMargin: BigNumber;
-        minEffectiveQuoteAmount: BigNumber;
-        equivalentAlpha: BigNumber;
-    }> {
+    ): Promise<SimulateAddLiquidityResult> {
         const res = await this.simulateAddLiquidityWithAsymmetricRange(
             targetAddress,
             instrumentIdentifier,
@@ -774,24 +680,7 @@ export class SimulateModule implements SimulateInterface {
         margin: BigNumber,
         slippage: number,
         currentSqrtPX96?: BigNumber,
-    ): Promise<{
-        tickDeltaLower: number;
-        tickDeltaUpper: number;
-        liquidity: BigNumber;
-        upperPrice: BigNumber;
-        lowerPrice: BigNumber;
-        lowerPosition: PositionModel;
-        lowerLeverageWad: BigNumber;
-        upperPosition: PositionModel;
-        upperLeverageWad: BigNumber;
-        sqrtStrikeLowerPX96: BigNumber;
-        sqrtStrikeUpperPX96: BigNumber;
-        marginToDepositWad: BigNumber;
-        minMargin: BigNumber;
-        minEffectiveQuoteAmount: BigNumber;
-        equivalentAlphaLower: BigNumber;
-        equivalentAlphaUpper: BigNumber;
-    }> {
+    ): Promise<SimulateAddLiquidityWithAsymmetricRangeResult> {
         const instrumentAddress = await this.synfV3.instrument.computeInstrumentAddress(
             instrumentIdentifier.marketType,
             instrumentIdentifier.baseSymbol,
@@ -880,12 +769,7 @@ export class SimulateModule implements SimulateInterface {
         pairAccountModel: PairLevelAccountModel,
         rangeModel: RangeModel,
         slippage: number,
-    ): {
-        simulatePositionRemoved: PositionModel;
-        simulationMainPosition: PositionModel;
-        sqrtStrikeLowerPX96: BigNumber;
-        sqrtStrikeUpperPX96: BigNumber;
-    } {
+    ): SimulateRemoveLiquidityResult {
         const amm = pairAccountModel.rootPair.amm;
         const rawPositionRemoved = rangeModel.rawPositionIfRemove(amm);
         const rawMainPosition = combine(amm, rawPositionRemoved, pairAccountModel.getMainPosition()).position;

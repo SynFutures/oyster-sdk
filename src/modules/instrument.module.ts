@@ -259,6 +259,57 @@ export class InstrumentModule implements InstrumentInterface {
         }
     }
 
+    async placeCrossMarketOrder(
+        signer: Signer,
+        pair: PairModel,
+        side: Side,
+
+        swapSize: BigNumber,
+        swapMargin: BigNumber,
+        swapTradePrice: BigNumber,
+
+        orderTickNumber: number,
+        orderBaseWad: BigNumber,
+        orderMargin: BigNumber,
+
+        slippage: number,
+        deadline: number,
+        referralCode = DEFAULT_REFERRAL_CODE,
+        overrides?: PayableOverrides,
+    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
+        const sign = signOfSide(side);
+        const instrument = this.synfV3.cache.getInstrumentContract(pair.rootInstrument.info.addr);
+        const swapLimitTick = TickMath.getLimitTick(swapTradePrice, slippage, side);
+        const callData = [];
+        callData.push(
+            instrument.interface.encodeFunctionData('trade', [
+                encodeTradeWithReferralParam(
+                    pair.amm.expiry,
+                    swapSize.mul(sign),
+                    swapMargin,
+                    swapLimitTick,
+                    deadline,
+                    referralCode,
+                ),
+            ]),
+        );
+
+        callData.push(
+            instrument.interface.encodeFunctionData('place', [
+                encodePlaceWithReferralParam(
+                    pair.amm.expiry,
+                    orderBaseWad.mul(sign),
+                    orderMargin,
+                    orderTickNumber,
+                    deadline,
+                    referralCode,
+                ),
+            ]),
+        );
+        const tx = await instrument.populateTransaction.multicall(callData, overrides ?? {});
+        return await this.synfV3.ctx.sendTx(signer, tx);
+    }
+
     async batchPlace(
         signer: Signer,
         instrumentAddr: string,
