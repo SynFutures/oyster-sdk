@@ -191,11 +191,12 @@ export class ObserverModule implements ObserverInterface {
 
                     let instrumentLevelAccount = map.get(instrumentAddr);
                     if (!instrumentLevelAccount) {
-                        instrumentLevelAccount = new InstrumentLevelAccountModel(
-                            instrumentModel,
+                        instrumentLevelAccount = new InstrumentLevelAccountModel({
+                            rootInstrument: instrumentModel,
                             instrumentAddr,
-                            target.toLowerCase(),
-                        );
+                            traderAddr: target.toLowerCase(),
+                            portfolios: new Map(),
+                        });
                         map.set(instrumentAddr, instrumentLevelAccount);
                     }
                     const pair = instrumentModel.getPairModel(expiries[j]);
