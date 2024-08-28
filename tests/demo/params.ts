@@ -1,8 +1,9 @@
-import { BigNumber, Signer } from 'ethers';
+import { BigNumber, Signer, Overrides, CallOverrides } from 'ethers';
 import { BatchOrderSizeDistribution, Side } from '../../src/types/enum';
 import { PairModel, PositionModel, RangeModel, WrappedPositionModel, WrappedOrderModel } from '../../src/models';
 import { InstrumentIdentifier, SimulateOrderResult, SimulateTradeResult } from '../../src/types/params';
 import { Quotation } from '../../src/types';
+import { BlockInfo } from '@derivation-tech/web3-core';
 
 export interface ITradeRequest {
     signer: Signer;
@@ -391,4 +392,147 @@ export interface IAccountBalanceHistory {
   origin: AccountBalanceHistory;
   amount: BigNumber; // [modify] inverse display
 
+}
+
+export interface IOdysseySimulatePortfolioPointPerDayRequest {
+    portfolio: InstrumentLevelAccountModel[];
+    accountBoost: number;
+    pointConfigMetaMap: Map<string, InstrumentPointConfigParam>;
+}
+
+export interface IOdysseySimulateRangePointPerDayRequest {
+    instrumentIdentifier: InstrumentIdentifier;
+    expiry: number;
+    alphaWad: BigNumber;
+    liquidity: BigNumber;
+    balance: BigNumber;
+    accountBoost: number;
+    poolFactor: number;
+    quotePriceWad: BigNumber; // [modify] inverse display
+    isStable?: boolean;
+}
+
+export interface IOdysseySimulateOrderPointPerDayRequest {
+    targetTick: number;
+    baseSize: BigNumber;
+    accountBoost: number;
+    poolFactor: number;
+    quotePriceWad: BigNumber; // [modify] inverse display
+}
+
+export interface RawSpotState {
+    price: BigNumber;
+    time: number;
+}
+export interface IRawSpotState extends RawSpotState {
+    origin: RawSpotState;
+    price: BigNumber; // [modify] inverse display
+}
+
+export interface IRawSpotStateRequest {
+    instrumentIdentifier: InstrumentIdentifier;
+    instrumentAddr?: string;
+}
+
+export interface IGetOrderBookDataRequest {
+    // observer: Observer;
+    instrumentAddr: string;
+    expiry: number;
+    stepRatio: number;
+    length?: number;
+}
+
+interface DepthChartData {
+    tick: number;
+    price: number;
+    base: number;
+}
+
+export interface IDepthChartData extends DepthChartData {
+    origin: DepthChartData;
+    price: number; // [modify] inverse display
+}
+
+export interface IOrderBookData {
+    left: DepthChartData[];
+    right: DepthChartData[];
+}
+
+export interface IDepthChartRequest {
+    // observer: Observer;
+    instrumentAddr: string;
+    expiry: number;
+    stepRatio: number;
+    isInverse?: boolean;
+    lowerPrice?: BigNumber;
+    upperPrice?: BigNumber;
+}
+export interface IDeepChartsData {
+    left: DepthChartData[];
+    right: DepthChartData[];
+}
+
+export interface IPortfolioReleaseClaimRequest {
+    signer: Signer;
+    quote: string;
+    trader: string;
+    overrides?: Overrides;
+}
+
+export interface IPortfolioGetPendingParamsRequest {
+    quotes: string[];
+    overrides?: CallOverrides;
+}
+
+export interface IPortfolioGetPendingParamsResult {
+    pendingDuration: BigNumber;
+    thresholds: BigNumber[];
+}
+
+export interface FundFlow {
+    totalIn: BigNumber;
+    totalOut: BigNumber;
+}
+export interface Pending {
+    timestamp: number;
+    native: boolean;
+    amount: BigNumber;
+    exemption: BigNumber;
+}
+
+export interface IPortfolioGetFundFlowsRequest {
+    quoteAddrs: string[];
+    trader: string;
+    overrides?: CallOverrides;
+}
+
+export interface IPortfolioGetFundFlowsResult {
+    fundFlows: FundFlow[];
+    blockInfo: BlockInfo;
+}
+
+export interface IPortfolioGetUserPendingsRequest {
+    quoteAddrs: string[];
+    trader: string;
+    overrides?: CallOverrides;
+}
+
+export interface IPortfolioGetUserPendingsResult {
+    pendings: {
+        maxWithdrawable: BigNumber;
+        pending: Pending;
+    }[];
+    blockInfo: BlockInfo;
+}
+
+export interface IPortfolioDepositRequest {
+    signer: Signer;
+    quoteAddress: string;
+    amountWad: BigNumber;
+}
+
+export interface IPortfolioWithdrawRequest {
+    signer: Signer;
+    quoteAddress: string;
+    amountWad: BigNumber;
 }
