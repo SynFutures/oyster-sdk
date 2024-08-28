@@ -1,7 +1,19 @@
 import { BigNumber, Signer, Overrides, CallOverrides } from 'ethers';
 import { BatchOrderSizeDistribution, Side } from '../../src/types/enum';
-import { PairModel, PositionModel, RangeModel, WrappedPositionModel, WrappedOrderModel } from '../../src/models';
-import { InstrumentIdentifier, SimulateOrderResult, SimulateTradeResult } from '../../src/types/params';
+import {
+    PairModel,
+    PositionModel,
+    RangeModel,
+    WrappedPositionModel,
+    WrappedOrderModel,
+    InstrumentLevelAccountModel,
+} from '../../src/models';
+import {
+    InstrumentIdentifier,
+    InstrumentPointConfigParam,
+    SimulateOrderResult,
+    SimulateTradeResult,
+} from '../../src/types/params';
 import { Quotation } from '../../src/types';
 import { BlockInfo } from '@derivation-tech/web3-core';
 
@@ -285,39 +297,37 @@ export interface VirtualTrade {
 
 export interface IVirtualTrade extends VirtualTrade {
     origin: VirtualTrade; // origin result
-    size: BigNumber; // [modify] inverse display
     price: BigNumber; // [modify] inverse display
+    side: Side; // [add] inverse display
 }
 export interface FundingHistory {
-  timestamp?: number;
-  instrumentAddr?: string;
-  expiry?: number;
-  trader: string;
-  funding: BigNumber;
-  type: 'Receive' | 'Pay';
-  txHash: string;
-//   pair?: WrappedPair;
-  logIndex: number;
+    timestamp?: number;
+    instrumentAddr?: string;
+    expiry?: number;
+    trader: string;
+    funding: BigNumber;
+    type: 'Receive' | 'Pay';
+    txHash: string;
+    //   pair?: WrappedPair;
+    logIndex: number;
 }
-export interface IFundingHistory {
-  origin: FundingHistory  
-  funding: BigNumber; // [modify] inverse display
+export interface IFundingHistory extends FundingHistory {
+    origin: FundingHistory;
 }
 export interface TransferHistory {
-  timestamp?: number;
-  instrumentAddr?: string;
-  expiry?: number;
-  quoteAddr: string;
-  trader: string;
-  amount: BigNumber;
-  isTransferIn: boolean;
-  txHash: string;
-//   pair?: WrappedPair;
-  logIndex: number;
+    timestamp?: number;
+    instrumentAddr?: string;
+    expiry?: number;
+    quoteAddr: string;
+    trader: string;
+    amount: BigNumber;
+    isTransferIn: boolean;
+    txHash: string;
+    //   pair?: WrappedPair;
+    logIndex: number;
 }
-export interface ITransferHistory {
-  origin: TransferHistory;
-  amount: BigNumber; // [modify] inverse display
+export interface ITransferHistory extends TransferHistory {
+    origin: TransferHistory;
 }
 export interface UserOrder {
     trader: string;
@@ -338,60 +348,50 @@ export interface UserOrder {
     cancelTxHash?: string;
     cancelTxLogIndex?: number;
     referralCode?: string;
-     txHash: string;
-//   pair?: WrappedPair;
+    txHash: string;
+    //   pair?: WrappedPair;
     logIndex?: number;
 }
-export interface IOrderHistory  {
+export interface IOrderHistory extends UserOrder {
     origin: UserOrder;
-    size: BigNumber; // [modify] inverse display
-    filledSize: BigNumber; // [modify] inverse display
+    side: Side; // [add] inverse display
     price: BigNumber; // [modify] inverse display
-    fee: BigNumber; // [modify] inverse display
+    tradeValue: BigNumber; // [add] price * size. different from status, [OrderStatus.CANCELLED]:price(from tick) * size, [OrderStatus.OPEN||OrderStatus.FILLED]:price * filledSize
 }
 
 export interface LiquidityHistory {
-  timestamp?: number;
-  instrumentAddr?: string;
-  expiry?: number;
-  trader: string;
-  priceRangeMin: BigNumber;
-  priceRangeMax: BigNumber;
-  amount: BigNumber;
-  feeEarned?: BigNumber;
-  logIndex: number;
-  type: 'Add' | 'Remove';
-//   pair?: WrappedPair;
-  fairPrice: BigNumber;
-  txHash: string;
-  operator: string;
+    timestamp?: number;
+    instrumentAddr?: string;
+    expiry?: number;
+    trader: string;
+    priceRangeMin: BigNumber;
+    priceRangeMax: BigNumber;
+    amount: BigNumber;
+    feeEarned?: BigNumber;
+    logIndex: number;
+    type: 'Add' | 'Remove';
+    //   pair?: WrappedPair;
+    fairPrice: BigNumber;
+    txHash: string;
+    operator: string;
 }
-export interface ILiquidityHistory {
-  origin: LiquidityHistory;
-  priceRangeMin: BigNumber; // [modify] inverse display
-  priceRangeMax: BigNumber; // [modify] inverse display
-  amount: BigNumber; // [modify] inverse display
-  feeEarned?: BigNumber; // [modify] inverse display
-//   pair?: WrappedPair;
-  fairPrice: BigNumber; // [modify] inverse display
+export interface ILiquidityHistory extends LiquidityHistory {
+    origin: LiquidityHistory;
+    priceRangeMin: BigNumber; // [modify] inverse display, and use priceRangeMax to calculate
+    priceRangeMax: BigNumber; // [modify] inverse display, and use priceRangeMin to calculate
+    fairPrice: BigNumber; // [modify] inverse display
 }
 
 export interface AccountBalanceHistory {
-  timestamp?: number;
-  quoteAddr: string;
-  trader: string;
-  amount: BigNumber;
-//   type: BALANCE_TYPE;
-  txHash: string;
-  logIndex: number;
-//   pair?: WrappedPair;
-//   quote: TokenInfo;
-//   chainId: CHAIN_ID;
+    timestamp?: number;
+    quoteAddr: string;
+    trader: string;
+    amount: BigNumber;
+    txHash: string;
+    logIndex: number;
 }
-export interface IAccountBalanceHistory {
-  origin: AccountBalanceHistory;
-  amount: BigNumber; // [modify] inverse display
-
+export interface IAccountBalanceHistory extends AccountBalanceHistory {
+    origin: AccountBalanceHistory;
 }
 
 export interface IOdysseySimulatePortfolioPointPerDayRequest {
@@ -486,7 +486,7 @@ export interface IPortfolioGetPendingParamsRequest {
 
 export interface IPortfolioGetPendingParamsResult {
     pendingDuration: BigNumber;
-    thresholds: BigNumber[];
+    thresholds: BigNumber[]; // TODO by @jinxi: need to fix decimals to 18?
 }
 
 export interface FundFlow {
@@ -496,7 +496,7 @@ export interface FundFlow {
 export interface Pending {
     timestamp: number;
     native: boolean;
-    amount: BigNumber;
+    amount: BigNumber; // TODO by @jinxi: need to fix decimals to 18?
     exemption: BigNumber;
 }
 
@@ -519,7 +519,7 @@ export interface IPortfolioGetUserPendingsRequest {
 
 export interface IPortfolioGetUserPendingsResult {
     pendings: {
-        maxWithdrawable: BigNumber;
+        maxWithdrawable: BigNumber; // TODO by @jinxi: need to fix decimals to 18?
         pending: Pending;
     }[];
     blockInfo: BlockInfo;
@@ -528,11 +528,11 @@ export interface IPortfolioGetUserPendingsResult {
 export interface IPortfolioDepositRequest {
     signer: Signer;
     quoteAddress: string;
-    amountWad: BigNumber;
+    amount: BigNumber;
 }
 
 export interface IPortfolioWithdrawRequest {
     signer: Signer;
     quoteAddress: string;
-    amountWad: BigNumber;
+    amount: BigNumber;
 }
