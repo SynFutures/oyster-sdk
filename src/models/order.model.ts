@@ -3,8 +3,9 @@ import { Order, Side } from '../types';
 import { orderKey, parseOrderTickNonce } from '../common';
 import { TickMath, wdiv, wmul, ZERO, WAD, safeWDiv } from '../math';
 
-import { PositionModel } from './position.model';
-import { PairModel } from './pair.model';
+import { PositionModel, WrappedPositionModel } from './position.model';
+import { PairModel, PairModelBase, WrappedPairModel } from './pair.model';
+import { InstrumentModel, InstrumentModelBase, WrappedInstrumentModel } from './instrument.model';
 
 export interface OrderData {
     rootPair: PairModel;
@@ -15,24 +16,10 @@ export interface OrderData {
     nonce: number;
 }
 
-export class OrderModel implements Order {
+abstract class OrderModelBase<U extends InstrumentModelBase, T extends PairModelBase<U>> {
     constructor(protected readonly data: OrderData) {}
 
-    static fromRawOrder(rootPair: PairModel, order: Order, taken: BigNumber, oid: number): OrderModel {
-        const { tick, nonce } = parseOrderTickNonce(oid);
-        return new OrderModel({
-            rootPair,
-            balance: order.balance,
-            size: order.size,
-            taken: taken,
-            tick,
-            nonce,
-        });
-    }
-
-    get rootPair(): PairModel {
-        return this.data.rootPair;
-    }
+    abstract get rootPair(): T;
 
     get balance(): BigNumber {
         return this.data.balance;
@@ -54,20 +41,12 @@ export class OrderModel implements Order {
         return this.data.nonce;
     }
 
-    get wrap(): WrappedOrderModel {
-        return new WrappedOrderModel(this.data);
-    }
-
     get isInverse(): boolean {
         return this.rootPair.isInverse;
     }
 
     get limitPrice(): BigNumber {
         return TickMath.getWadAtTick(this.tick);
-    }
-
-    get equity(): BigNumber {
-        return this.toPositionModel().getEquity();
     }
 
     get oid(): number {
@@ -89,6 +68,28 @@ export class OrderModel implements Order {
         const value = wmul(px, this.size.abs());
         return wdiv(value, this.balance);
     }
+}
+
+export class OrderModel extends OrderModelBase<InstrumentModel, PairModel> implements Order {
+    static fromRawOrder(rootPair: PairModel, order: Order, taken: BigNumber, oid: number): OrderModel {
+        const { tick, nonce } = parseOrderTickNonce(oid);
+        return new OrderModel({
+            rootPair,
+            balance: order.balance,
+            size: order.size,
+            taken: taken,
+            tick,
+            nonce,
+        });
+    }
+
+    get rootPair(): PairModel {
+        return this.data.rootPair;
+    }
+
+    get equity(): BigNumber {
+        return this.toPositionModel().getEquity();
+    }
 
     toPositionModel(): PositionModel {
         return new PositionModel({
@@ -102,9 +103,9 @@ export class OrderModel implements Order {
     }
 }
 
-export class WrappedOrderModel extends OrderModel {
-    get wrap(): WrappedOrderModel {
-        throw new Error('invalid wrap');
+export class WrappedOrderModel extends OrderModelBase<WrappedInstrumentModel, WrappedPairModel> {
+    get rootPair(): WrappedPairModel {
+        return this.data.rootPair.wrap;
     }
 
     get unWrap(): OrderModel {
@@ -127,5 +128,20 @@ export class WrappedOrderModel extends OrderModel {
 
     get limitPrice(): BigNumber {
         return this.isInverse ? safeWDiv(WAD, super.limitPrice) : super.limitPrice;
+    }
+
+    get equity(): BigNumber {
+        return this.toPositionModel().getEquity();
+    }
+
+    toPositionModel(): WrappedPositionModel {
+        return new PositionModel({
+            rootPair: this.data.rootPair,
+            balance: this.balance,
+            size: this.size,
+            entryNotional: wmul(this.limitPrice, this.size.abs()),
+            entrySocialLossIndex: BigNumber.from(0),
+            entryFundingIndex: BigNumber.from(0),
+        }).wrap;
     }
 }

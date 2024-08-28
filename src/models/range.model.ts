@@ -3,8 +3,16 @@ import { Amm, Position, Range, rangeToPosition, tally } from '../types';
 import { parseTicks, rangeKey } from '../common';
 import { TickMath, wmulDown, WAD, safeWDiv } from '../math';
 
-import { PositionModel } from './position.model';
-import { PairModel } from './pair.model';
+import { PositionModel, WrappedPositionModel } from './position.model';
+import { PairModel, PairModelBase, WrappedPairModel } from './pair.model';
+import { InstrumentModel, InstrumentModelBase, WrappedInstrumentModel } from './instrument.model';
+
+function customAmm(tick: number, input: Amm): Amm {
+    const amm = Object.assign({}, input);
+    amm.tick = tick;
+    amm.sqrtPX96 = TickMath.getSqrtRatioAtTick(tick);
+    return amm;
+}
 
 export interface RangeData {
     rootPair: PairModel;
@@ -16,25 +24,10 @@ export interface RangeData {
     tickUpper: number;
 }
 
-export class RangeModel {
+abstract class RangeModelBase<U extends InstrumentModelBase, T extends PairModelBase<U>> {
     constructor(protected readonly data: RangeData) {}
 
-    public static fromRawRange(rootPair: PairModel, range: Range, rid: number): RangeModel {
-        const { tickLower, tickUpper } = parseTicks(rid);
-        return new RangeModel({
-            rootPair,
-            liquidity: range.liquidity,
-            balance: range.balance,
-            sqrtEntryPX96: range.sqrtEntryPX96,
-            entryFeeIndex: range.entryFeeIndex,
-            tickLower,
-            tickUpper,
-        });
-    }
-
-    get rootPair(): PairModel {
-        return this.data.rootPair;
-    }
+    abstract get rootPair(): T;
 
     get liquidity(): BigNumber {
         return this.data.liquidity;
@@ -60,10 +53,6 @@ export class RangeModel {
         return this.data.tickUpper;
     }
 
-    get wrap(): WrappedRangeModel {
-        return new WrappedRangeModel(this.data);
-    }
-
     get isInverse(): boolean {
         return this.rootPair.isInverse;
     }
@@ -82,7 +71,7 @@ export class RangeModel {
 
     get valueLocked(): BigNumber {
         const position = this.rawPositionIfRemove(this.rootPair.amm);
-        const total = tally(this.rootPair.amm, position, this.rootPair.markPrice);
+        const total = tally(this.data.rootPair.amm, position, this.data.rootPair.markPrice);
         return total.equity;
     }
 
@@ -91,19 +80,7 @@ export class RangeModel {
         return wmulDown(amm.feeIndex.sub(this.entryFeeIndex), this.liquidity);
     }
 
-    get lowerPositionModelIfRemove(): PositionModel {
-        const amm = this.customAmm(this.tickLower, this.rootPair.amm);
-        const rawPositionLower = this.rawPositionIfRemove(amm);
-        return PositionModel.fromRawPosition(this.rootPair, rawPositionLower);
-    }
-
-    get upperPositionModelIfRemove(): PositionModel {
-        const amm = this.customAmm(this.tickUpper, this.rootPair.amm);
-        const rawPositionLower = this.rawPositionIfRemove(amm);
-        return PositionModel.fromRawPosition(this.rootPair, rawPositionLower);
-    }
-
-    public rawPositionIfRemove(amm: Amm): Position {
+    rawPositionIfRemove(amm: Amm): Position {
         return rangeToPosition(
             amm.sqrtPX96,
             amm.tick,
@@ -117,18 +94,46 @@ export class RangeModel {
             this,
         );
     }
+}
 
-    private customAmm(tick: number, input: Amm): Amm {
-        const amm = Object.assign({}, input);
-        amm.tick = tick;
-        amm.sqrtPX96 = TickMath.getSqrtRatioAtTick(tick);
-        return amm;
+export class RangeModel extends RangeModelBase<InstrumentModel, PairModel> {
+    public static fromRawRange(rootPair: PairModel, range: Range, rid: number): RangeModel {
+        const { tickLower, tickUpper } = parseTicks(rid);
+        return new RangeModel({
+            rootPair,
+            liquidity: range.liquidity,
+            balance: range.balance,
+            sqrtEntryPX96: range.sqrtEntryPX96,
+            entryFeeIndex: range.entryFeeIndex,
+            tickLower,
+            tickUpper,
+        });
+    }
+
+    get rootPair(): PairModel {
+        return this.data.rootPair;
+    }
+
+    get wrap(): WrappedRangeModel {
+        return new WrappedRangeModel(this.data);
+    }
+
+    get lowerPositionModelIfRemove(): PositionModel {
+        const amm = customAmm(this.tickLower, this.rootPair.amm);
+        const rawPositionLower = this.rawPositionIfRemove(amm);
+        return PositionModel.fromRawPosition(this.rootPair, rawPositionLower);
+    }
+
+    get upperPositionModelIfRemove(): PositionModel {
+        const amm = customAmm(this.tickUpper, this.rootPair.amm);
+        const rawPositionLower = this.rawPositionIfRemove(amm);
+        return PositionModel.fromRawPosition(this.rootPair, rawPositionLower);
     }
 }
 
-export class WrappedRangeModel extends RangeModel {
-    get wrap(): WrappedRangeModel {
-        throw new Error('invalid wrap');
+export class WrappedRangeModel extends RangeModelBase<WrappedInstrumentModel, WrappedPairModel> {
+    get rootPair(): WrappedPairModel {
+        return this.data.rootPair.wrap;
     }
 
     get unWrap(): RangeModel {
@@ -151,11 +156,15 @@ export class WrappedRangeModel extends RangeModel {
         return this.isInverse ? safeWDiv(WAD, super.lowerPrice) : super.upperPrice;
     }
 
-    get lowerPositionModelIfRemove(): PositionModel {
-        return this.isInverse ? super.upperPositionModelIfRemove : super.lowerPositionModelIfRemove;
+    get lowerPositionModelIfRemove(): WrappedPositionModel {
+        const amm = customAmm(this.tickUpper, this.rootPair.amm);
+        const rawPositionLower = this.rawPositionIfRemove(amm);
+        return PositionModel.fromRawPosition(this.data.rootPair, rawPositionLower).wrap;
     }
 
-    get upperPositionModelIfRemove(): PositionModel {
-        return this.isInverse ? super.lowerPositionModelIfRemove : super.upperPositionModelIfRemove;
+    get upperPositionModelIfRemove(): WrappedPositionModel {
+        const amm = customAmm(this.tickLower, this.rootPair.amm);
+        const rawPositionLower = this.rawPositionIfRemove(amm);
+        return PositionModel.fromRawPosition(this.data.rootPair, rawPositionLower).wrap;
     }
 }

@@ -3,7 +3,8 @@ import { calcFundingFee, calcLiquidationPrice, calcPnl, Position, Side } from '.
 import { r2w, wdiv, safeWDiv, wmul, wmulUp, ZERO, WAD } from '../math';
 import { ONE_RATIO, PERP_EXPIRY } from '../constants';
 
-import { PairModel } from './pair.model';
+import { PairModel, PairModelBase, WrappedPairModel } from './pair.model';
+import { InstrumentModel, InstrumentModelBase, WrappedInstrumentModel } from './instrument.model';
 
 export interface PositionData {
     rootPair: PairModel;
@@ -14,34 +15,10 @@ export interface PositionData {
     entryFundingIndex: BigNumber;
 }
 
-export class PositionModel implements Position {
+abstract class PositionModelBase<U extends InstrumentModelBase, T extends PairModelBase<U>> {
     constructor(protected readonly data: PositionData) {}
 
-    static fromRawPosition(rootPair: PairModel, pos: Position): PositionModel {
-        return new PositionModel({
-            rootPair,
-            balance: pos.balance,
-            size: pos.size,
-            entryNotional: pos.entryNotional,
-            entrySocialLossIndex: pos.entrySocialLossIndex,
-            entryFundingIndex: pos.entryFundingIndex,
-        });
-    }
-
-    static fromEmptyPosition(rootPair: PairModel): PositionModel {
-        return new PositionModel({
-            rootPair,
-            balance: ZERO,
-            size: ZERO,
-            entryNotional: ZERO,
-            entrySocialLossIndex: ZERO,
-            entryFundingIndex: ZERO,
-        });
-    }
-
-    get rootPair(): PairModel {
-        return this.data.rootPair;
-    }
+    abstract get rootPair(): T;
 
     get balance(): BigNumber {
         return this.data.balance;
@@ -65,10 +42,6 @@ export class PositionModel implements Position {
 
     get entryFundingIndex(): BigNumber {
         return this.data.entryFundingIndex;
-    }
-
-    get wrap(): WrappedPositionModel {
-        return new WrappedPositionModel(this.data);
     }
 
     get isInverse(): boolean {
@@ -173,10 +146,41 @@ export class PositionModel implements Position {
     }
 }
 
-export class WrappedPositionModel extends PositionModel {
-    // TODO by @jinxi: can i read root account from position?
+export class PositionModel extends PositionModelBase<InstrumentModel, PairModel> implements Position {
+    static fromRawPosition(rootPair: PairModel, pos: Position): PositionModel {
+        return new PositionModel({
+            rootPair,
+            balance: pos.balance,
+            size: pos.size,
+            entryNotional: pos.entryNotional,
+            entrySocialLossIndex: pos.entrySocialLossIndex,
+            entryFundingIndex: pos.entryFundingIndex,
+        });
+    }
+
+    static fromEmptyPosition(rootPair: PairModel): PositionModel {
+        return new PositionModel({
+            rootPair,
+            balance: ZERO,
+            size: ZERO,
+            entryNotional: ZERO,
+            entrySocialLossIndex: ZERO,
+            entryFundingIndex: ZERO,
+        });
+    }
+
+    get rootPair(): PairModel {
+        return this.data.rootPair;
+    }
+
     get wrap(): WrappedPositionModel {
-        throw new Error('invalid wrap');
+        return new WrappedPositionModel(this.data);
+    }
+}
+
+export class WrappedPositionModel extends PositionModelBase<WrappedInstrumentModel, WrappedPairModel> {
+    get rootPair(): WrappedPairModel {
+        return this.data.rootPair.wrap;
     }
 
     get unWrap(): PositionModel {

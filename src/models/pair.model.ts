@@ -53,7 +53,7 @@ export interface PairData {
     markPrice: BigNumber;
 }
 
-abstract class PairModelBase<T extends InstrumentModelBase> {
+export abstract class PairModelBase<T extends InstrumentModelBase> {
     constructor(protected readonly data: PairData) {}
 
     abstract get rootInstrument(): T;
