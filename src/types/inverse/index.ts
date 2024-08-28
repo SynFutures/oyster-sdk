@@ -76,7 +76,7 @@ export class WrappedPlaceOrderRequest extends PlaceOrderRequestBase<WrappedPairM
                   };
 
         return new PlaceOrderRequest(
-            this.pair.wrap,
+            this.pair.unWrap,
             this.traderAddr,
             this.isInverse
                 ? this.side === Side.LONG
