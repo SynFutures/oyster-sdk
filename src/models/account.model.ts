@@ -5,11 +5,11 @@ import { EMPTY_POSITION, Order, Portfolio, Position, Range } from '../types';
 import { rangeKey } from '../common';
 import { ZERO } from '../math';
 
-import { InstrumentModel } from './instrument.model';
-import { RangeModel } from './range.model';
-import { PositionModel } from './position.model';
-import { OrderModel } from './order.model';
-import { PairModel } from './pair.model';
+import { InstrumentModelBase, InstrumentModel, WrappedInstrumentModel } from './instrument.model';
+import { RangeModel, WrappedRangeModel } from './range.model';
+import { PositionModel, WrappedPositionModel } from './position.model';
+import { OrderModel, WrappedOrderModel } from './order.model';
+import { PairModelBase, PairModel, WrappedPairModel } from './pair.model';
 
 export class AccountState {
     onumber = 0;
@@ -48,40 +48,52 @@ export class AccountState {
     }
 }
 
-export class PairLevelAccountModel {
-    public readonly rootPair: PairModel;
+export interface PairLevelAccountData {
+    rootPair: PairModel;
     // address of trader
     traderAddr: string;
     account: AccountState;
-
-    ordersTaken: BigNumber[];
+    ordersTaken?: BigNumber[];
     blockInfo?: BlockInfo;
+}
 
-    constructor(
-        rootPair: PairModel, // address of trader
-        traderAddr: string,
-        account: AccountState,
-        ordersTaken?: BigNumber[],
-        blockInfo?: BlockInfo,
-    ) {
-        this.rootPair = rootPair;
-        this.traderAddr = traderAddr;
-        this.account = account;
+abstract class PairLevelAccountModelBase<U extends InstrumentModelBase, T extends PairModelBase<U>> {
+    constructor(protected readonly data: PairLevelAccountData) {}
 
-        this.ordersTaken = ordersTaken ?? [];
-        this.blockInfo = blockInfo;
+    abstract get rootPair(): T;
+
+    get traderAddr(): string {
+        return this.data.traderAddr;
     }
 
-    public static fromRawPortfolio(
+    get account(): AccountState {
+        return this.data.account;
+    }
+
+    get ordersTaken(): BigNumber[] {
+        return this.data.ordersTaken ?? [];
+    }
+
+    get blockInfo(): BlockInfo | undefined {
+        return this.data.blockInfo;
+    }
+
+    containsRange(lowerTick: number, upperTick: number): boolean {
+        return this.account.rids.some((rid) => rid == rangeKey(lowerTick, upperTick));
+    }
+}
+
+export class PairLevelAccountModel extends PairLevelAccountModelBase<InstrumentModel, PairModel> {
+    static fromRawPortfolio(
         rootPair: PairModel,
         traderAddr: string,
         portfolio: Portfolio,
         blockInfo?: BlockInfo,
     ): PairLevelAccountModel {
-        return new PairLevelAccountModel(
+        return new PairLevelAccountModel({
             rootPair,
             traderAddr,
-            new AccountState(
+            account: new AccountState(
                 portfolio.position,
                 portfolio.oids,
                 portfolio.rids,
@@ -89,9 +101,26 @@ export class PairLevelAccountModel {
                 portfolio.ranges,
                 blockInfo,
             ),
-            portfolio.ordersTaken,
+            ordersTaken: portfolio.ordersTaken,
             blockInfo,
-        );
+        });
+    }
+
+    static fromEmptyPortfolio(rootPair: PairModel, traderAddr: string): PairLevelAccountModel {
+        return new PairLevelAccountModel({
+            rootPair,
+            traderAddr,
+            account: new AccountState(EMPTY_POSITION, [], [], [], []),
+            ordersTaken: [],
+        });
+    }
+
+    get rootPair(): PairModel {
+        return this.data.rootPair;
+    }
+
+    get wrap(): WrapppedPairLevelAccount {
+        return new WrapppedPairLevelAccount(this.data);
     }
 
     get ranges(): RangeModel[] {
@@ -117,17 +146,54 @@ export class PairLevelAccountModel {
         return this.getMainPosition();
     }
 
-    public static fromEmptyPortfolio(rootPair: PairModel, traderAddr: string): PairLevelAccountModel {
-        return new PairLevelAccountModel(rootPair, traderAddr, new AccountState(EMPTY_POSITION, [], [], [], []), []);
+    get accountValue(): BigNumber {
+        let accountValue = ZERO;
+        accountValue = accountValue.add(this.position.getEquity());
+        for (const order of this.orders) {
+            accountValue = accountValue.add(order.balance);
+        }
+        for (const range of this.ranges) {
+            accountValue = accountValue.add(range.valueLocked);
+        }
+        return accountValue;
     }
 
-    public getMainPosition(): PositionModel {
+    getMainPosition(): PositionModel {
         // TODO by @jinxi: add a cache and read from it?
         return PositionModel.fromRawPosition(this.rootPair, this.account.position);
     }
+}
 
-    public containsRange(lowerTick: number, upperTick: number): boolean {
-        return this.account.rids.some((rid) => rid == rangeKey(lowerTick, upperTick));
+export class WrapppedPairLevelAccount extends PairLevelAccountModelBase<WrappedInstrumentModel, WrappedPairModel> {
+    get rootPair(): WrappedPairModel {
+        return this.data.rootPair.wrap;
+    }
+
+    get unWrap(): PairLevelAccountModel {
+        return new PairLevelAccountModel(this.data);
+    }
+
+    get ranges(): WrappedRangeModel[] {
+        const res = [];
+        for (const rid of this.account.rids) {
+            const range = this.account.ranges.get(rid)!;
+            res.push(RangeModel.fromRawRange(this.data.rootPair, range, rid).wrap);
+        }
+        return res;
+    }
+
+    get orders(): WrappedOrderModel[] {
+        const res = [];
+        for (let i = 0; i < this.account.oids.length; i++) {
+            const oid = this.account.oids[i];
+            const order = this.account.orders.get(oid)!;
+            res.push(OrderModel.fromRawOrder(this.data.rootPair, order, this.ordersTaken[i] ?? ZERO, oid).wrap);
+        }
+        return res;
+    }
+
+    get position(): WrappedPositionModel {
+        return this.getMainPosition();
     }
 
     get accountValue(): BigNumber {
@@ -140,6 +206,11 @@ export class PairLevelAccountModel {
             accountValue = accountValue.add(range.valueLocked);
         }
         return accountValue;
+    }
+
+    getMainPosition(): WrappedPositionModel {
+        // TODO by @jinxi: add a cache and read from it?
+        return PositionModel.fromRawPosition(this.data.rootPair, this.account.position).wrap;
     }
 }
 

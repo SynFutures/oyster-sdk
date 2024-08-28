@@ -87,6 +87,10 @@ export class OrderModel extends OrderModelBase<InstrumentModel, PairModel> imple
         return this.data.rootPair;
     }
 
+    get wrap(): WrappedOrderModel {
+        return new WrappedOrderModel(this.data);
+    }
+
     get equity(): BigNumber {
         return this.toPositionModel().getEquity();
     }
