@@ -40,9 +40,8 @@ import { DEFAULT_REFERRAL_CODE, MAX_CANCEL_ORDER_COUNT, PEARL_SPACING } from '..
 import { OrderModel, PairLevelAccountModel, PairModel, RangeModel } from '../models';
 import { InstrumentInterface } from './instrument.interface';
 import { CachePlugin } from './cache.plugin';
-import { TxPlugin } from './tx.plugin';
 
-type SynFuturesV3 = Combine<[SynFuturesV3Core, CachePlugin, TxPlugin]>;
+type SynFuturesV3 = Combine<[SynFuturesV3Core, CachePlugin]>;
 
 export class InstrumentModule implements InstrumentInterface {
     synfV3: SynFuturesV3;
@@ -143,7 +142,7 @@ export class InstrumentModule implements InstrumentInterface {
             encodeAddWithReferralParam(param, referralCode),
             overrides ?? {},
         );
-        return this.synfV3.tx.sendTx(signer, unsignedTx);
+        return this.synfV3.ctx.sendTx(signer, unsignedTx);
     }
 
     async addLiquidity(
@@ -205,7 +204,7 @@ export class InstrumentModule implements InstrumentInterface {
             encodeAdjustWithReferralParam(param.expiry, param.net, param.deadline, referralCode),
             overrides ?? {},
         );
-        return this.synfV3.tx.sendTx(signer, unsignedTx);
+        return this.synfV3.ctx.sendTx(signer, unsignedTx);
     }
 
     async adjustMargin(
@@ -224,7 +223,7 @@ export class InstrumentModule implements InstrumentInterface {
             encodeAdjustWithReferralParam(pair.amm.expiry, margin.mul(sign), deadline, referralCode),
             overrides ?? {},
         );
-        return this.synfV3.tx.sendTx(signer, unsignedTx);
+        return this.synfV3.ctx.sendTx(signer, unsignedTx);
     }
 
     async batchCancelOrder(
@@ -244,7 +243,7 @@ export class InstrumentModule implements InstrumentInterface {
                 encodeCancelParam(expiry, ticks, deadline),
                 overrides ?? {},
             );
-            return this.synfV3.tx.sendTx(signer, unsignedTx);
+            return this.synfV3.ctx.sendTx(signer, unsignedTx);
         } else {
             // split ticks by size of MAX_CANCEL_ORDER_COUNT
             const tickGroups = [];
@@ -255,7 +254,7 @@ export class InstrumentModule implements InstrumentInterface {
                 return instrument.interface.encodeFunctionData('cancel', [encodeCancelParam(expiry, group, deadline)]);
             });
             const unsignedTx = await instrument.populateTransaction.multicall(calldatas, overrides ?? {});
-            return this.synfV3.tx.sendTx(signer, unsignedTx);
+            return this.synfV3.ctx.sendTx(signer, unsignedTx);
         }
     }
 
@@ -330,7 +329,7 @@ export class InstrumentModule implements InstrumentInterface {
             ),
             overrides ?? {},
         );
-        return this.synfV3.tx.sendTx(signer, unsignedTx);
+        return this.synfV3.ctx.sendTx(signer, unsignedTx);
     }
 
     async cancel(
@@ -344,7 +343,7 @@ export class InstrumentModule implements InstrumentInterface {
             encodeCancelParam(param.expiry, [param.tick], param.deadline),
             overrides ?? {},
         );
-        return this.synfV3.tx.sendTx(signer, unsignedTx);
+        return this.synfV3.ctx.sendTx(signer, unsignedTx);
     }
 
     async donateInsuranceFund(
@@ -356,7 +355,7 @@ export class InstrumentModule implements InstrumentInterface {
     ): Promise<ContractTransaction | ethers.providers.TransactionReceipt> {
         const instrument = this.synfV3.cache.getInstrumentContract(instrumentAddr, signer);
         const unsignedTx = await instrument.populateTransaction.donateInsuranceFund(expiry, amount, overrides ?? {});
-        return this.synfV3.tx.sendTx(signer, unsignedTx);
+        return this.synfV3.ctx.sendTx(signer, unsignedTx);
     }
 
     async fill(
@@ -370,7 +369,7 @@ export class InstrumentModule implements InstrumentInterface {
             encodeFillParam(param.expiry, param.target, param.tick, param.nonce),
             overrides ?? {},
         );
-        return this.synfV3.tx.sendTx(signer, unsignedTx);
+        return this.synfV3.ctx.sendTx(signer, unsignedTx);
     }
 
     async intuitiveTrade(
@@ -445,7 +444,7 @@ export class InstrumentModule implements InstrumentInterface {
             ),
             overrides ?? {},
         );
-        return this.synfV3.tx.sendTx(signer, unsignedTx);
+        return this.synfV3.ctx.sendTx(signer, unsignedTx);
     }
 
     async remove(
@@ -456,7 +455,7 @@ export class InstrumentModule implements InstrumentInterface {
     ): Promise<ContractTransaction | ethers.providers.TransactionReceipt> {
         const instrument = this.synfV3.cache.getInstrumentContract(instrumentAddr, signer);
         const unsignedTx = await instrument.populateTransaction.remove(encodeRemoveParam(param), overrides ?? {});
-        return this.synfV3.tx.sendTx(signer, unsignedTx);
+        return this.synfV3.ctx.sendTx(signer, unsignedTx);
     }
 
     async removeLiquidity(
@@ -499,7 +498,7 @@ export class InstrumentModule implements InstrumentInterface {
             ),
             overrides ?? {},
         );
-        return this.synfV3.tx.sendTx(signer, unsignedTx);
+        return this.synfV3.ctx.sendTx(signer, unsignedTx);
     }
 
     async tradeWithRisk(
@@ -523,7 +522,7 @@ export class InstrumentModule implements InstrumentInterface {
             ),
             overrides ?? {},
         );
-        return this.synfV3.tx.sendTx(signer, unsignedTx);
+        return this.synfV3.ctx.sendTx(signer, unsignedTx);
     }
 
     private async _addLiquidity(
@@ -559,7 +558,7 @@ export class InstrumentModule implements InstrumentInterface {
                 encodeAddWithReferralParam(addParam, referralCode),
                 overrides ?? {},
             );
-            return this.synfV3.tx.sendTx(signer, unsignedTx);
+            return this.synfV3.ctx.sendTx(signer, unsignedTx);
         } else {
             return this.add(signer, instrumentAddress, addParam, overrides, referralCode);
         }

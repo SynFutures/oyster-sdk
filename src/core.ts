@@ -20,7 +20,6 @@ import {
     observerPlugin,
     simulatePlugin,
     instrumentPlugin,
-    txPlugin,
     configPlugin,
     inversePlugin,
     CachePlugin,
@@ -28,7 +27,6 @@ import {
     ObserverPlugin,
     SimulatePlugin,
     InstrumentPlugin,
-    TxPlugin,
     ConfigPlugin,
     InversePlugin,
     CacheInterface,
@@ -36,7 +34,6 @@ import {
     ObserverInterface,
     SimulateInterface,
     InstrumentInterface,
-    TxInterface,
     ConfigInterface,
     InverseInterface,
     CacheModule,
@@ -44,7 +41,6 @@ import {
     ObserverModule,
     SimulateModule,
     InstrumentModule,
-    TxModule,
     ConfigModule,
     InverseModule,
 } from './modules';
@@ -72,7 +68,7 @@ export interface SynFutureV3Plugin<T extends SynFuturesV3, U> {
 }
 
 export type DefaultSynFuturesV3 = Combine<
-    [SynFuturesV3, CachePlugin, GatePlugin, ObserverPlugin, SimulatePlugin, InstrumentPlugin, TxPlugin, ConfigPlugin]
+    [SynFuturesV3, CachePlugin, GatePlugin, ObserverPlugin, SimulatePlugin, InstrumentPlugin, ConfigPlugin]
 >;
 
 export type LegacySynFuturesV3 = Combine<
@@ -83,7 +79,6 @@ export type LegacySynFuturesV3 = Combine<
         ObserverInterface,
         SimulateInterface,
         InstrumentInterface,
-        TxInterface,
         ConfigInterface,
     ]
 >;
@@ -111,7 +106,6 @@ export class SynFuturesV3 {
             mount(_instance, ObserverModule, _instance.observer);
             mount(_instance, SimulateModule, _instance.simulate);
             mount(_instance, InstrumentModule, _instance.instrument);
-            mount(_instance, TxModule, _instance.tx);
             mount(_instance, ConfigModule, _instance.config);
 
             SynFuturesV3.instances.set(chainId, (instance = _instance as unknown as LegacySynFuturesV3));
@@ -285,7 +279,6 @@ export class SynFuturesV3 {
             .use(observerPlugin())
             .use(simulatePlugin())
             .use(instrumentPlugin())
-            .use(txPlugin())
             .use(configPlugin()) as unknown as DefaultSynFuturesV3;
     }
 }
