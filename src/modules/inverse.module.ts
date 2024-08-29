@@ -4,12 +4,12 @@ import { TokenInfo } from '@derivation-tech/web3-core';
 import { InverseInterface } from './inverse.interface';
 import { Combine } from '../common';
 import { SynFuturesV3 as SynFuturesV3Core } from '../core';
-import { FetchInstrumentParam, WrappedInstrumentInfo } from '../types';
+import { FetchInstrumentParam, InstrumentIdentifier, WrappedInstrumentInfo } from '../types';
 import { WrappedPlaceOrderRequest, WrappedSimulateOrderResult } from '../types/inverse';
-import { WrappedPairLevelAccountModel, WrappedInstrumentModel } from '../models';
-import { alignPriceWadToTick } from '../math';
+import { WrappedPairLevelAccountModel, WrappedInstrumentModel, WrappedInstrumentLevelAccountModel } from '../models';
 import { CachePlugin } from './cache.plugin';
 import { InstrumentPlugin } from './instrument.plugin';
+import { alignPriceWadToTick, safeWDiv, WAD } from '../math';
 import { SimulatePlugin } from './simulate.plugin';
 import { ObserverPlugin } from './observer.plugin';
 
@@ -73,6 +73,74 @@ export class InverseModule implements InverseInterface {
         return res.map((i) => {
             return i.wrap;
         });
+    }
+
+    async getInstrumentLevelAccounts(
+        target: string,
+        overrides?: CallOverrides,
+    ): Promise<WrappedInstrumentLevelAccountModel[]> {
+        const res = await this.synfV3.observer.getInstrumentLevelAccounts(target, overrides);
+        return res.map((i) => {
+            return i.wrap;
+        });
+    }
+
+    async getPairLevelAccount(
+        target: string,
+        instrument: string,
+        expiry: number,
+        useCache?: boolean,
+    ): Promise<WrappedPairLevelAccountModel> {
+        const res = await this.synfV3.observer.getPairLevelAccount(target, instrument, expiry, useCache);
+        return res.wrap;
+    }
+
+    async updatePairLevelAccount(
+        target: string,
+        instrument: string,
+        expiry: number,
+        overrides?: CallOverrides,
+    ): Promise<WrappedPairLevelAccountModel> {
+        const res = await this.synfV3.observer.updatePairLevelAccount(target, instrument, expiry, overrides);
+        return res.wrap;
+    }
+
+    async getAllInstruments(batchSize?: number, overrides?: CallOverrides): Promise<WrappedInstrumentModel[]> {
+        const res = await this.synfV3.observer.getAllInstruments(batchSize, overrides);
+        return res.map((i) => {
+            return i.wrap;
+        });
+    }
+
+    async fetchInstrumentBatch(
+        params: FetchInstrumentParam[],
+        overrides?: CallOverrides,
+    ): Promise<WrappedInstrumentModel[]> {
+        const res = await this.synfV3.observer.fetchInstrumentBatch(params, overrides);
+        return res.map((i) => {
+            return i.wrap;
+        });
+    }
+
+    async inspectDexV2MarketBenchmarkPrice(
+        instrumentIdentifier: InstrumentIdentifier,
+        expiry: number,
+    ): Promise<BigNumber> {
+        const res = await this.synfV3.observer.inspectDexV2MarketBenchmarkPrice(instrumentIdentifier, expiry);
+        return safeWDiv(WAD, res);
+    }
+
+    async inspectCexMarketBenchmarkPrice(
+        instrumentIdentifier: InstrumentIdentifier,
+        expiry: number,
+    ): Promise<BigNumber> {
+        const res = await this.synfV3.observer.inspectCexMarketBenchmarkPrice(instrumentIdentifier, expiry);
+        return safeWDiv(WAD, res);
+    }
+
+    async getRawSpotPrice(identifier: InstrumentIdentifier): Promise<BigNumber> {
+        const res = await this.synfV3.observer.getRawSpotPrice(identifier);
+        return safeWDiv(WAD, res);
     }
 
     async simulatePlaceOrder(

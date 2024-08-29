@@ -1,9 +1,9 @@
-import { CallOverrides, Signer, ContractTransaction, providers } from 'ethers';
+import { CallOverrides, Signer, ContractTransaction, providers, BigNumber } from 'ethers';
 import { TokenInfo } from '@derivation-tech/web3-core';
 import { BaseInterface } from '../common';
-import { FetchInstrumentParam, InstrumentInfo } from '../types';
+import { FetchInstrumentParam, InstrumentIdentifier, InstrumentInfo } from '../types';
 import { WrappedPlaceOrderRequest, WrappedSimulateOrderResult } from '../types/inverse';
-import { WrappedPairLevelAccountModel, WrappedInstrumentModel } from '../models';
+import { WrappedPairLevelAccountModel, WrappedInstrumentModel, WrappedInstrumentLevelAccountModel } from '../models';
 
 export interface InverseInterface extends BaseInterface {
     get instrumentMap(): Map<string, WrappedInstrumentModel>;
@@ -28,6 +28,79 @@ export interface InverseInterface extends BaseInterface {
      * @param overrides overrides with ethers types
      */
     updateInstrument(params: FetchInstrumentParam[], overrides?: CallOverrides): Promise<WrappedInstrumentModel[]>;
+
+    /**
+     *Get instrument level accounts infos
+     *given single trader address, return multiple instrument level account which have been involved
+     * @param target the target address
+     * @param overrides overrides with ethers types
+     */
+    getInstrumentLevelAccounts(
+        target: string,
+        overrides?: CallOverrides,
+    ): Promise<WrappedInstrumentLevelAccountModel[]>;
+
+    /**
+     *Get pair level account infos
+     * @param target the target address
+     * @param instrument the instrument address
+     * @param expiry the expiry
+     * @param useCache whether use cache
+     */
+    getPairLevelAccount(
+        target: string,
+        instrument: string,
+        expiry: number,
+        useCache?: boolean,
+    ): Promise<WrappedPairLevelAccountModel>;
+
+    /**
+     * Update pair level account infos
+     * @param target the target address
+     * @param instrument the instrument address
+     * @param expiry the expiry
+     * @param overrides ethers overrides
+     */
+    updatePairLevelAccount(
+        target: string,
+        instrument: string,
+        expiry: number,
+        overrides?: CallOverrides,
+    ): Promise<WrappedPairLevelAccountModel>;
+
+    /**
+     *Get all instruments
+     * @param batchSize the batch size,default value is 10
+     * @param overrides overrides with ethers types
+     */
+    getAllInstruments(batchSize?: number, overrides?: CallOverrides): Promise<WrappedInstrumentModel[]>;
+
+    /**
+     *Fetch instrument batch by given params
+     * @param params the params
+     * @param overrides overrides with ethers types
+     */
+    fetchInstrumentBatch(params: FetchInstrumentParam[], overrides?: CallOverrides): Promise<WrappedInstrumentModel[]>;
+
+    /**
+     *Inspect dex v2 market benchmark price
+     * @param instrumentIdentifier the instrument
+     * @param expiry the expiry
+     */
+    inspectDexV2MarketBenchmarkPrice(instrumentIdentifier: InstrumentIdentifier, expiry: number): Promise<BigNumber>;
+
+    /**
+     * Inspect cex market benchmark price
+     * @param instrumentIdentifier the instrument
+     * @param expiry the expiry
+     */
+    inspectCexMarketBenchmarkPrice(instrumentIdentifier: InstrumentIdentifier, expiry: number): Promise<BigNumber>;
+
+    /**
+     * Get raw spot price by instrument marketType
+     * @param identifier the instrument identifier
+     */
+    getRawSpotPrice(identifier: InstrumentIdentifier): Promise<BigNumber>;
 
     // simulateTrade(params: ITradeRequest): ISimulateTradeResult;
     // // if simulate before, just pass the simulateResult
