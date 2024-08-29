@@ -4,3 +4,6 @@ export * from './earn.plugin';
 export * from './order.interface';
 export * from './order.module';
 export * from './order.plugin';
+export * from './trade.interface';
+export * from './trade.module';
+export * from './trade.plugin';
