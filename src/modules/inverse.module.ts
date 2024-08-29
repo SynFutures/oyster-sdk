@@ -2,10 +2,15 @@
 import { CallOverrides, Signer, ContractTransaction, providers, BigNumber } from 'ethers';
 import { TokenInfo } from '@derivation-tech/web3-core';
 import { InverseInterface } from './inverse.interface';
-import { Combine } from '../common';
+import { Combine, reverse } from '../common';
 import { SynFuturesV3 as SynFuturesV3Core } from '../core';
-import { FetchInstrumentParam, InstrumentIdentifier, WrappedInstrumentInfo } from '../types';
-import { WrappedPairLevelAccountModel, WrappedInstrumentModel, WrappedInstrumentLevelAccountModel } from '../models';
+import { FetchInstrumentParam, InstrumentIdentifier, Position, Quotation, Side, WrappedInstrumentInfo } from '../types';
+import {
+    WrappedPairLevelAccountModel,
+    WrappedInstrumentModel,
+    WrappedInstrumentLevelAccountModel,
+    WrappedPairModel,
+} from '../models';
 import { CachePlugin } from './cache.plugin';
 import { InstrumentPlugin } from './instrument.plugin';
 import { alignPriceWadToTick, safeWDiv, WAD } from '../math';
@@ -143,6 +148,36 @@ export class InverseModule implements InverseInterface {
     async getRawSpotPrice(identifier: InstrumentIdentifier): Promise<BigNumber> {
         const res = await this.synfV3.observer.getRawSpotPrice(identifier);
         return safeWDiv(WAD, res);
+    }
+
+    async inquireByBase(
+        pair: WrappedPairModel,
+        side: Side,
+        baseAmount: BigNumber,
+        overrides?: CallOverrides,
+    ): Promise<{ quoteAmount: BigNumber; quotation: Quotation }> {
+        const res = await this.synfV3.observer.inquireByBase(pair.unWrap, reverse(side), baseAmount, overrides);
+        return res;
+    }
+
+    async inquireByQuote(
+        pair: WrappedPairModel,
+        side: Side,
+        quoteAmount: BigNumber,
+        overrides?: CallOverrides,
+    ): Promise<{ baseAmount: BigNumber; quotation: Quotation }> {
+        const res = await this.synfV3.observer.inquireByQuote(pair.unWrap, reverse(side), quoteAmount, overrides);
+        return res;
+    }
+
+    async getPositionIfSettle(traderAccount: WrappedPairLevelAccountModel): Promise<Position> {
+        const res = await this.synfV3.observer.getPositionIfSettle(traderAccount.unWrap);
+        return res;
+    }
+
+    estimateAPY(pairModel: WrappedPairModel, poolFee24h: BigNumber, alphaWad: BigNumber): number {
+        const res = this.synfV3.observer.estimateAPY(pairModel.unWrap, poolFee24h, alphaWad);
+        return res;
     }
 
     async simulatePlaceOrder(
