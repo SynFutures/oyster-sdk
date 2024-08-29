@@ -54,6 +54,7 @@ import {
     QuoteParam,
     QuoteType,
     RemoveParam,
+    Side,
     TokenInfo,
     TradeParam,
 } from '../types';
@@ -1256,4 +1257,8 @@ export function getBatchOrderRatios(sizeDistribution: BatchOrderSizeDistribution
     // make sure the sum of ratios is 10000
     ratios[ratios.length - 1] = RATIO_BASE - ratios.slice(0, ratios.length - 1).reduce((acc, ratio) => acc + ratio, 0);
     return ratios;
+}
+
+export function reverse(side: Side): Side {
+    return side === Side.LONG ? Side.SHORT : side === Side.SHORT ? Side.LONG : Side.FLAT;
 }

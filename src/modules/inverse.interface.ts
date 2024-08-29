@@ -44,6 +44,7 @@ export interface InverseInterface extends BaseInterface {
     placeOrder(
         signer: Signer,
         params: WrappedPlaceOrderRequest,
+        deadline: number,
         simulateResult?: WrappedSimulateOrderResult,
         overrides?: CallOverrides,
     ): Promise<ContractTransaction | providers.TransactionReceipt>;

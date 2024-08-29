@@ -96,21 +96,22 @@ export class InverseModule implements InverseInterface {
             params.leverage,
         );
 
-        return new WrappedSimulateOrderResult(
-            result.baseSize,
-            result.balance,
-            result.leverageWad,
-            result.marginToDepositWad,
-            result.minOrderValue,
-            result.minFeeRebate,
+        return new WrappedSimulateOrderResult({
+            baseSize: result.baseSize,
+            balance: result.balance,
+            leverageWad: result.leverageWad,
+            marginToDepositWad: result.marginToDepositWad,
+            minOrderValue: result.minOrderValue,
+            minFeeRebate: result.minFeeRebate,
             tick,
-            params.isInverse,
-        );
+            isInverse: params.isInverse,
+        });
     }
 
     async placeOrder(
         signer: Signer,
         _params: WrappedPlaceOrderRequest,
+        deadline: number,
         simulateResult?: WrappedSimulateOrderResult,
         overrides?: CallOverrides,
     ): Promise<ContractTransaction | providers.TransactionReceipt> {
@@ -125,7 +126,7 @@ export class InverseModule implements InverseInterface {
             simulateResult.baseSize,
             simulateResult.balance,
             params.side,
-            params.deadline,
+            deadline,
             overrides,
             params.referralCode,
         );
