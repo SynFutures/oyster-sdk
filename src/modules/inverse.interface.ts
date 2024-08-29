@@ -1,8 +1,13 @@
 import { CallOverrides, BigNumber } from 'ethers';
 import { TokenInfo } from '@derivation-tech/web3-core';
 import { BaseInterface } from '../common';
-import { FetchInstrumentParam, InstrumentIdentifier, InstrumentInfo } from '../types';
-import { WrappedPairLevelAccountModel, WrappedInstrumentModel, WrappedInstrumentLevelAccountModel } from '../models';
+import { FetchInstrumentParam, InstrumentIdentifier, InstrumentInfo, Position, Quotation, Side } from '../types';
+import {
+    WrappedPairLevelAccountModel,
+    WrappedInstrumentModel,
+    WrappedInstrumentLevelAccountModel,
+    WrappedPairModel,
+} from '../models';
 
 export interface InverseInterface extends BaseInterface {
     get instrumentMap(): Map<string, WrappedInstrumentModel>;
@@ -100,6 +105,48 @@ export interface InverseInterface extends BaseInterface {
      * @param identifier the instrument identifier
      */
     getRawSpotPrice(identifier: InstrumentIdentifier): Promise<BigNumber>;
+
+    /**
+     *Inquire by base
+     * @param pair the pair
+     * @param side the side
+     * @param baseAmount the base amount
+     * @param overrides CallOverrides with ethers types
+     */
+    inquireByBase(
+        pair: WrappedPairModel,
+        side: Side,
+        baseAmount: BigNumber,
+        overrides?: CallOverrides,
+    ): Promise<{ quoteAmount: BigNumber; quotation: Quotation }>;
+
+    /**
+     *Inquire by quote
+     * @param pair the pair
+     * @param side the side
+     * @param quoteAmount the quote amount
+     * @param overrides CallOverrides with ethers types
+     */
+    inquireByQuote(
+        pair: WrappedPairModel,
+        side: Side,
+        quoteAmount: BigNumber,
+        overrides?: CallOverrides,
+    ): Promise<{ baseAmount: BigNumber; quotation: Quotation }>;
+
+    /**
+     * Get position if settle
+     * @param traderAccount the trader account
+     */
+    getPositionIfSettle(traderAccount: WrappedPairLevelAccountModel): Promise<Position>;
+
+    /**
+     * Estimate APY
+     * @param pairModel the pair
+     * @param poolFee24h the pool fee
+     * @param alphaWad the alpha
+     */
+    estimateAPY(pairModel: WrappedPairModel, poolFee24h: BigNumber, alphaWad: BigNumber): number;
 
     // simulateTrade(params: ITradeRequest): ISimulateTradeResult;
     // // if simulate before, just pass the simulateResult
