@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { BigNumber } from 'ethers';
 import { WAD, safeWDiv, TickMath, wmul } from '../../math';
 import { WrappedPairModel, PairModel } from '../../models';

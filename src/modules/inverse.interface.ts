@@ -2,8 +2,10 @@ import { CallOverrides, Signer, ContractTransaction, providers } from 'ethers';
 import { TokenInfo } from '@derivation-tech/web3-core';
 import { BaseInterface } from '../common';
 import { FetchInstrumentParam, InstrumentInfo } from '../types';
-import { WrappedPlaceOrderRequest, WrappedSimulateOrderResult } from '../types/inverse';
 import { WrappedPairLevelAccountModel, WrappedInstrumentModel } from '../models';
+
+// TODO: @samlior remove from here
+import { WrappedPlaceOrderRequest, WrappedSimulateOrderResult } from '../types/advanced';
 
 export interface InverseInterface extends BaseInterface {
     get instrumentMap(): Map<string, WrappedInstrumentModel>;

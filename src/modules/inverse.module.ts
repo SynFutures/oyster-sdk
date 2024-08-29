@@ -5,13 +5,15 @@ import { InverseInterface } from './inverse.interface';
 import { Combine } from '../common';
 import { SynFuturesV3 as SynFuturesV3Core } from '../core';
 import { FetchInstrumentParam, WrappedInstrumentInfo } from '../types';
-import { WrappedPlaceOrderRequest, WrappedSimulateOrderResult } from '../types/inverse';
 import { WrappedPairLevelAccountModel, WrappedInstrumentModel } from '../models';
 import { alignPriceWadToTick } from '../math';
 import { CachePlugin } from './cache.plugin';
 import { InstrumentPlugin } from './instrument.plugin';
 import { SimulatePlugin } from './simulate.plugin';
 import { ObserverPlugin } from './observer.plugin';
+
+// TODO: @samlior remove from here
+import { WrappedPlaceOrderRequest, WrappedSimulateOrderResult } from '../types/advanced';
 
 type SynFuturesV3 = Combine<[SynFuturesV3Core, CachePlugin, InstrumentPlugin, SimulatePlugin, ObserverPlugin]>;
 
