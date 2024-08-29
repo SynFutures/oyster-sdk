@@ -6,7 +6,7 @@ import { Combine } from '../common';
 import { SynFuturesV3 as SynFuturesV3Core } from '../core';
 import { FetchInstrumentParam, WrappedInstrumentInfo } from '../types';
 import { WrappedPlaceOrderRequest, WrappedSimulateOrderResult } from '../types/inverse';
-import { PairLevelAccountModel, WrappedInstrumentModel } from '../models';
+import { WrappedPairLevelAccountModel, WrappedInstrumentModel } from '../models';
 import { alignPriceWadToTick } from '../math';
 import { CachePlugin } from './cache.plugin';
 import { InstrumentPlugin } from './instrument.plugin';
@@ -34,8 +34,20 @@ export class InverseModule implements InverseInterface {
     }
 
     //todo need to use wrapped map to fix inverse
-    get accountCache(): Map<string, Map<string, Map<number, PairLevelAccountModel>>> {
-        return this.synfV3.cache.accountCache;
+    get accountCache(): Map<string, Map<string, Map<number, WrappedPairLevelAccountModel>>> {
+        const map = new Map<string, Map<string, Map<number, WrappedPairLevelAccountModel>>>();
+        for (const key of this.synfV3.cache.accountCache.keys()) {
+            const map2 = new Map<string, Map<number, WrappedPairLevelAccountModel>>();
+            for (const key2 of this.synfV3.cache.accountCache.get(key)!.keys()) {
+                const map3 = new Map<number, WrappedPairLevelAccountModel>();
+                for (const key3 of this.synfV3.cache.accountCache.get(key)!.get(key2)!.keys()) {
+                    map3.set(key3, this.synfV3.cache.accountCache.get(key)!.get(key2)!.get(key3)!.wrap);
+                }
+                map2.set(key2, map3);
+            }
+            map.set(key, map2);
+        }
+        return map;
     }
 
     async initInstruments(symbolToInfo?: Map<string, TokenInfo>): Promise<WrappedInstrumentModel[]> {
