@@ -130,21 +130,27 @@ export class InverseModule implements InverseInterface {
         instrumentIdentifier: InstrumentIdentifier,
         expiry: number,
     ): Promise<BigNumber> {
-        const res = await this.synfV3.observer.inspectDexV2MarketBenchmarkPrice(instrumentIdentifier, expiry);
-        return safeWDiv(WAD, res);
+        const { benchmarkPrice, isInverse } = await this.synfV3.observer._inspectDexV2MarketBenchmarkPrice(
+            instrumentIdentifier,
+            expiry,
+        );
+        return isInverse ? safeWDiv(WAD, benchmarkPrice) : benchmarkPrice;
     }
 
     async inspectCexMarketBenchmarkPrice(
         instrumentIdentifier: InstrumentIdentifier,
         expiry: number,
     ): Promise<BigNumber> {
-        const res = await this.synfV3.observer.inspectCexMarketBenchmarkPrice(instrumentIdentifier, expiry);
-        return safeWDiv(WAD, res);
+        const { benchmarkPrice, isInverse } = await this.synfV3.observer._inspectCexMarketBenchmarkPrice(
+            instrumentIdentifier,
+            expiry,
+        );
+        return isInverse ? safeWDiv(WAD, benchmarkPrice) : benchmarkPrice;
     }
 
     async getRawSpotPrice(identifier: InstrumentIdentifier): Promise<BigNumber> {
-        const res = await this.synfV3.observer.getRawSpotPrice(identifier);
-        return safeWDiv(WAD, res);
+        const { rawSpotPrice, isInverse } = await this.synfV3.observer._getRawSpotPrice(identifier);
+        return isInverse ? safeWDiv(WAD, rawSpotPrice) : rawSpotPrice;
     }
 
     async inquireByBase(
@@ -153,7 +159,12 @@ export class InverseModule implements InverseInterface {
         baseAmount: BigNumber,
         overrides?: CallOverrides,
     ): Promise<{ quoteAmount: BigNumber; quotation: Quotation }> {
-        const res = await this.synfV3.observer.inquireByBase(pair.unWrap, reverse(side), baseAmount, overrides);
+        const res = await this.synfV3.observer.inquireByBase(
+            pair.unWrap,
+            pair.isInverse ? reverse(side) : side,
+            baseAmount,
+            overrides,
+        );
         return res;
     }
 
@@ -163,7 +174,12 @@ export class InverseModule implements InverseInterface {
         quoteAmount: BigNumber,
         overrides?: CallOverrides,
     ): Promise<{ baseAmount: BigNumber; quotation: Quotation }> {
-        const res = await this.synfV3.observer.inquireByQuote(pair.unWrap, reverse(side), quoteAmount, overrides);
+        const res = await this.synfV3.observer.inquireByQuote(
+            pair.unWrap,
+            pair.isInverse ? reverse(side) : side,
+            quoteAmount,
+            overrides,
+        );
         return res;
     }
 

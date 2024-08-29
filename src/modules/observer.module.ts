@@ -56,6 +56,7 @@ import {
 import { RANGE_SPACING, EMPTY_POSITION } from '../constants';
 import { CachePlugin } from './cache.plugin';
 import { InstrumentPlugin } from './instrument.plugin';
+import { ConfigManager } from '../config';
 
 type SynFuturesV3 = Combine<[SynFuturesV3Core, CachePlugin, InstrumentPlugin]>;
 
@@ -321,14 +322,32 @@ export class ObserverModule implements ObserverInterface {
         );
     }
 
-    getRawSpotPrice(identifier: InstrumentIdentifier): Promise<BigNumber> {
+    async _getRawSpotPrice(identifier: InstrumentIdentifier): Promise<{ rawSpotPrice: BigNumber; isInverse: boolean }> {
+        const instrumentAddress = await this.synfV3.instrument.computeInstrumentAddress(
+            identifier.marketType,
+            identifier.baseSymbol,
+            identifier.quoteSymbol,
+        );
+        const isInverse = ConfigManager.isInversePair(
+            this.synfV3.ctx.chainId,
+            instrumentAddress,
+            typeof identifier.baseSymbol !== 'string'
+                ? (identifier.baseSymbol as TokenInfo).address
+                : await this.synfV3.ctx.getAddress(identifier.baseSymbol),
+        );
         if (identifier.marketType === MarketType.DEXV2) {
-            return this.getDexV2RawSpotPrice(identifier);
+            const rawSpotPrice = await this.getDexV2RawSpotPrice(identifier);
+            return { rawSpotPrice, isInverse };
         } else if (cexMarket(identifier.marketType)) {
-            return this.getCexRawSpotPrice(identifier);
+            const rawSpotPrice = await this.getCexRawSpotPrice(identifier);
+            return { rawSpotPrice, isInverse };
         } else {
             throw new Error('Unsupported market type');
         }
+    }
+
+    getRawSpotPrice(identifier: InstrumentIdentifier): Promise<BigNumber> {
+        return this._getRawSpotPrice(identifier).then((res) => res.rawSpotPrice);
     }
 
     async getSizeToTargetTick(instrumentAddr: string, expiry: number, targetTick: number): Promise<BigNumber> {
@@ -451,6 +470,14 @@ export class ObserverModule implements ObserverInterface {
         instrumentIdentifier: InstrumentIdentifier,
         expiry: number,
     ): Promise<BigNumber> {
+        const { benchmarkPrice } = await this._inspectCexMarketBenchmarkPrice(instrumentIdentifier, expiry);
+        return benchmarkPrice;
+    }
+
+    async _inspectCexMarketBenchmarkPrice(
+        instrumentIdentifier: InstrumentIdentifier,
+        expiry: number,
+    ): Promise<{ benchmarkPrice: BigNumber; isInverse: boolean }> {
         const instrumentAddress = await this.synfV3.instrument.computeInstrumentAddress(
             instrumentIdentifier.marketType,
             instrumentIdentifier.baseSymbol,
@@ -464,13 +491,28 @@ export class ObserverModule implements ObserverInterface {
             console.error('fetch chainlink market price error', e);
             benchmarkPrice = ZERO;
         }
-        return benchmarkPrice;
+        const isInverse = ConfigManager.isInversePair(
+            this.synfV3.ctx.chainId,
+            instrumentAddress,
+            typeof instrumentIdentifier.baseSymbol !== 'string'
+                ? (instrumentIdentifier.baseSymbol as TokenInfo).address
+                : await this.synfV3.ctx.getAddress(instrumentIdentifier.baseSymbol),
+        );
+        return { benchmarkPrice, isInverse };
     }
 
     async inspectDexV2MarketBenchmarkPrice(
         instrumentIdentifier: InstrumentIdentifier,
         expiry: number,
     ): Promise<BigNumber> {
+        const { benchmarkPrice } = await this._inspectDexV2MarketBenchmarkPrice(instrumentIdentifier, expiry);
+        return benchmarkPrice;
+    }
+
+    async _inspectDexV2MarketBenchmarkPrice(
+        instrumentIdentifier: InstrumentIdentifier,
+        expiry: number,
+    ): Promise<{ benchmarkPrice: BigNumber; isInverse: boolean }> {
         const { baseSymbol, quoteSymbol } = getTokenSymbol(
             instrumentIdentifier.baseSymbol,
             instrumentIdentifier.quoteSymbol,
@@ -485,12 +527,26 @@ export class ObserverModule implements ObserverInterface {
 
         const rawSpotPrice = await this.getDexV2RawSpotPrice(instrumentIdentifier);
 
-        return calcBenchmarkPrice(
+        const benchmarkPrice = calcBenchmarkPrice(
             expiry,
             rawSpotPrice,
             feederType,
             this.synfV3.conf.marketConfig.DEXV2!.dailyInterestRate,
         );
+
+        const instrumentAddress = await this.synfV3.instrument.computeInstrumentAddress(
+            instrumentIdentifier.marketType,
+            instrumentIdentifier.baseSymbol,
+            instrumentIdentifier.quoteSymbol,
+        );
+        const isInverse = ConfigManager.isInversePair(
+            this.synfV3.ctx.chainId,
+            instrumentAddress,
+            typeof instrumentIdentifier.baseSymbol !== 'string'
+                ? (instrumentIdentifier.baseSymbol as TokenInfo).address
+                : await this.synfV3.ctx.getAddress(instrumentIdentifier.baseSymbol),
+        );
+        return { benchmarkPrice, isInverse };
     }
 
     async parseInstrumentData(rawList: AssembledInstrumentData[], blockInfo: BlockInfo): Promise<InstrumentModel[]> {

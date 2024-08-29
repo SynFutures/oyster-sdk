@@ -69,6 +69,11 @@ export interface ObserverInterface extends BaseInterface {
      */
     inspectDexV2MarketBenchmarkPrice(instrumentIdentifier: InstrumentIdentifier, expiry: number): Promise<BigNumber>;
 
+    _inspectDexV2MarketBenchmarkPrice(
+        instrumentIdentifier: InstrumentIdentifier,
+        expiry: number,
+    ): Promise<{ benchmarkPrice: BigNumber; isInverse: boolean }>;
+
     /**
      * Inspect cex market benchmark price
      * @param instrumentIdentifier the instrument
@@ -76,11 +81,18 @@ export interface ObserverInterface extends BaseInterface {
      */
     inspectCexMarketBenchmarkPrice(instrumentIdentifier: InstrumentIdentifier, expiry: number): Promise<BigNumber>;
 
+    _inspectCexMarketBenchmarkPrice(
+        instrumentIdentifier: InstrumentIdentifier,
+        expiry: number,
+    ): Promise<{ benchmarkPrice: BigNumber; isInverse: boolean }>;
+
     /**
      * Get raw spot price by instrument marketType
      * @param identifier the instrument identifier
      */
     getRawSpotPrice(identifier: InstrumentIdentifier): Promise<BigNumber>;
+
+    _getRawSpotPrice(identifier: InstrumentIdentifier): Promise<{ rawSpotPrice: BigNumber; isInverse: boolean }>;
 
     /**
      * Get next initialized tick outside
