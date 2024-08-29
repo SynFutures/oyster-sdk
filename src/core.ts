@@ -22,6 +22,8 @@ import {
     instrumentPlugin,
     configPlugin,
     inversePlugin,
+    orderPlugin,
+    earnPlugin,
     CachePlugin,
     GatePlugin,
     ObserverPlugin,
@@ -29,6 +31,8 @@ import {
     InstrumentPlugin,
     ConfigPlugin,
     InversePlugin,
+    OrderPlugin,
+    EarnPlugin,
     CacheInterface,
     GateInterface,
     ObserverInterface,
@@ -84,7 +88,7 @@ export type LegacySynFuturesV3 = Combine<
 >;
 
 export type WrappedSynFutureV3 = Combine<
-    [Omit<LegacySynFuturesV3, keyof InverseInterface>, InverseInterface, InversePlugin]
+    [Omit<LegacySynFuturesV3, keyof InverseInterface>, InverseInterface, InversePlugin, OrderPlugin, EarnPlugin]
 >;
 
 export class SynFuturesV3 {
@@ -120,7 +124,10 @@ export class SynFuturesV3 {
         let wrappedInstance = SynFuturesV3.wrappedInstances.get(chainId);
 
         if (!wrappedInstance) {
-            const _instance = SynFuturesV3.getInstance(chainId).use(inversePlugin());
+            const _instance = SynFuturesV3.getInstance(chainId)
+                .use(inversePlugin())
+                .use(orderPlugin())
+                .use(earnPlugin());
 
             // In order to be fully compatible with the old usage,
             // member functions and member variables are mounted on the SDK instance
