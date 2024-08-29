@@ -19,3 +19,4 @@ export * from './gate.plugin';
 export * from './observer.plugin';
 export * from './config.plugin';
 export * from './inverse.plugin';
+export * from './advanced';

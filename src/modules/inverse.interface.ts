@@ -1,11 +1,8 @@
-import { CallOverrides, Signer, ContractTransaction, providers, BigNumber } from 'ethers';
+import { CallOverrides, BigNumber } from 'ethers';
 import { TokenInfo } from '@derivation-tech/web3-core';
 import { BaseInterface } from '../common';
 import { FetchInstrumentParam, InstrumentIdentifier, InstrumentInfo } from '../types';
 import { WrappedPairLevelAccountModel, WrappedInstrumentModel, WrappedInstrumentLevelAccountModel } from '../models';
-
-// TODO: @samlior remove from here
-import { WrappedPlaceOrderRequest, WrappedSimulateOrderResult } from '../types/advanced';
 
 export interface InverseInterface extends BaseInterface {
     get instrumentMap(): Map<string, WrappedInstrumentModel>;
@@ -111,18 +108,18 @@ export interface InverseInterface extends BaseInterface {
     //     simulateResult?: ISimulateTradeResult, // TODO: if not pass simulateResult, will simulate check before send tx
     // ): Promise<ContractTransaction | providers.TransactionReceipt>;
 
-    simulatePlaceOrder(
-        params: WrappedPlaceOrderRequest,
-        overrides?: CallOverrides,
-    ): Promise<WrappedSimulateOrderResult>;
+    // simulatePlaceOrder(
+    //     params: WrappedPlaceOrderRequest,
+    //     overrides?: CallOverrides,
+    // ): Promise<WrappedSimulateOrderResult>;
 
-    placeOrder(
-        signer: Signer,
-        params: WrappedPlaceOrderRequest,
-        deadline: number,
-        simulateResult?: WrappedSimulateOrderResult,
-        overrides?: CallOverrides,
-    ): Promise<ContractTransaction | providers.TransactionReceipt>;
+    // placeOrder(
+    //     signer: Signer,
+    //     params: WrappedPlaceOrderRequest,
+    //     deadline: number,
+    //     simulateResult?: WrappedSimulateOrderResult,
+    //     overrides?: CallOverrides,
+    // ): Promise<ContractTransaction | providers.TransactionReceipt>;
 
     // simulateAddLiquidity(params: IAddLiquidityRequest): ISimulateAddLiquidityResult;
     // addLiquidity(

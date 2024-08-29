@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { CallOverrides, Signer, ContractTransaction, providers, BigNumber } from 'ethers';
+import { CallOverrides, BigNumber } from 'ethers';
 import { TokenInfo } from '@derivation-tech/web3-core';
 import { InverseInterface } from './inverse.interface';
 import { Combine } from '../common';
@@ -8,12 +8,9 @@ import { FetchInstrumentParam, InstrumentIdentifier, WrappedInstrumentInfo } fro
 import { WrappedPairLevelAccountModel, WrappedInstrumentModel, WrappedInstrumentLevelAccountModel } from '../models';
 import { CachePlugin } from './cache.plugin';
 import { InstrumentPlugin } from './instrument.plugin';
-import { alignPriceWadToTick, safeWDiv, WAD } from '../math';
+import { safeWDiv, WAD } from '../math';
 import { SimulatePlugin } from './simulate.plugin';
 import { ObserverPlugin } from './observer.plugin';
-
-// TODO: @samlior remove from here
-import { WrappedPlaceOrderRequest, WrappedSimulateOrderResult } from '../types/advanced';
 
 type SynFuturesV3 = Combine<[SynFuturesV3Core, CachePlugin, InstrumentPlugin, SimulatePlugin, ObserverPlugin]>;
 
@@ -143,74 +140,5 @@ export class InverseModule implements InverseInterface {
     async getRawSpotPrice(identifier: InstrumentIdentifier): Promise<BigNumber> {
         const res = await this.synfV3.observer.getRawSpotPrice(identifier);
         return safeWDiv(WAD, res);
-    }
-
-    async simulatePlaceOrder(
-        _params: WrappedPlaceOrderRequest,
-        overrides?: CallOverrides,
-    ): Promise<WrappedSimulateOrderResult> {
-        const params = _params.unWrap;
-
-        const tick =
-            'tick' in params.priceInfo ? params.priceInfo.tick : alignPriceWadToTick(params.priceInfo.price).tick;
-
-        let baseSize: BigNumber | undefined = undefined;
-
-        if ('base' in params.amountInfo) {
-            baseSize = params.amountInfo.base;
-        } else {
-            const { baseAmount } = await this.synfV3.observer.inquireByQuote(
-                params.pair,
-                params.side,
-                params.amountInfo.quote,
-                overrides,
-            );
-
-            baseSize = baseAmount;
-        }
-
-        const result = this.synfV3.simulate.simulateOrder2(
-            params.pair,
-            params.traderAddr,
-            tick,
-            baseSize,
-            params.side,
-            params.leverage,
-        );
-
-        return new WrappedSimulateOrderResult({
-            baseSize: result.baseSize,
-            balance: result.balance,
-            leverageWad: result.leverageWad,
-            marginToDepositWad: result.marginToDepositWad,
-            minOrderValue: result.minOrderValue,
-            minFeeRebate: result.minFeeRebate,
-            tick,
-            isInverse: params.isInverse,
-        });
-    }
-
-    async placeOrder(
-        signer: Signer,
-        _params: WrappedPlaceOrderRequest,
-        deadline: number,
-        simulateResult?: WrappedSimulateOrderResult,
-        overrides?: CallOverrides,
-    ): Promise<ContractTransaction | providers.TransactionReceipt> {
-        const params = _params.unWrap;
-
-        simulateResult = simulateResult ?? (await this.simulatePlaceOrder(_params, overrides));
-
-        return this.synfV3.instrument.limitOrder(
-            signer,
-            params.pair,
-            simulateResult.tick,
-            simulateResult.baseSize,
-            simulateResult.balance,
-            params.side,
-            deadline,
-            overrides,
-            params.referralCode,
-        );
     }
 }
