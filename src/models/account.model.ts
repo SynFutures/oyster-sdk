@@ -119,8 +119,8 @@ export class PairLevelAccountModel extends PairLevelAccountModelBase<InstrumentM
         return this.data.rootPair;
     }
 
-    get wrap(): WrapppedPairLevelAccount {
-        return new WrapppedPairLevelAccount(this.data);
+    get wrap(): WrapppedPairLevelAccountModel {
+        return new WrapppedPairLevelAccountModel(this.data);
     }
 
     get ranges(): RangeModel[] {
@@ -164,7 +164,7 @@ export class PairLevelAccountModel extends PairLevelAccountModelBase<InstrumentM
     }
 }
 
-export class WrapppedPairLevelAccount extends PairLevelAccountModelBase<WrappedInstrumentModel, WrappedPairModel> {
+export class WrapppedPairLevelAccountModel extends PairLevelAccountModelBase<WrappedInstrumentModel, WrappedPairModel> {
     get rootPair(): WrappedPairModel {
         return this.data.rootPair.wrap;
     }
