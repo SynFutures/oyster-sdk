@@ -1,8 +1,21 @@
-import { BigNumber, Signer } from 'ethers';
+import { BigNumber, Signer, Overrides, CallOverrides } from 'ethers';
 import { BatchOrderSizeDistribution, Side } from '../../src/types/enum';
-import { PairModel, PositionModel, RangeModel, WrappedPositionModel, WrappedOrderModel } from '../../src/models';
-import { InstrumentIdentifier, SimulateOrderResult, SimulateTradeResult } from '../../src/types/params';
+import {
+    PairModel,
+    PositionModel,
+    RangeModel,
+    WrappedPositionModel,
+    WrappedOrderModel,
+    InstrumentLevelAccountModel,
+} from '../../src/models';
+import {
+    InstrumentIdentifier,
+    InstrumentPointConfigParam,
+    SimulateOrderResult,
+    SimulateTradeResult,
+} from '../../src/types/params';
 import { Quotation } from '../../src/types';
+import { BlockInfo } from '@derivation-tech/web3-core';
 
 export interface ITradeRequest {
     signer: Signer;
@@ -249,4 +262,277 @@ export interface ICrossMarketOrderResult extends CrossMarketOrderResult {
     tradeSimulation: ISimulateTradeResult; // [modify] inverse display
     orderSimulation: ISimulatePlaceOrderResult; // [modify] inverse display
     totalMinSize: BigNumber; // [add] tradeSize + orderSize
+}
+
+export interface Pagination {
+    page?: number;
+    size?: number;
+}
+export interface QueryParam extends Pagination {
+    traders?: string[];
+    instrumentAddr?: string;
+    expiry?: number;
+    startTs?: number;
+    endTs?: number;
+    referralCode?: string;
+}
+
+export interface VirtualTrade {
+    txHash: string;
+    timestamp: number;
+    blockNumber: number;
+    logIndex: number;
+    trader: string;
+    instrumentAddr: string;
+    expiry: number;
+    size: BigNumber;
+    price: BigNumber;
+    tradeValue: BigNumber;
+    fee: BigNumber;
+    stablityFee: BigNumber;
+    // type: VirtualTradeType;
+    isRangeLiquidated?: boolean;
+    referralCode?: string;
+}
+
+export interface IVirtualTrade extends VirtualTrade {
+    origin: VirtualTrade; // origin result
+    price: BigNumber; // [modify] inverse display
+    side: Side; // [add] inverse display
+}
+export interface FundingHistory {
+    timestamp?: number;
+    instrumentAddr?: string;
+    expiry?: number;
+    trader: string;
+    funding: BigNumber;
+    type: 'Receive' | 'Pay';
+    txHash: string;
+    //   pair?: WrappedPair;
+    logIndex: number;
+}
+export interface IFundingHistory extends FundingHistory {
+    origin: FundingHistory;
+}
+export interface TransferHistory {
+    timestamp?: number;
+    instrumentAddr?: string;
+    expiry?: number;
+    quoteAddr: string;
+    trader: string;
+    amount: BigNumber;
+    isTransferIn: boolean;
+    txHash: string;
+    //   pair?: WrappedPair;
+    logIndex: number;
+}
+export interface ITransferHistory extends TransferHistory {
+    origin: TransferHistory;
+}
+export interface UserOrder {
+    trader: string;
+    instrumentAddr: string;
+    expiry: number;
+    tick: number;
+    size: BigNumber;
+    filledSize: BigNumber;
+    price: BigNumber;
+    fee: BigNumber;
+    createdTimestamp: number;
+    timestamp: number;
+    // status: OrderStatus;
+    placeTxHash: string;
+    placeTxLogIndex: number;
+    fillTxHash?: string;
+    fillTxLogIndex?: number;
+    cancelTxHash?: string;
+    cancelTxLogIndex?: number;
+    referralCode?: string;
+    txHash: string;
+    //   pair?: WrappedPair;
+    logIndex?: number;
+}
+export interface IOrderHistory extends UserOrder {
+    origin: UserOrder;
+    side: Side; // [add] inverse display
+    price: BigNumber; // [modify] inverse display
+    tradeValue: BigNumber; // [add] price * size. different from status, [OrderStatus.CANCELLED]:price(from tick) * size, [OrderStatus.OPEN||OrderStatus.FILLED]:price * filledSize
+}
+
+export interface LiquidityHistory {
+    timestamp?: number;
+    instrumentAddr?: string;
+    expiry?: number;
+    trader: string;
+    priceRangeMin: BigNumber;
+    priceRangeMax: BigNumber;
+    amount: BigNumber;
+    feeEarned?: BigNumber;
+    logIndex: number;
+    type: 'Add' | 'Remove';
+    //   pair?: WrappedPair;
+    fairPrice: BigNumber;
+    txHash: string;
+    operator: string;
+}
+export interface ILiquidityHistory extends LiquidityHistory {
+    origin: LiquidityHistory;
+    priceRangeMin: BigNumber; // [modify] inverse display, and use priceRangeMax to calculate
+    priceRangeMax: BigNumber; // [modify] inverse display, and use priceRangeMin to calculate
+    fairPrice: BigNumber; // [modify] inverse display
+}
+
+export interface AccountBalanceHistory {
+    timestamp?: number;
+    quoteAddr: string;
+    trader: string;
+    amount: BigNumber;
+    txHash: string;
+    logIndex: number;
+}
+export interface IAccountBalanceHistory extends AccountBalanceHistory {
+    origin: AccountBalanceHistory;
+}
+
+export interface IOdysseySimulatePortfolioPointPerDayRequest {
+    portfolio: InstrumentLevelAccountModel[];
+    accountBoost: number;
+    pointConfigMetaMap: Map<string, InstrumentPointConfigParam>;
+}
+
+export interface IOdysseySimulateRangePointPerDayRequest {
+    instrumentIdentifier: InstrumentIdentifier;
+    expiry: number;
+    alphaWad: BigNumber;
+    liquidity: BigNumber;
+    balance: BigNumber;
+    accountBoost: number;
+    poolFactor: number;
+    quotePriceWad: BigNumber; // [modify] inverse display
+    isStable?: boolean;
+}
+
+export interface IOdysseySimulateOrderPointPerDayRequest {
+    targetTick: number;
+    baseSize: BigNumber;
+    accountBoost: number;
+    poolFactor: number;
+    quotePriceWad: BigNumber; // [modify] inverse display
+}
+
+export interface RawSpotState {
+    price: BigNumber;
+    time: number;
+}
+export interface IRawSpotState extends RawSpotState {
+    origin: RawSpotState;
+    price: BigNumber; // [modify] inverse display
+}
+
+export interface IRawSpotStateRequest {
+    instrumentIdentifier: InstrumentIdentifier;
+    instrumentAddr?: string;
+}
+
+export interface IGetOrderBookDataRequest {
+    // observer: Observer;
+    instrumentAddr: string;
+    expiry: number;
+    stepRatio: number;
+    length?: number;
+}
+
+interface DepthChartData {
+    tick: number;
+    price: number;
+    base: number;
+}
+
+export interface IDepthChartData extends DepthChartData {
+    origin: DepthChartData;
+    price: number; // [modify] inverse display
+}
+
+export interface IOrderBookData {
+    left: DepthChartData[];
+    right: DepthChartData[];
+}
+
+export interface IDepthChartRequest {
+    // observer: Observer;
+    instrumentAddr: string;
+    expiry: number;
+    stepRatio: number;
+    isInverse?: boolean;
+    lowerPrice?: BigNumber;
+    upperPrice?: BigNumber;
+}
+export interface IDeepChartsData {
+    left: DepthChartData[];
+    right: DepthChartData[];
+}
+
+export interface IPortfolioReleaseClaimRequest {
+    signer: Signer;
+    quote: string;
+    trader: string;
+    overrides?: Overrides;
+}
+
+export interface IPortfolioGetPendingParamsRequest {
+    quotes: string[];
+    overrides?: CallOverrides;
+}
+
+export interface IPortfolioGetPendingParamsResult {
+    pendingDuration: BigNumber;
+    thresholds: BigNumber[]; // TODO by @jinxi: need to fix decimals to 18?
+}
+
+export interface FundFlow {
+    totalIn: BigNumber;
+    totalOut: BigNumber;
+}
+export interface Pending {
+    timestamp: number;
+    native: boolean;
+    amount: BigNumber; // TODO by @jinxi: need to fix decimals to 18?
+    exemption: BigNumber;
+}
+
+export interface IPortfolioGetFundFlowsRequest {
+    quoteAddrs: string[];
+    trader: string;
+    overrides?: CallOverrides;
+}
+
+export interface IPortfolioGetFundFlowsResult {
+    fundFlows: FundFlow[];
+    blockInfo: BlockInfo;
+}
+
+export interface IPortfolioGetUserPendingsRequest {
+    quoteAddrs: string[];
+    trader: string;
+    overrides?: CallOverrides;
+}
+
+export interface IPortfolioGetUserPendingsResult {
+    pendings: {
+        maxWithdrawable: BigNumber; // TODO by @jinxi: need to fix decimals to 18?
+        pending: Pending;
+    }[];
+    blockInfo: BlockInfo;
+}
+
+export interface IPortfolioDepositRequest {
+    signer: Signer;
+    quoteAddress: string;
+    amount: BigNumber;
+}
+
+export interface IPortfolioWithdrawRequest {
+    signer: Signer;
+    quoteAddress: string;
+    amount: BigNumber;
 }
