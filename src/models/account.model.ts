@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { BigNumber } from 'ethers';
 import { BlockInfo } from '@derivation-tech/web3-core';
-import { EMPTY_POSITION, Order, Portfolio, Position, Range } from '../types';
+import { Order, Portfolio, Position, Range } from '../types';
 import { rangeKey } from '../common';
 import { ZERO } from '../math';
+import { EMPTY_POSITION } from '../constants';
 
 import { InstrumentModelBase, InstrumentModel, WrappedInstrumentModel } from './instrument.model';
 import { RangeModel, WrappedRangeModel } from './range.model';

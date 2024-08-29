@@ -11,9 +11,17 @@ import {
     wmul,
 } from './basic';
 import { BigNumber } from 'ethers';
-import { alphaWadToTickDelta, asInt256, asUint256, decompose, forceAsInt24, solidityRequire } from '../common/util';
+import {
+    alphaWadToTickDelta,
+    asInt256,
+    asUint256,
+    decompose,
+    forceAsInt24,
+    solidityRequire,
+    signOfSide,
+} from '../common/util';
 import { INT24_MAX, INT24_MIN, MAX_TICK, MIN_TICK, ONE_RATIO, PEARL_SPACING, RANGE_SPACING } from '../constants';
-import { Observer, Side, signOfSide } from '../types';
+import { Observer, Side } from '../types';
 import { SqrtPriceMath } from './sqrtPriceMath';
 
 export abstract class TickMath {

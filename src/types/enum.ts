@@ -64,20 +64,3 @@ export enum BatchOrderSizeDistribution {
     LOWER,
     RANDOM,
 }
-
-export function cexMarket(marketType: MarketType): boolean {
-    return marketType === MarketType.LINK || marketType === MarketType.EMG || marketType === MarketType.PYTH;
-}
-
-export function signOfSide(side: Side): number {
-    switch (side) {
-        case Side.LONG:
-            return 1;
-        case Side.SHORT:
-            return -1;
-        case Side.FLAT:
-            return 0;
-        default:
-            throw new Error(`invalid side: ${side}`);
-    }
-}

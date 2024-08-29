@@ -1,7 +1,8 @@
 import { BigNumber } from 'ethers';
-import { calcFundingFee, calcLiquidationPrice, calcPnl, Position, Side } from '../types';
+import { Position, Side } from '../types';
 import { r2w, wdiv, safeWDiv, wmul, wmulUp, ZERO, WAD } from '../math';
 import { ONE_RATIO, PERP_EXPIRY } from '../constants';
+import { calcFundingFee, calcLiquidationPrice, calcPnl } from '../common';
 
 import { PairModel, PairModelBase, WrappedPairModel } from './pair.model';
 import { InstrumentModel, InstrumentModelBase, WrappedInstrumentModel } from './instrument.model';

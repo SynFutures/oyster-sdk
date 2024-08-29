@@ -1,4 +1,6 @@
 import { BigNumber } from 'ethers';
+import { ZERO } from '@derivation-tech/web3-core';
+import { Amm, Status, QuoteParam, QuoteType, Position } from './types';
 
 export const WAD_DECIMALS = 18;
 export const RATIO_DECIMALS = 4;
@@ -47,3 +49,42 @@ export const MAX_BATCH_ORDER_COUNT = 9;
 export const MIN_BATCH_ORDER_COUNT = 2;
 
 export const MAX_CANCEL_ORDER_COUNT = 8;
+
+export const EMPTY_AMM: Amm = {
+    expiry: 0,
+    timestamp: 0,
+    status: Status.TRADING,
+    tick: 0,
+    sqrtPX96: ZERO,
+    liquidity: ZERO,
+    totalLiquidity: ZERO,
+    involvedFund: ZERO,
+    openInterests: ZERO,
+    feeIndex: ZERO,
+    protocolFee: ZERO,
+    totalLong: ZERO,
+    totalShort: ZERO,
+    longSocialLossIndex: ZERO,
+    shortSocialLossIndex: ZERO,
+    longFundingIndex: ZERO,
+    shortFundingIndex: ZERO,
+    insuranceFund: ZERO,
+    settlementPrice: ZERO,
+};
+
+export const EMPTY_QUOTE_PARAM: QuoteParam = {
+    tradingFeeRatio: 0,
+    stabilityFeeRatioParam: ZERO,
+    protocolFeeRatio: 0,
+    qtype: QuoteType.INVALID,
+    minMarginAmount: ZERO,
+    tip: ZERO,
+};
+
+export const EMPTY_POSITION: Position = {
+    balance: ZERO,
+    size: ZERO,
+    entryNotional: ZERO,
+    entrySocialLossIndex: ZERO,
+    entryFundingIndex: ZERO,
+};

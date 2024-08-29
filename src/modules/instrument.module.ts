@@ -6,7 +6,6 @@ import {
     AdjustParam,
     BatchPlaceParam,
     CancelParam,
-    cexMarket,
     FillParam,
     InstrumentIdentifier,
     MarketType,
@@ -14,7 +13,6 @@ import {
     Quotation,
     RemoveParam,
     Side,
-    signOfSide,
     TradeParam,
 } from '../types';
 import {
@@ -32,6 +30,8 @@ import {
     InstrumentParser,
     normalizeTick,
     trimObj,
+    cexMarket,
+    signOfSide,
 } from '../common';
 import { BigNumber, ContractTransaction, ethers, Overrides, PayableOverrides, Signer } from 'ethers';
 import { SdkError } from '../errors/sdk.error';

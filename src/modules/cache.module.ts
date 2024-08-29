@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { BigNumber, CallOverrides, ethers, Signer } from 'ethers';
+import { Provider } from '@ethersproject/providers';
 import { CHAIN_ID, TokenInfo } from '@derivation-tech/web3-core';
 import { SynFuturesV3 as SynFuturesV3Core } from '../core';
 import {
-    cexMarket,
-    EMPTY_QUOTE_PARAM,
     FetchInstrumentParam,
     Instrument,
     Instrument__factory,
@@ -11,11 +11,10 @@ import {
     InstrumentInfo,
     MarketType,
 } from '../types';
-import { BigNumber, CallOverrides, ethers, Signer } from 'ethers';
 import { ConfigState, GateState, InstrumentModel, PairLevelAccountModel } from '../models';
+import { EMPTY_QUOTE_PARAM } from '../constants';
+import { Combine, getTokenInfo, InstrumentParser, cexMarket } from '../common';
 import { CacheInterface } from './cache.interface';
-import { Combine, getTokenInfo, InstrumentParser } from '../common';
-import { Provider } from '@ethersproject/providers';
 import { ObserverPlugin } from './observer.plugin';
 
 type SynFuturesV3 = Combine<[SynFuturesV3Core, ObserverPlugin]>;

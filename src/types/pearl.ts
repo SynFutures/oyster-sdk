@@ -1,5 +1,5 @@
-import { BlockInfo } from '@derivation-tech/web3-core';
-import { BigNumber } from 'ethers';
+import type { BlockInfo } from '@derivation-tech/web3-core';
+import type { BigNumber } from 'ethers';
 
 export interface Pearl {
     liquidityGross: BigNumber; // the total position liquidity that references this tick

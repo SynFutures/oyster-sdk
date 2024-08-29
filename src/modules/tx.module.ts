@@ -1,7 +1,6 @@
-import { TxInterface } from './tx.interface';
-import { PopulatedTransaction, Signer } from 'ethers';
+import { PopulatedTransaction, Signer, ethers } from 'ethers';
 import { SynFuturesV3 } from '../core';
-import * as ethers from 'ethers';
+import { TxInterface } from './tx.interface';
 
 export class TxModule implements TxInterface {
     synfV3: SynFuturesV3;

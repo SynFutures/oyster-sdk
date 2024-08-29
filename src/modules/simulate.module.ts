@@ -1,23 +1,16 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { BigNumber, ethers } from 'ethers';
 import { SynFuturesV3 as SynFuturesV3Core } from '../core';
 import {
-    alignRangeTick,
     BatchOrderSizeDistribution,
-    cexMarket,
-    combine,
-    entryDelta,
-    getMarginFromLiquidity,
     InstrumentIdentifier,
     InstrumentSetting,
-    NumericConverter,
     Quotation,
     Side,
-    signOfSide,
     SimulateOrderResult,
     SimulateTradeResult,
     TokenInfo,
 } from '../types';
-import { BigNumber, ethers } from 'ethers';
 import {
     getMaxLeverage,
     max,
@@ -52,12 +45,15 @@ import {
     rangeKey,
     tickDeltaToAlphaWad,
     withinOrderLimit,
+    alignRangeTick,
+    cexMarket,
+    combine,
+    entryDelta,
+    getMarginFromLiquidity,
+    NumericConverter,
+    signOfSide,
 } from '../common';
 import { InstrumentModel, PairLevelAccountModel, PairModel, PositionModel, RangeModel } from '../models';
-import { SimulateInterface } from './simulate.interface';
-import { CachePlugin } from './cache.plugin';
-import { InstrumentPlugin } from './instrument.plugin';
-import { ObserverPlugin } from './observer.plugin';
 import {
     SimulateAddLiquidityResult,
     SimulateAddLiquidityWithAsymmetricRangeResult,
@@ -67,6 +63,10 @@ import {
     SimulateCrossMarketOrderResult,
     SimulateRemoveLiquidityResult,
 } from '../types/simulate';
+import { SimulateInterface } from './simulate.interface';
+import { CachePlugin } from './cache.plugin';
+import { InstrumentPlugin } from './instrument.plugin';
+import { ObserverPlugin } from './observer.plugin';
 
 type SynFuturesV3 = Combine<[SynFuturesV3Core, CachePlugin, InstrumentPlugin, ObserverPlugin]>;
 

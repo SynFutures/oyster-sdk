@@ -7,9 +7,9 @@ import { SynFuturesV3 as SynFuturesV3Core } from '../core';
 import { FetchInstrumentParam, WrappedInstrumentInfo } from '../types';
 import { WrappedPlaceOrderRequest, WrappedSimulateOrderResult } from '../types/inverse';
 import { PairLevelAccountModel, WrappedInstrumentModel } from '../models';
+import { alignPriceWadToTick } from '../math';
 import { CachePlugin } from './cache.plugin';
 import { InstrumentPlugin } from './instrument.plugin';
-import { alignPriceWadToTick } from '../math';
 import { SimulatePlugin } from './simulate.plugin';
 import { ObserverPlugin } from './observer.plugin';
 

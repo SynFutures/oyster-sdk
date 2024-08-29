@@ -1,7 +1,7 @@
-import { BigNumber } from 'ethers';
-import { PositionModel } from '../models';
-import { Quotation } from './position';
-import { SimulateOrderResult, SimulateTradeResult } from './params';
+import type { BigNumber } from 'ethers';
+import type { PositionModel } from '../models';
+import type { Quotation } from './position';
+import type { SimulateOrderResult, SimulateTradeResult } from './params';
 
 export interface SimulateAddLiquidityResult {
     tickDelta: number;

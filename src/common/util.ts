@@ -1,33 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { BigNumber, BigNumberish, ethers } from 'ethers';
-import {
-    INT24_MAX,
-    MAX_CANCEL_ORDER_COUNT,
-    MAX_STABILITY_FEE_RATIO,
-    MAX_TICK,
-    MIN_TICK,
-    PERP_EXPIRY,
-    RATIO_BASE,
-    RATIO_DECIMALS,
-} from '../constants';
-import {
-    EMPTY_TICK,
-    MAX_INT_24,
-    MAX_UINT_128,
-    MAX_UINT_16,
-    ONE,
-    r2w,
-    s2w,
-    sqrt,
-    sqrtX96ToWad,
-    TickMath,
-    WAD,
-    wadToTick,
-    wdiv,
-    wmul,
-    wmulDown,
-    ZERO,
-} from '../math';
+import { CallOverrides } from 'ethers/lib/ethers';
+import { hexZeroPad, Interface, Result } from 'ethers/lib/utils';
+import moment from 'moment';
 import {
     ADDR_BATCH_SIZE,
     ChainContext,
@@ -37,6 +12,46 @@ import {
     SECS_PER_DAY,
     SECS_PER_HOUR,
 } from '@derivation-tech/web3-core';
+import {
+    INT24_MAX,
+    MAX_CANCEL_ORDER_COUNT,
+    MAX_STABILITY_FEE_RATIO,
+    MAX_POSITION_NUM,
+    MAX_TICK,
+    MIN_TICK,
+    PERP_EXPIRY,
+    RATIO_BASE,
+    RATIO_DECIMALS,
+    RANGE_SPACING,
+} from '../constants';
+import {
+    EMPTY_TICK,
+    MAX_INT_24,
+    MAX_UINT_128,
+    MAX_UINT_16,
+    ONE,
+    ZERO,
+    Q96,
+    r2w,
+    s2w,
+    sqrt,
+    sqrtX96ToWad,
+    TickMath,
+    SqrtPriceMath,
+    WAD,
+    wadToTick,
+    wdiv,
+    wdivDown,
+    wdivUp,
+    wmul,
+    wmulDown,
+    wmulUp,
+    wmulInt,
+    frac,
+    fracDown,
+    weightedAverage,
+    oppositeSigns,
+} from '../math';
 import {
     AddParam,
     BatchOrderSizeDistribution,
@@ -57,12 +72,14 @@ import {
     Side,
     TokenInfo,
     TradeParam,
+    Order,
+    Position,
+    ContractRecord,
+    Amm,
+    Range,
 } from '../types';
-import * as moment from 'moment';
-import { hexZeroPad, Interface, Result } from 'ethers/lib/utils';
 import { EmaParamStruct } from '../types/typechain/CexMarket';
-import { CallOverrides } from 'ethers/lib/ethers';
-import { PositionModel } from '../models';
+import { PositionModel, PairState } from '../models';
 
 const nonceLength = 24;
 const tickLength = 24;
@@ -1261,4 +1278,470 @@ export function getBatchOrderRatios(sizeDistribution: BatchOrderSizeDistribution
 
 export function reverse(side: Side): Side {
     return side === Side.LONG ? Side.SHORT : side === Side.SHORT ? Side.LONG : Side.FLAT;
+}
+
+export abstract class NumericConverter {
+    static scaleQuoteAmount(amount: BigNumber, quoteDecimals: number): BigNumber {
+        const quoteAmountScaler = BigNumber.from(10).pow(18 - quoteDecimals);
+        return amount.mul(quoteAmountScaler);
+    }
+
+    static toContractQuoteAmount(amount: BigNumber, quoteDecimals: number): BigNumber {
+        const quoteAmountScaler = BigNumber.from(10).pow(18 - quoteDecimals);
+        return amount.div(quoteAmountScaler);
+    }
+
+    static toContractRatio(ratioWad: BigNumber): number {
+        return ratioWad.div(BigNumber.from(10).pow(14)).toNumber();
+    }
+}
+
+export function cexMarket(marketType: MarketType): boolean {
+    return marketType === MarketType.LINK || marketType === MarketType.EMG || marketType === MarketType.PYTH;
+}
+
+export function signOfSide(side: Side): number {
+    switch (side) {
+        case Side.LONG:
+            return 1;
+        case Side.SHORT:
+            return -1;
+        case Side.FLAT:
+            return 0;
+        default:
+            throw new Error(`invalid side: ${side}`);
+    }
+}
+
+export function requiredMarginForOrder(limit: BigNumber, sizeWad: BigNumber, ratio: number): BigNumber {
+    const marginValue: BigNumber = wmul(limit, sizeWad);
+    const minAmount: BigNumber = wmulUp(marginValue, r2w(ratio));
+    return minAmount;
+}
+
+export function fillOrderToPosition(
+    pearlNonce: number,
+    pearlTaken: BigNumber,
+    pearlFee: BigNumber,
+    pearlSocialLoss: BigNumber,
+    pearlFundingIndex: BigNumber,
+    order: Order,
+    tick: number,
+    nonce: number,
+    fillSize: BigNumber,
+    record: ContractRecord,
+): Position {
+    if (fillSize.eq(ZERO)) {
+        fillSize = order.size;
+    }
+    const usize = fillSize.abs();
+    let makerFee: BigNumber;
+    let entrySocialLossIndex: BigNumber;
+    let entryFundingIndex: BigNumber;
+    if (nonce < pearlNonce) {
+        const utaken0 = record.taken.abs();
+        makerFee = record.taken.eq(fillSize) ? record.fee : fracDown(record.fee, usize, utaken0);
+        entrySocialLossIndex = record.entrySocialLossIndex;
+        entryFundingIndex = record.entryFundingIndex;
+    } else {
+        const utaken1 = pearlTaken.abs();
+        makerFee = pearlTaken.eq(fillSize) ? pearlFee : fracDown(pearlFee, usize, utaken1);
+        entrySocialLossIndex = pearlSocialLoss;
+        entryFundingIndex = pearlFundingIndex;
+    }
+    const srtikePrice = TickMath.getWadAtTick(tick);
+
+    const pic: Position = {
+        balance: order.balance.add(makerFee),
+        size: fillSize,
+        entryNotional: wmul(srtikePrice, fillSize.abs()),
+        entrySocialLossIndex: entrySocialLossIndex,
+        entryFundingIndex: entryFundingIndex,
+    };
+    return pic;
+}
+
+export function cancelOrderToPosition(
+    pearlLeft: BigNumber,
+    pearlNonce: number,
+    pearlTaken: BigNumber,
+    pearlFee: BigNumber,
+    pearlSocialLoss: BigNumber,
+    pearlFundingIndex: BigNumber,
+    order: Order,
+    tick: number,
+    nonce: number,
+    record: ContractRecord,
+): Position {
+    let pic: Position = {
+        balance: order.balance,
+        size: ZERO,
+        entryNotional: ZERO,
+        entrySocialLossIndex: ZERO,
+        entryFundingIndex: ZERO,
+    };
+    const uleft: BigNumber = pearlLeft.abs();
+    const usize: BigNumber = order.size.abs();
+    if (uleft.lt(usize)) {
+        // partially cancelled
+        const tLeft = pearlLeft;
+        pic = fillOrderToPosition(
+            pearlNonce,
+            pearlTaken,
+            pearlFee,
+            pearlSocialLoss,
+            pearlFundingIndex,
+            order,
+            tick,
+            nonce,
+            order.size.sub(tLeft),
+            record,
+        );
+    }
+    // fully cancelled, no position generated
+    return pic;
+}
+
+// e.g. 0b1101 => [0, 2, 3]
+export function decomposePbitmap(pbitmap: BigNumber): number[] {
+    const bits: number[] = [];
+    for (let i = 0; i < MAX_POSITION_NUM; i++) {
+        if (!pbitmap.and(ONE.shl(i)).isZero()) {
+            bits.push(i);
+        }
+    }
+    return bits;
+}
+
+export function tally(
+    amm: Amm,
+    position: Position,
+    mark: BigNumber,
+): { equity: BigNumber; pnl: BigNumber; socialLoss: BigNumber } {
+    let fundingFee: BigNumber = ZERO;
+    const value: BigNumber = wmul(mark, position.size.abs());
+    const socialLoss: BigNumber = wmulUp(
+        (position.size.gt(ZERO) ? amm.longSocialLossIndex : amm.shortSocialLossIndex).sub(
+            position.entrySocialLossIndex,
+        ),
+        position.size.abs(),
+    );
+
+    // perp should consider funding fee
+    if (amm.expiry === PERP_EXPIRY) fundingFee = calcFundingFee(amm, position);
+
+    const pnl = (position.size.gt(ZERO) ? value.sub(position.entryNotional) : position.entryNotional.sub(value))
+        .add(fundingFee)
+        .sub(socialLoss);
+
+    const equity = pnl.add(position.balance);
+    return { equity: equity, pnl: pnl, socialLoss: socialLoss };
+}
+
+export function calcLiquidationPrice(amm: Amm, position: Position, maintenanceMarginRatio = 500): BigNumber {
+    // if LONG:
+    // price * size - entryNotional - socialLoss + balance + fundingFee = price * size * mmr
+    // price = (entryNotional + socialLoss - balance - fundingFee) / (1 - mmr)*size
+    // if SHORT:
+    // entryNotional - price * size - socialLoss + balance + fundingFee = price * size * mmr
+    // price = (entryNotional - socialLoss + balance + fundingFee) / (1 + mmr)*size
+    const socialLoss: BigNumber = wmulUp(
+        (position.size.gt(ZERO) ? amm.longSocialLossIndex : amm.shortSocialLossIndex).sub(
+            position.entrySocialLossIndex,
+        ),
+        position.size.abs(),
+    );
+    const fundingFee = calcFundingFee(amm, position);
+    let price: BigNumber;
+
+    if (position.size.gt(ZERO)) {
+        const numerator = position.entryNotional.add(socialLoss).sub(position.balance).sub(fundingFee);
+        if (numerator.lte(ZERO)) return ZERO;
+        price = wdivDown(numerator, wmulUp(position.size.abs(), r2w(10000 - maintenanceMarginRatio)));
+    } else {
+        const numerator = position.entryNotional.sub(socialLoss).add(position.balance).add(fundingFee);
+        if (numerator.lte(ZERO)) return ZERO; // highly unlikely to happen
+        price = wdivUp(numerator, wmulDown(position.size.abs(), r2w(10000 + maintenanceMarginRatio)));
+    }
+    return price;
+}
+
+export function calculatePriceFromPnl(amm: Amm, position: Position, pnl: BigNumber): BigNumber {
+    // if LONG:
+    // price = (pnl - fundingFee + socialLoss + entryNotional) / size
+    // if SHORT:
+    // price = (entryNotional + fundingFee - socialLoss - pnl) / size
+    const socialLoss: BigNumber = wmulUp(
+        (position.size.gt(ZERO) ? amm.longSocialLossIndex : amm.shortSocialLossIndex).sub(
+            position.entrySocialLossIndex,
+        ),
+        position.size.abs(),
+    );
+    const fundingFee = calcFundingFee(amm, position);
+    const value = position.size.gt(ZERO)
+        ? pnl.add(socialLoss).add(position.entryNotional).sub(fundingFee)
+        : position.entryNotional.sub(socialLoss).sub(pnl).add(fundingFee);
+
+    return position.size.gt(ZERO) ? wdivUp(value, position.size.abs()) : wdivDown(value, position.size.abs());
+}
+
+export function calcFundingFee(amm: Amm, position: Position): BigNumber {
+    return wmulInt(
+        (position.size.gte(ZERO) ? amm.longFundingIndex : amm.shortFundingIndex).sub(position.entryFundingIndex),
+        position.size.abs(),
+    );
+}
+
+export function calcPnl(amm: Amm, position: Position, mark: BigNumber): BigNumber {
+    return tally(amm, position, mark).pnl;
+}
+
+export function realizeFundingWithPnl(amm: Amm, pos: Position): { position: Position; pnl: BigNumber } {
+    if (pos.size.eq(0)) return { position: pos, pnl: ZERO };
+    const position: Position = Object.assign({}, pos);
+
+    const currentFundingIndex = position.size.gt(ZERO) ? amm.longFundingIndex : amm.shortFundingIndex;
+    let pnl = ZERO;
+    if (!currentFundingIndex.eq(position.entryFundingIndex)) {
+        const funding = wmulInt(currentFundingIndex.sub(position.entryFundingIndex), position.size.abs());
+        pnl = funding;
+
+        position.entryFundingIndex = currentFundingIndex;
+        position.balance = position.balance.add(funding);
+    }
+    return { position, pnl };
+}
+
+export function realizeFundingIncome(amm: Amm, pos: Position): Position {
+    return realizeFundingWithPnl(amm, pos).position;
+}
+
+export function combine(
+    amm: Amm,
+    position_1: Position,
+    position_2: Position,
+): { position: Position; closedSize: BigNumber; realized: BigNumber } {
+    let position1 = Object.assign({}, position_1);
+    let position2 = Object.assign({}, position_2);
+    let realized = ZERO;
+
+    if (amm.expiry === PERP_EXPIRY) {
+        const { position: realizedPosition1, pnl: realizedPnl1 } = realizeFundingWithPnl(amm, position1);
+        const { position: realizedPosition2, pnl: realizedPnl2 } = realizeFundingWithPnl(amm, position2);
+        position1 = realizedPosition1;
+        position2 = realizedPosition2;
+        realized = realized.add(realizedPnl1);
+        realized = realized.add(realizedPnl2);
+    }
+
+    let pic: Position = {
+        balance: ZERO,
+        size: ZERO,
+        entryNotional: ZERO,
+        entrySocialLossIndex: ZERO,
+        entryFundingIndex: ZERO,
+    };
+    let closedSize = ZERO;
+    if (position1.size.eq(ZERO) || position2.size.eq(ZERO)) {
+        pic = position1.size.eq(ZERO) ? position2 : position1;
+        pic.balance = position1.balance.add(position2.balance);
+        return { position: pic, closedSize: closedSize, realized: realized };
+    }
+
+    pic.size = position1.size.add(position2.size);
+    if (oppositeSigns(position1.size, position2.size)) {
+        closedSize = position1.size.abs().lt(position2.size.abs()) ? position1.size.abs() : position2.size.abs();
+
+        const LongPic: Position = position1.size.gt(ZERO) ? position1 : position2;
+        const shortPic: Position = position1.size.gt(ZERO) ? position2 : position1;
+        let closedLongNotional: BigNumber = ZERO;
+        let closedShortNotional: BigNumber = ZERO;
+
+        if (pic.size.gt(ZERO)) {
+            closedLongNotional = frac(LongPic.entryNotional, closedSize, LongPic.size.abs());
+            closedShortNotional = shortPic.entryNotional;
+            pic.entryNotional = LongPic.entryNotional.sub(closedLongNotional);
+            pic.entrySocialLossIndex = LongPic.entrySocialLossIndex;
+            pic.entryFundingIndex = LongPic.entryFundingIndex;
+        } else if (pic.size.lt(ZERO)) {
+            closedLongNotional = LongPic.entryNotional;
+            closedShortNotional = frac(shortPic.entryNotional, closedSize, shortPic.size.abs());
+            pic.entryNotional = shortPic.entryNotional.sub(closedShortNotional);
+            pic.entrySocialLossIndex = shortPic.entrySocialLossIndex;
+            pic.entryFundingIndex = shortPic.entryFundingIndex;
+        } else {
+            closedLongNotional = LongPic.entryNotional;
+            closedShortNotional = shortPic.entryNotional;
+        }
+        const realizedPnl = closedShortNotional.sub(closedLongNotional);
+        const longPartSocialLoss = wmulUp(amm.longSocialLossIndex.sub(LongPic.entrySocialLossIndex), closedSize);
+        const shortPartSocialLoss = wmulUp(amm.shortSocialLossIndex.sub(shortPic.entrySocialLossIndex), closedSize);
+        const loss = longPartSocialLoss.add(shortPartSocialLoss);
+        pic.balance = pic.balance.add(LongPic.balance).add(shortPic.balance).add(realizedPnl).sub(loss);
+        realized = realized.add(realizedPnl).sub(loss);
+    } else {
+        pic.entryNotional = position1.entryNotional.add(position2.entryNotional);
+        pic.entrySocialLossIndex = weightedAverage(
+            position1.size.abs(),
+            position1.entrySocialLossIndex,
+            position2.size.abs(),
+            position2.entrySocialLossIndex,
+        );
+        pic.entryFundingIndex = position1.size.gt(ZERO) ? amm.longFundingIndex : amm.shortFundingIndex;
+        pic.balance = position1.balance.add(position2.balance);
+    }
+
+    return { position: pic, closedSize: closedSize, realized: realized };
+}
+
+export function positionEquity(ctx: PairState, p: Position, mark: BigNumber): BigNumber {
+    const tallyRet = tally(ctx.amm as unknown as Amm, p, mark);
+    return tallyRet.equity;
+}
+
+export function splitPosition(pos: Position, partSize: BigNumber): { partPos: Position; finalPos: Position } {
+    const uFullSize = pos.size.abs();
+    const uPartSize = partSize.abs();
+
+    const partPos = {} as Position;
+    const finalPos = pos;
+
+    partPos.size = partSize;
+    finalPos.size = pos.size.sub(partSize);
+
+    partPos.balance = frac(pos.balance, uPartSize, uFullSize);
+    finalPos.balance = pos.balance.sub(partPos.balance);
+
+    partPos.entryNotional = frac(pos.entryNotional, uPartSize, uFullSize);
+    finalPos.entryNotional = pos.entryNotional.sub(partPos.entryNotional);
+
+    partPos.entrySocialLossIndex = pos.entrySocialLossIndex;
+    partPos.entryFundingIndex = pos.entryFundingIndex;
+
+    return { partPos, finalPos };
+}
+
+export function entryDelta(
+    sqrtEntryPX96: BigNumber,
+    tickLower: number,
+    tickUpper: number,
+    entryMargin: BigNumber,
+    initialMarginRatio: number,
+): { deltaBase: BigNumber; deltaQuote: BigNumber; liquidity: BigNumber } {
+    const upperPX96 = TickMath.getSqrtRatioAtTick(tickUpper);
+    const lowerPX96 = TickMath.getSqrtRatioAtTick(tickLower);
+    const liquidityByUpper = getLiquidityFromMarginByUpper(sqrtEntryPX96, upperPX96, entryMargin, initialMarginRatio);
+    const liquidityByLower = getLiquidityFromMarginByLower(sqrtEntryPX96, lowerPX96, entryMargin, initialMarginRatio);
+    const liquidity = liquidityByUpper.lt(liquidityByLower) ? liquidityByUpper : liquidityByLower;
+    const deltaBase = SqrtPriceMath.getDeltaBaseAutoRoundUp(sqrtEntryPX96, upperPX96, liquidity);
+    const deltaQuote = SqrtPriceMath.getDeltaQuoteAutoRoundUp(lowerPX96, sqrtEntryPX96, liquidity);
+
+    return { deltaBase: deltaBase, deltaQuote: deltaQuote, liquidity: liquidity };
+}
+
+export function alignRangeTick(tick: number, lower: boolean): number {
+    if ((tick > 0 && lower) || (tick < 0 && !lower)) {
+        return RANGE_SPACING * ~~(tick / RANGE_SPACING);
+    } else {
+        return RANGE_SPACING * ~~((tick + (tick > 0 ? 1 : -1) * (RANGE_SPACING - 1)) / RANGE_SPACING);
+    }
+}
+
+export function getLiquidityFromMarginByUpper(
+    sqrtEntryPX96: BigNumber,
+    sqrtUpperPX96: BigNumber,
+    entryMargin: BigNumber,
+    initialMarginRatio: number,
+): BigNumber {
+    const numerator = entryMargin.mul(sqrtEntryPX96).div(sqrtUpperPX96.sub(sqrtEntryPX96));
+    const denominator = sqrtUpperPX96.sub(sqrtEntryPX96).add(wmulUp(sqrtUpperPX96, r2w(initialMarginRatio)));
+    return numerator.mul(Q96).div(denominator);
+}
+
+export function getLiquidityFromMarginByLower(
+    sqrtEntryPX96: BigNumber,
+    sqrtLowerPX96: BigNumber,
+    entryMargin: BigNumber,
+    initialMarginRatio: number,
+): BigNumber {
+    const numerator = entryMargin.mul(sqrtEntryPX96).div(sqrtEntryPX96.sub(sqrtLowerPX96));
+    const denominator = sqrtEntryPX96.sub(sqrtLowerPX96).add(wmulUp(sqrtLowerPX96, r2w(initialMarginRatio)));
+    return numerator.mul(Q96).div(denominator);
+}
+
+export function getMarginFromLiquidity(
+    sqrtEntryPX96: BigNumber,
+    tickUpper: number,
+    liquidity: BigNumber,
+    initialMarginRatio: number,
+): BigNumber {
+    const sqrtUpperPX96 = TickMath.getSqrtRatioAtTick(tickUpper);
+    const denominator = wmulUp(sqrtUpperPX96, r2w(10000 + initialMarginRatio)).sub(sqrtEntryPX96);
+    const temp = liquidity.mul(denominator).div(Q96);
+    return temp.mul(sqrtUpperPX96.sub(sqrtEntryPX96)).div(sqrtEntryPX96);
+}
+
+export function rangeEntryDeltaBase(range: Range, tickUpper: number): BigNumber {
+    const sqrtUpperPX96 = TickMath.getSqrtRatioAtTick(tickUpper);
+    return SqrtPriceMath.getDeltaBaseAutoRoundUp(range.sqrtEntryPX96, sqrtUpperPX96, range.liquidity);
+}
+
+export function rangeEntryDeltaQuote(range: Range, tickLower: number): BigNumber {
+    const sqrtLowerPX96 = TickMath.getSqrtRatioAtTick(tickLower);
+    return SqrtPriceMath.getDeltaQuoteAutoRoundUp(sqrtLowerPX96, range.sqrtEntryPX96, range.liquidity);
+}
+
+export function rangeToPosition(
+    currentPX96: BigNumber,
+    currentTick: number,
+    feeIndex: BigNumber,
+    longSocialLossIndex: BigNumber,
+    shortSocialLossIndex: BigNumber,
+    longFundingIndex: BigNumber,
+    shortFundingIndex: BigNumber,
+    tickLower: number,
+    tickUpper: number,
+    range: Range,
+): Position {
+    const sqrtUpperPX96 = TickMath.getSqrtRatioAtTick(tickUpper);
+    const sqrtLowerPX96 = TickMath.getSqrtRatioAtTick(tickLower);
+    const fair = sqrtX96ToWad(currentPX96);
+    const entryDeltaBase = rangeEntryDeltaBase(range, tickUpper);
+    const entryDeltaQuote = rangeEntryDeltaQuote(range, tickLower);
+
+    let removeDeltaBase = ZERO;
+    let removeDeltaQuote = ZERO;
+
+    if (currentTick < tickLower) {
+        removeDeltaBase = SqrtPriceMath.getDeltaBaseAutoRoundUp(
+            sqrtLowerPX96,
+            TickMath.getSqrtRatioAtTick(tickUpper),
+            range.liquidity,
+        );
+    } else if (currentTick < tickUpper) {
+        removeDeltaBase = SqrtPriceMath.getDeltaBaseAutoRoundUp(
+            currentPX96,
+            TickMath.getSqrtRatioAtTick(tickUpper),
+            range.liquidity,
+        );
+        removeDeltaQuote = SqrtPriceMath.getDeltaQuoteAutoRoundUp(sqrtLowerPX96, currentPX96, range.liquidity);
+    } else {
+        removeDeltaQuote = SqrtPriceMath.getDeltaQuoteAutoRoundUp(sqrtLowerPX96, sqrtUpperPX96, range.liquidity);
+    }
+
+    // cal pnl
+    const earnedByBase = wmul(removeDeltaBase.sub(entryDeltaBase), fair);
+    const earnedByQuote = removeDeltaQuote.sub(entryDeltaQuote);
+    const pnl = earnedByBase.add(earnedByQuote);
+    const fee = wmulDown(feeIndex.sub(range.entryFeeIndex), range.liquidity);
+    const size = removeDeltaBase.sub(entryDeltaBase);
+    return {
+        balance: range.balance.add(fee).add(pnl).sub(ONE),
+        size: size,
+        takeProfitRatio: 0,
+        stopLossRatio: 0,
+        entryNotional: wmul(fair, size.abs()),
+        entrySocialLossIndex: size.gt(ZERO) ? longSocialLossIndex : shortSocialLossIndex,
+        entryFundingIndex: size.gt(ZERO) ? longFundingIndex : shortFundingIndex,
+    } as Position;
 }

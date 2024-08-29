@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { BigNumber } from 'ethers';
-import { Status } from './enum';
-import { BlockInfo, ZERO } from '@derivation-tech/web3-core';
+import type { BigNumber } from 'ethers';
+import type { BlockInfo } from '@derivation-tech/web3-core';
+import type { Status } from './enum';
 
 export interface Amm {
     expiry: number; // timestamp of the specified expiry
@@ -41,25 +41,3 @@ export interface Amm {
 
     blockInfo?: BlockInfo;
 }
-
-export const EMPTY_AMM: Amm = {
-    expiry: 0,
-    timestamp: 0,
-    status: Status.TRADING,
-    tick: 0,
-    sqrtPX96: ZERO,
-    liquidity: ZERO,
-    totalLiquidity: ZERO,
-    involvedFund: ZERO,
-    openInterests: ZERO,
-    feeIndex: ZERO,
-    protocolFee: ZERO,
-    totalLong: ZERO,
-    totalShort: ZERO,
-    longSocialLossIndex: ZERO,
-    shortSocialLossIndex: ZERO,
-    longFundingIndex: ZERO,
-    shortFundingIndex: ZERO,
-    insuranceFund: ZERO,
-    settlementPrice: ZERO,
-};

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { BigNumber } from 'ethers';
+import type { BigNumber } from 'ethers';
 
 export interface FundFlow {
     totalIn: BigNumber;

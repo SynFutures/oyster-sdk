@@ -1,10 +1,10 @@
-import { PriceFeeder, DexV2Feeder, Market } from './market';
-import { InstrumentCondition } from './enum';
-import { BaseInfo, TokenInfo } from './token';
-import { Amm } from './pair';
-import { BigNumber } from 'ethers';
-import { QuoteParam } from './params';
-import { CHAIN_ID } from '@derivation-tech/web3-core';
+import type { BigNumber } from 'ethers';
+import type { CHAIN_ID } from '@derivation-tech/web3-core';
+import type { PriceFeeder, DexV2Feeder, Market } from './market';
+import type { InstrumentCondition } from './enum';
+import type { BaseInfo, TokenInfo } from './token';
+import type { Amm } from './pair';
+import type { QuoteParam } from './params';
 
 export interface AssembledInstrumentData {
     instrumentAddr: string;
@@ -30,6 +30,8 @@ export interface InstrumentInfo {
     base: BaseInfo;
     quote: TokenInfo;
 }
+
+// TODO: @samlior a more explicit way of expressing
 export type WrappedInstrumentInfo = InstrumentInfo;
 
 export interface InstrumentMarket extends Market {

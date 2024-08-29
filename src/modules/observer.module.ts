@@ -13,16 +13,10 @@ import {
 import {
     Amm,
     AssembledInstrumentData,
-    cancelOrderToPosition,
     CexMarket,
-    cexMarket,
-    combine,
     DexV2Feeder,
-    EMPTY_POSITION,
-    entryDelta,
     FeederType,
     FetchInstrumentParam,
-    fillOrderToPosition,
     FundFlow,
     InstrumentCondition,
     InstrumentIdentifier,
@@ -38,9 +32,7 @@ import {
     Quotation,
     QuoteParam,
     QuoteType,
-    rangeToPosition,
     Side,
-    signOfSide,
 } from '../types';
 import { calcMaxWithdrawable, TickMath, wdiv, ZERO } from '../math';
 import {
@@ -53,8 +45,15 @@ import {
     InstrumentParser,
     isEmptyPortfolio,
     trimObj,
+    cancelOrderToPosition,
+    cexMarket,
+    combine,
+    entryDelta,
+    fillOrderToPosition,
+    rangeToPosition,
+    signOfSide,
 } from '../common';
-import { RANGE_SPACING } from '../constants';
+import { RANGE_SPACING, EMPTY_POSITION } from '../constants';
 import { CachePlugin } from './cache.plugin';
 import { InstrumentPlugin } from './instrument.plugin';
 

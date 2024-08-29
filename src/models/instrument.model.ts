@@ -3,7 +3,6 @@ import { BigNumber } from 'ethers';
 import { BlockInfo } from '@derivation-tech/web3-core';
 import {
     Amm,
-    EMPTY_AMM,
     FeederType,
     InstrumentCondition,
     InstrumentInfo,
@@ -19,6 +18,7 @@ import {
     MIN_RANGE_MULTIPLIER,
     PERP_EXPIRY,
     RATIO_BASE,
+    EMPTY_AMM,
 } from '../constants';
 import { WAD, r2w, safeWDiv, wdiv, wmulDown, ZERO } from '../math';
 

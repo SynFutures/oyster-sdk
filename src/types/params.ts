@@ -1,9 +1,8 @@
-import { BigNumber } from 'ethers';
-import { Position } from './index';
-import { FeederType, MarketType, QuoteType } from './enum';
-import { ZERO } from '../math';
-import { TokenInfo } from '@derivation-tech/web3-core';
-import { PositionModel } from '../models';
+import type { BigNumber } from 'ethers';
+import type { TokenInfo } from '@derivation-tech/web3-core';
+import type { Position } from './index';
+import type { FeederType, MarketType, QuoteType } from './enum';
+import type { PositionModel } from '../models';
 
 // sdk interface
 export interface SetChainlinkFeederParam {
@@ -32,15 +31,6 @@ export interface QuoteParam {
     tip: BigNumber;
     qtype: QuoteType;
 }
-
-export const EMPTY_QUOTE_PARAM: QuoteParam = {
-    tradingFeeRatio: 0,
-    stabilityFeeRatioParam: ZERO,
-    protocolFeeRatio: 0,
-    qtype: QuoteType.INVALID,
-    minMarginAmount: ZERO,
-    tip: ZERO,
-};
 
 export type PositionCache = Position;
 

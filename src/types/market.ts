@@ -1,5 +1,5 @@
-import { BigNumber } from 'ethers';
-import { FeederType } from './enum';
+import type { BigNumber } from 'ethers';
+import type { FeederType } from './enum';
 
 export interface Market {
     info: MarketInfo;

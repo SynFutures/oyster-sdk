@@ -4,7 +4,6 @@ import { Provider } from '@ethersproject/providers';
 import { CHAIN_ID, ChainContext, TokenInfo, ContractParser } from '@derivation-tech/web3-core';
 import {
     Beacon__factory,
-    cexMarket,
     CexMarket__factory,
     Config__factory,
     DexV2Market__factory,
@@ -57,7 +56,16 @@ import {
     SynFuturesConfig,
     SynFuturesV3Contracts,
 } from './config';
-import { Combine, mount, CexMarketParser, ConfigParser, DexV2MarketParser, GateParser, GuardianParser } from './common';
+import {
+    Combine,
+    mount,
+    CexMarketParser,
+    ConfigParser,
+    DexV2MarketParser,
+    GateParser,
+    GuardianParser,
+    cexMarket,
+} from './common';
 
 export interface SynFutureV3Plugin<T extends SynFuturesV3, U> {
     install(synfV3: T): T & U;

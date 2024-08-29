@@ -1,7 +1,8 @@
 import { ChainContext, ContractParser, formatUnits, formatWad } from '@derivation-tech/web3-core';
-import { cexMarket, Gate__factory, MarketType } from '../../types';
+import { Gate__factory, MarketType } from '../../types';
 import { ethers } from 'ethers';
 import {
+    cexMarket,
     decodeAddParam,
     decodeParamForDepositAndWithdraw,
     formatExpiry,

@@ -1,6 +1,6 @@
 import { BigNumber } from 'ethers';
-import { Amm, Position, Range, rangeToPosition, tally } from '../types';
-import { parseTicks, rangeKey } from '../common';
+import { Amm, Position, Range } from '../types';
+import { parseTicks, rangeKey, rangeToPosition, tally } from '../common';
 import { TickMath, wmulDown, WAD, safeWDiv } from '../math';
 
 import { PositionModel, WrappedPositionModel } from './position.model';

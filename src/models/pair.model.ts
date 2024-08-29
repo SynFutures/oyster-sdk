@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { BigNumber } from 'ethers';
 import { BlockInfo, ZERO } from '@derivation-tech/web3-core';
-import { Amm, ContractRecord, Pearl, EMPTY_AMM } from '../types';
+import { Amm, ContractRecord, Pearl } from '../types';
 import { Q96, r2w, sqrtX96ToWad, TickMath, wadToSqrtX96, wmul, safeWDiv, WAD } from '../math';
 import { formatExpiry, withinOrderLimit } from '../common';
-import { ORDER_SPACING } from '../constants';
+import { ORDER_SPACING, EMPTY_AMM } from '../constants';
 
 import { InstrumentModel, InstrumentModelBase, WrappedInstrumentModel } from './instrument.model';
 

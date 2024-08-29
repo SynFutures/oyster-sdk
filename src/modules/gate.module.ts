@@ -1,8 +1,7 @@
 import { BigNumber, CallOverrides, ContractTransaction, ethers, Overrides, Signer } from 'ethers';
-import { encodeDepositParam, encodeWithdrawParam } from '../common';
+import { encodeDepositParam, encodeWithdrawParam, NumericConverter } from '../common';
 import { SynFuturesV3 } from '../core';
 import { NATIVE_TOKEN_ADDRESS } from '../constants';
-import { NumericConverter } from '../types';
 import { GateInterface } from './gate.interface';
 
 export class GateModule implements GateInterface {
