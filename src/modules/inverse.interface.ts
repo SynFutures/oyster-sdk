@@ -3,11 +3,11 @@ import { TokenInfo } from '@derivation-tech/web3-core';
 import { BaseInterface } from '../common';
 import { FetchInstrumentParam, InstrumentInfo } from '../types';
 import { WrappedPlaceOrderRequest, WrappedSimulateOrderResult } from '../types/inverse';
-import { PairLevelAccountModel, WrappedInstrumentModel } from '../models';
+import { WrappedPairLevelAccountModel, WrappedInstrumentModel } from '../models';
 
 export interface InverseInterface extends BaseInterface {
     get instrumentMap(): Map<string, WrappedInstrumentModel>;
-    get accountCache(): Map<string, Map<string, Map<number, PairLevelAccountModel>>>;
+    get accountCache(): Map<string, Map<string, Map<number, WrappedPairLevelAccountModel>>>;
 
     /**
      *Get instrument info from cache and should inverse
