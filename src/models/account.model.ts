@@ -251,6 +251,10 @@ export class InstrumentLevelAccountModel extends InstrumentLevelAccountModelBase
         return this.data.rootInstrument;
     }
 
+    get wrap(): WrappedInstrumentLevelAccountModel {
+        return new WrappedInstrumentLevelAccountModel(this.data);
+    }
+
     addPairLevelAccount(pair: PairModel, portfolio: Portfolio, blockInfo?: BlockInfo): void {
         const pairLevelAccount = PairLevelAccountModel.fromRawPortfolio(pair, this.traderAddr, portfolio, blockInfo);
         this.rootInstrument.state.setAccountState(this.traderAddr, pair.amm.expiry, pairLevelAccount.account);
@@ -261,6 +265,10 @@ export class InstrumentLevelAccountModel extends InstrumentLevelAccountModelBase
 export class WrappedInstrumentLevelAccountModel extends InstrumentLevelAccountModelBase<WrappedInstrumentModel> {
     get rootInstrument(): WrappedInstrumentModel {
         return this.data.rootInstrument.wrap;
+    }
+
+    get unWrap(): InstrumentLevelAccountModel {
+        return new InstrumentLevelAccountModel(this.data);
     }
 
     addPairLevelAccount(pair: WrappedPairModel, portfolio: Portfolio, blockInfo?: BlockInfo): void {
