@@ -136,6 +136,7 @@ export interface GuardianInterface extends utils.Interface {
     "setLpWhiteList(address[],address[],bool[])": FunctionFragment;
     "setMarketInfo(string,address,address)": FunctionFragment;
     "setPendingDuration(uint256)": FunctionFragment;
+    "setPlacePaused(address[],bool[])": FunctionFragment;
     "setPythFeederFactoryAddress(address)": FunctionFragment;
     "setPythFeederId(bytes32,bytes32)": FunctionFragment;
     "setSynFuturesV3Admin(address)": FunctionFragment;
@@ -206,6 +207,7 @@ export interface GuardianInterface extends utils.Interface {
       | "setLpWhiteList"
       | "setMarketInfo"
       | "setPendingDuration"
+      | "setPlacePaused"
       | "setPythFeederFactoryAddress"
       | "setPythFeederId"
       | "setSynFuturesV3Admin"
@@ -285,7 +287,7 @@ export interface GuardianInterface extends utils.Interface {
     functionFragment: "emergingFeederFactory",
     values?: undefined
   ): string;
-  
+
   encodeFunctionData(
     functionFragment: "enableLpWhitelistForQuote",
     values: [PromiseOrValue<string>, PromiseOrValue<boolean>]
@@ -450,6 +452,10 @@ export interface GuardianInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "setPendingDuration",
     values: [PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setPlacePaused",
+    values: [PromiseOrValue<string>[], PromiseOrValue<boolean>[]]
   ): string;
   encodeFunctionData(
     functionFragment: "setPythFeederFactoryAddress",
@@ -672,6 +678,10 @@ export interface GuardianInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "setPendingDuration",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setPlacePaused",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -1112,6 +1122,12 @@ export interface Guardian extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
+    setPlacePaused(
+      instruments: PromiseOrValue<string>[],
+      params: PromiseOrValue<boolean>[],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
     setPythFeederFactoryAddress(
       _pythFeederFactory: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -1444,6 +1460,12 @@ export interface Guardian extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
+  setPlacePaused(
+    instruments: PromiseOrValue<string>[],
+    params: PromiseOrValue<boolean>[],
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
   setPythFeederFactoryAddress(
     _pythFeederFactory: PromiseOrValue<string>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -1770,6 +1792,12 @@ export interface Guardian extends BaseContract {
 
     setPendingDuration(
       duration: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setPlacePaused(
+      instruments: PromiseOrValue<string>[],
+      params: PromiseOrValue<boolean>[],
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -2151,6 +2179,12 @@ export interface Guardian extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
+    setPlacePaused(
+      instruments: PromiseOrValue<string>[],
+      params: PromiseOrValue<boolean>[],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
     setPythFeederFactoryAddress(
       _pythFeederFactory: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -2481,6 +2515,12 @@ export interface Guardian extends BaseContract {
 
     setPendingDuration(
       duration: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setPlacePaused(
+      instruments: PromiseOrValue<string>[],
+      params: PromiseOrValue<boolean>[],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
