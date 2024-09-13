@@ -216,11 +216,11 @@ export class DepthChartDataProvider implements IDepthChartDataProvider {
             tick2Peral.set(liquidityDetails.tids[i], liquidityDetails.pearls[i]);
         }
         let pageAdjustmentDelta = 0;
-        if (liquidityDetails.amm.tick % ORDER_SPACING !== 0) {
+        if (liquidityDetails.amm.tick % size !== 0) {
             pageAdjustmentDelta =
                 liquidityDetails.amm.tick > 0
-                    ? liquidityDetails.amm.tick % ORDER_SPACING
-                    : ORDER_SPACING - (-liquidityDetails.amm.tick % ORDER_SPACING);
+                    ? liquidityDetails.amm.tick % size
+                    : size - (-liquidityDetails.amm.tick % size);
         }
 
         const right: DepthChartData[] = this.buildDepthChartData(
