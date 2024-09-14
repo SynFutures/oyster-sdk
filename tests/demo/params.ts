@@ -536,3 +536,33 @@ export interface IPortfolioWithdrawRequest {
     quoteAddress: string;
     amount: BigNumber;
 }
+
+export interface IVolumeChartsRequest {
+    instrumentAddr: string;
+    expiry: number;
+    startTs: number;
+    endTs: number;
+}
+
+export interface IVolumeChartData {
+    timestamp: number;
+    baseVolume: number;
+    quoteVolume: number;
+}
+
+export interface ILiquidityChartsRequest {
+    instrumentAddr: string;
+    expiry: number;
+    spacing?: number;
+}
+
+export interface LiquidityChartData {
+    tick: number;
+    price: number;
+    liquidity: BigNumber;
+}
+
+export interface ILiquidityChartsData extends LiquidityChartData {
+    origin: LiquidityChartData;
+    price: number; // [modify] inverse display
+}

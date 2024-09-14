@@ -134,6 +134,8 @@ export interface InverseInterface extends BaseInterface {
     charts: {
         // getOrderBookData(params: IGetOrderBookDataRequest): Promise<IOrderBookData>;
         // getDepthChartsData(params: IDepthChartRequest): Promise<IDeepChartsData>;
+        // getVolumeChartsData(params: IVolumeChartsRequest): Promise<IVolumeChartsData>; // wrap for VolumeChartDataProvider.getVolumeData
+        // getLiquidityChartsData(params: ILiquidityChartsRequest): Promise<LiquidityChartsData>; // wrap for LiquidityChartDataProvider.getLiquidityData
     };
 
     utils: {
