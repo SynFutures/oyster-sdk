@@ -1165,6 +1165,24 @@ const _abi = [
   {
     inputs: [
       {
+        internalType: "address[]",
+        name: "instruments",
+        type: "address[]",
+      },
+      {
+        internalType: "bool[]",
+        name: "params",
+        type: "bool[]",
+      },
+    ],
+    name: "setPlacePaused",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "address",
         name: "_pythFeederFactory",
         type: "address",

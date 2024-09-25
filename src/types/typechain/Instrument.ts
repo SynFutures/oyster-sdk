@@ -152,6 +152,7 @@ export interface InstrumentInterface extends utils.Interface {
     "multicall(bytes[])": FunctionFragment;
     "normalize()": FunctionFragment;
     "place(bytes32[2])": FunctionFragment;
+    "placePaused()": FunctionFragment;
     "queryAccount(uint32,address,uint8,bytes)": FunctionFragment;
     "queryContext(uint32,uint8,uint256[],bytes)": FunctionFragment;
     "querySetting(uint256[])": FunctionFragment;
@@ -159,6 +160,7 @@ export interface InstrumentInterface extends utils.Interface {
     "remove(bytes32[2])": FunctionFragment;
     "resolve(uint128)": FunctionFragment;
     "setLeverage(uint8,uint16)": FunctionFragment;
+    "setPlacePaused(bool)": FunctionFragment;
     "setQuoteParam((uint128,uint16,uint16,uint64,uint8,uint128))": FunctionFragment;
     "settle(uint32,address)": FunctionFragment;
     "sweep(uint32,address,int256)": FunctionFragment;
@@ -187,6 +189,7 @@ export interface InstrumentInterface extends utils.Interface {
       | "multicall"
       | "normalize"
       | "place"
+      | "placePaused"
       | "queryAccount"
       | "queryContext"
       | "querySetting"
@@ -194,6 +197,7 @@ export interface InstrumentInterface extends utils.Interface {
       | "remove"
       | "resolve"
       | "setLeverage"
+      | "setPlacePaused"
       | "setQuoteParam"
       | "settle"
       | "sweep"
@@ -280,6 +284,10 @@ export interface InstrumentInterface extends utils.Interface {
     values: [[PromiseOrValue<BytesLike>, PromiseOrValue<BytesLike>]]
   ): string;
   encodeFunctionData(
+    functionFragment: "placePaused",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "queryAccount",
     values: [
       PromiseOrValue<BigNumberish>,
@@ -316,6 +324,10 @@ export interface InstrumentInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "setLeverage",
     values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setPlacePaused",
+    values: [PromiseOrValue<boolean>]
   ): string;
   encodeFunctionData(
     functionFragment: "setQuoteParam",
@@ -377,6 +389,10 @@ export interface InstrumentInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "normalize", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "place", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "placePaused",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "queryAccount",
     data: BytesLike
   ): Result;
@@ -396,6 +412,10 @@ export interface InstrumentInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "resolve", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "setLeverage",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setPlacePaused",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -990,6 +1010,8 @@ export interface Instrument extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
+    placePaused(overrides?: CallOverrides): Promise<[boolean]>;
+
     queryAccount(
       expiry: PromiseOrValue<BigNumberish>,
       target: PromiseOrValue<string>,
@@ -1029,6 +1051,11 @@ export interface Instrument extends BaseContract {
     setLeverage(
       leverage: PromiseOrValue<BigNumberish>,
       maintenanceMarginRatio: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
+    setPlacePaused(
+      paused: PromiseOrValue<boolean>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -1157,6 +1184,8 @@ export interface Instrument extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
+  placePaused(overrides?: CallOverrides): Promise<boolean>;
+
   queryAccount(
     expiry: PromiseOrValue<BigNumberish>,
     target: PromiseOrValue<string>,
@@ -1196,6 +1225,11 @@ export interface Instrument extends BaseContract {
   setLeverage(
     leverage: PromiseOrValue<BigNumberish>,
     maintenanceMarginRatio: PromiseOrValue<BigNumberish>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  setPlacePaused(
+    paused: PromiseOrValue<boolean>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -1349,6 +1383,8 @@ export interface Instrument extends BaseContract {
       [number, OrderStructOutput] & { nonce: number; order: OrderStructOutput }
     >;
 
+    placePaused(overrides?: CallOverrides): Promise<boolean>;
+
     queryAccount(
       expiry: PromiseOrValue<BigNumberish>,
       target: PromiseOrValue<string>,
@@ -1394,6 +1430,11 @@ export interface Instrument extends BaseContract {
     setLeverage(
       leverage: PromiseOrValue<BigNumberish>,
       maintenanceMarginRatio: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setPlacePaused(
+      paused: PromiseOrValue<boolean>,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1867,6 +1908,8 @@ export interface Instrument extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
+    placePaused(overrides?: CallOverrides): Promise<BigNumber>;
+
     queryAccount(
       expiry: PromiseOrValue<BigNumberish>,
       target: PromiseOrValue<string>,
@@ -1906,6 +1949,11 @@ export interface Instrument extends BaseContract {
     setLeverage(
       leverage: PromiseOrValue<BigNumberish>,
       maintenanceMarginRatio: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
+    setPlacePaused(
+      paused: PromiseOrValue<boolean>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -2035,6 +2083,8 @@ export interface Instrument extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
+    placePaused(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     queryAccount(
       expiry: PromiseOrValue<BigNumberish>,
       target: PromiseOrValue<string>,
@@ -2074,6 +2124,11 @@ export interface Instrument extends BaseContract {
     setLeverage(
       leverage: PromiseOrValue<BigNumberish>,
       maintenanceMarginRatio: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setPlacePaused(
+      paused: PromiseOrValue<boolean>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 

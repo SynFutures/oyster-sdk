@@ -121,6 +121,11 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "PlacePaused",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "SelfLiquidation",
     type: "error",
   },
@@ -662,6 +667,19 @@ const _abi = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "placePaused",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [
       {
         internalType: "uint32",
@@ -844,6 +862,19 @@ const _abi = [
       },
     ],
     name: "setLeverage",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bool",
+        name: "paused",
+        type: "bool",
+      },
+    ],
+    name: "setPlacePaused",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -2055,6 +2086,11 @@ const _abi = [
       },
     ],
     name: "BadTargetSize",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "FairDeviation",
     type: "error",
   },
   {

@@ -30,6 +30,7 @@ import {
     parseOrderTickNonce,
     parseTicks,
     serializeSimpleObject,
+    withinDeviationLimit,
     withinOrderLimit,
 } from '../common/util';
 import { Pearl } from './pearl';
@@ -742,6 +743,10 @@ export class PairModel {
             upperTick,
             lowerTick,
         };
+    }
+
+    get withinDeviationLimit(): boolean {
+        return withinDeviationLimit(this.fairPriceWad, this.markPrice, this.rootInstrument.setting.initialMarginRatio);
     }
 
     getMinLiquidity(px96?: BigNumber): BigNumber {
