@@ -179,7 +179,7 @@
       "stabilityFeeRatioParam": "14415916854096691200",
       "protocolFeeRatio": 1,
       "qtype": 1,
-      "minMarginAmount": "20000000000000000000000",
+      "minMarginAmount": "10000000000000000000",
       "tip": "20000000000000000"
     }
   },

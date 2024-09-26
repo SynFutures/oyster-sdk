@@ -2068,7 +2068,16 @@ export class SynFuturesV3 {
             if (instrument) {
                 setting = instrument.setting;
             } else {
-                const quoteParam = this.config.quotesParam[quoteInfo.symbol]!;
+                //const quoteParam = this.config.quotesParam[quoteInfo.symbol]!;
+                const quoteParamOpt = await this.contracts.config.getQuoteParam(quoteInfo.address);
+                const quoteParam = {
+                    minMarginAmount: quoteParamOpt.minMarginAmount,
+                    tradingFeeRatio: quoteParamOpt.tradingFeeRatio,
+                    protocolFeeRatio: quoteParamOpt.protocolFeeRatio,
+                    stabilityFeeRatioParam: quoteParamOpt.stabilityFeeRatioParam,
+                    tip: quoteParamOpt.tip,
+                    qtype: quoteParamOpt.qtype,
+                };
                 instrument = InstrumentModel.minimumInstrumentWithParam(quoteParam);
                 setting = instrument.setting;
             }
