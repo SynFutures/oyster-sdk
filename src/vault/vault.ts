@@ -1,4 +1,4 @@
-import { BlockInfo, ChainContext, ContractParser, formatUnits, ONE, TokenInfo } from '@derivation-tech/web3-core';
+import { BlockInfo, ChainContext, ContractParser, formatUnits, ONE, TokenInfo, ZERO } from '@derivation-tech/web3-core';
 import { Gate, Gate__factory, VaultFactory } from '../types/typechain/';
 import { VAULT_FACTORY_ADDRESSES } from './constants';
 import {
@@ -14,7 +14,7 @@ import {
     VaultFactory__factory,
     Vault__factory,
 } from '../types';
-import { Signer, ethers, BigNumber } from 'ethers';
+import { Signer, ethers, BigNumber, CallOverrides } from 'ethers';
 import { parseUnits } from 'ethers/lib/utils';
 import { AbiCoder } from 'ethers/lib/utils';
 import {
@@ -455,4 +455,75 @@ export class VaultClient {
         const ptx = await this.vault.populateTransaction.collectCommission(isNative, amount);
         return await this.ctx.sendTx(manager, ptx);
     }
+}
+
+export async function getUserDepositInfo(
+    user: string,
+    vaultAddrs: string[],
+    ctx: ChainContext,
+    overrides?: CallOverrides,
+): Promise<{
+    depositInfos: {
+        user: string;
+        vault: string;
+        share: BigNumber;
+        entryValue: BigNumber;
+        holdingValue: BigNumber;
+    }[];
+    blockHeight: number; // return blockInfo for later withdraw's quantity->share calculation
+}> {
+    const vaultInterface = Vault__factory.createInterface();
+    const calls = [];
+    calls.push(
+        ...vaultAddrs.map((vaultAddr) => {
+            return {
+                target: vaultAddr,
+                callData: vaultInterface.encodeFunctionData('getPortfolioValue'),
+            };
+        }),
+    );
+    calls.push(
+        ...vaultAddrs.map((vaultAddr) => {
+            return {
+                target: vaultAddr,
+                callData: vaultInterface.encodeFunctionData('getStake', [user]),
+            };
+        }),
+    );
+    calls.push(
+        ...vaultAddrs.map((vaultAddr) => {
+            return {
+                target: vaultAddr,
+                callData: vaultInterface.encodeFunctionData('totalShare'),
+            };
+        }),
+    );
+    overrides = overrides ?? { blockTag: await ctx.provider.getBlockNumber() };
+    const rawRet = (await ctx.getMulticall3().callStatic.aggregate(calls, overrides)).returnData;
+    const portfolioValues = rawRet.slice(0, vaultAddrs.length).map((ret) => {
+        return vaultInterface.decodeFunctionResult('getPortfolioValue', ret)[0] as BigNumber;
+    });
+    const stakes = rawRet.slice(vaultAddrs.length, vaultAddrs.length * 2).map((ret) => {
+        return vaultInterface.decodeFunctionResult('getStake', ret)[0] as {
+            share: BigNumber;
+            entryValue: BigNumber;
+        };
+    });
+    const totalShares = rawRet.slice(vaultAddrs.length * 2).map((ret) => {
+        return vaultInterface.decodeFunctionResult('totalShare', ret)[0] as BigNumber;
+    });
+    return {
+        depositInfos: stakes.map((stake, i) => {
+            return {
+                user,
+                vault: vaultAddrs[i],
+                share: stake.share,
+                entryValue: stake.entryValue,
+                holdingValue: totalShares[i].eq(ZERO)
+                    ? ZERO
+                    : portfolioValues[i].mul(stakes[i].share).div(totalShares[i]),
+            };
+        }),
+        blockHeight: overrides.blockTag as number,
+    };
 }
