@@ -1,0 +1,1176 @@
+[
+    {
+        "inputs": [],
+        "name": "AddOverflow",
+        "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "DivByZero",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "RoundHalfUpBadParam",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "TickOutOfBound",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_gate",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "AlreadyPending",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "CrazyFeeRatio",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "FrozenVault",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InsufficientShares",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidMsgValue",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidPairConfig",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidProfitFeeChange",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "MaxOrderNums",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "MaxPairNums",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "MaxRangeNums",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NoDirectTransfer",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotAdmin",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotManager",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotOperator",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotPending",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotReady",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        }
+      ],
+      "name": "UnsafeToken",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "UnsupportedQuote",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "VaultBankrupt",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "instrument",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint32",
+          "name": "expiry",
+          "type": "uint32"
+        }
+      ],
+      "name": "AddInvolvedPair",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint8",
+          "name": "version",
+          "type": "uint8"
+        }
+      ],
+      "name": "Initialized",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "instrument",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint32",
+          "name": "expiry",
+          "type": "uint32"
+        }
+      ],
+      "name": "RemoveInvolvedPair",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint8",
+              "name": "maxRangeNumber",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint8",
+              "name": "maxOrderNumber",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint8",
+              "name": "maxPairNumber",
+              "type": "uint8"
+            }
+          ],
+          "indexed": false,
+          "internalType": "struct PairConfig",
+          "name": "pairConfig",
+          "type": "tuple"
+        }
+      ],
+      "name": "SetPairConfig",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint32",
+          "name": "newProfitFeeRatio",
+          "type": "uint32"
+        }
+      ],
+      "name": "SetProfitFeeRatio",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "enum OperationMode",
+          "name": "mode",
+          "type": "uint8"
+        }
+      ],
+      "name": "SwitchOperationMode",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "enum VaultStatus",
+          "name": "status",
+          "type": "uint8"
+        }
+      ],
+      "name": "SwitchVaultStatus",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "components": [
+            {
+              "internalType": "enum PendingWithdrawStatus",
+              "name": "status",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint248",
+              "name": "quantity",
+              "type": "uint248"
+            }
+          ],
+          "indexed": false,
+          "internalType": "struct PendingWithdraw",
+          "name": "pending",
+          "type": "tuple"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "totalPendingShares",
+          "type": "uint256"
+        }
+      ],
+      "name": "UpdatePending",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint128",
+              "name": "shares",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "entryValue",
+              "type": "uint128"
+            }
+          ],
+          "indexed": false,
+          "internalType": "struct ShareInfo",
+          "name": "info",
+          "type": "tuple"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint128",
+          "name": "totalShares",
+          "type": "uint128"
+        }
+      ],
+      "name": "UpdateShareInfo",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint128",
+          "name": "totalFee",
+          "type": "uint128"
+        }
+      ],
+      "name": "UpdateTotalFee",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "EMERGENCY_RATIO",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "RATIO_BASE",
+      "outputs": [
+        {
+          "internalType": "uint16",
+          "name": "",
+          "type": "uint16"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "instrument",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32[2]",
+          "name": "args",
+          "type": "bytes32[2]"
+        }
+      ],
+      "name": "add",
+      "outputs": [
+        {
+          "internalType": "int24",
+          "name": "tickLower",
+          "type": "int24"
+        },
+        {
+          "internalType": "int24",
+          "name": "tickUpper",
+          "type": "int24"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint128",
+              "name": "liquidity",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint128",
+              "name": "entryFeeIndex",
+              "type": "uint128"
+            },
+            {
+              "internalType": "uint96",
+              "name": "balance",
+              "type": "uint96"
+            },
+            {
+              "internalType": "uint160",
+              "name": "sqrtEntryPX96",
+              "type": "uint160"
+            }
+          ],
+          "internalType": "struct Range",
+          "name": "range",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "admin",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "arg",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint240[3]",
+          "name": "encodedTicks",
+          "type": "uint240[3]"
+        }
+      ],
+      "name": "batchCancel",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "instrument",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32[3]",
+          "name": "args",
+          "type": "bytes32[3]"
+        }
+      ],
+      "name": "batchPlace",
+      "outputs": [
+        {
+          "internalType": "uint24[]",
+          "name": "",
+          "type": "uint24[]"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint128",
+              "name": "balance",
+              "type": "uint128"
+            },
+            {
+              "internalType": "int128",
+              "name": "size",
+              "type": "int128"
+            }
+          ],
+          "internalType": "struct Order[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "cancelPendingWithdraw",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "claimFee",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "claimPendingWithdraw",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "decimals",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "quantity",
+          "type": "uint256"
+        }
+      ],
+      "name": "deposit",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "instrument",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "arg",
+          "type": "bytes32"
+        }
+      ],
+      "name": "fill",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "int256",
+              "name": "balance",
+              "type": "int256"
+            },
+            {
+              "internalType": "int256",
+              "name": "size",
+              "type": "int256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "entryNotional",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "entrySocialLossIndex",
+              "type": "uint256"
+            },
+            {
+              "internalType": "int256",
+              "name": "entryFundingIndex",
+              "type": "int256"
+            }
+          ],
+          "internalType": "struct PositionCache",
+          "name": "pos",
+          "type": "tuple"
+        },
+        {
+          "internalType": "uint256",
+          "name": "tip",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "gate",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getInvolvedPairs",
+      "outputs": [
+        {
+          "internalType": "address[]",
+          "name": "instruments",
+          "type": "address[]"
+        },
+        {
+          "internalType": "uint32[]",
+          "name": "expiries",
+          "type": "uint32[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getTotalValue",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_quote",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_admin",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "manager",
+          "type": "address"
+        }
+      ],
+      "name": "initialize",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_quote",
+          "type": "address"
+        },
+        {
+          "internalType": "string",
+          "name": "mtype",
+          "type": "string"
+        },
+        {
+          "internalType": "address",
+          "name": "instrument",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes",
+          "name": "data",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes32[2]",
+          "name": "addArgs",
+          "type": "bytes32[2]"
+        }
+      ],
+      "name": "launch",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32[3]",
+          "name": "args",
+          "type": "bytes32[3]"
+        }
+      ],
+      "name": "liquidate",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address[]",
+          "name": "users",
+          "type": "address[]"
+        }
+      ],
+      "name": "markReady",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "mode",
+      "outputs": [
+        {
+          "internalType": "enum OperationMode",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes[]",
+          "name": "data",
+          "type": "bytes[]"
+        }
+      ],
+      "name": "multicall",
+      "outputs": [
+        {
+          "internalType": "bytes[]",
+          "name": "results",
+          "type": "bytes[]"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "pairConfig",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "maxRangeNumber",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint8",
+          "name": "maxOrderNumber",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint8",
+          "name": "maxPairNumber",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "pendingsOf",
+      "outputs": [
+        {
+          "internalType": "enum PendingWithdrawStatus",
+          "name": "status",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint248",
+          "name": "quantity",
+          "type": "uint248"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "instrument",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32[2]",
+          "name": "args",
+          "type": "bytes32[2]"
+        }
+      ],
+      "name": "place",
+      "outputs": [
+        {
+          "internalType": "uint24",
+          "name": "nonce",
+          "type": "uint24"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint128",
+              "name": "balance",
+              "type": "uint128"
+            },
+            {
+              "internalType": "int128",
+              "name": "size",
+              "type": "int128"
+            }
+          ],
+          "internalType": "struct Order",
+          "name": "order",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "profitFeeRatio",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "quote",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "instrument",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32[2]",
+          "name": "args",
+          "type": "bytes32[2]"
+        }
+      ],
+      "name": "remove",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint8",
+              "name": "maxRangeNumber",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint8",
+              "name": "maxOrderNumber",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint8",
+              "name": "maxPairNumber",
+              "type": "uint8"
+            }
+          ],
+          "internalType": "struct PairConfig",
+          "name": "newPairConfig",
+          "type": "tuple"
+        }
+      ],
+      "name": "setPairConfig",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint32",
+          "name": "newProfitFeeRatio",
+          "type": "uint32"
+        }
+      ],
+      "name": "setProfitFeeRatio",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "arg",
+          "type": "bytes32"
+        }
+      ],
+      "name": "settle",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "sharesInfoOf",
+      "outputs": [
+        {
+          "internalType": "uint128",
+          "name": "shares",
+          "type": "uint128"
+        },
+        {
+          "internalType": "uint128",
+          "name": "entryValue",
+          "type": "uint128"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "status",
+      "outputs": [
+        {
+          "internalType": "enum VaultStatus",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "arg",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "target",
+          "type": "address"
+        },
+        {
+          "internalType": "int256",
+          "name": "size",
+          "type": "int256"
+        }
+      ],
+      "name": "sweep",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "switchOperationMode",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "switchVaultStatus",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalFee",
+      "outputs": [
+        {
+          "internalType": "uint128",
+          "name": "",
+          "type": "uint128"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalPendingShares",
+      "outputs": [
+        {
+          "internalType": "uint96",
+          "name": "",
+          "type": "uint96"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalShares",
+      "outputs": [
+        {
+          "internalType": "uint128",
+          "name": "",
+          "type": "uint128"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "instrument",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32[2]",
+          "name": "args",
+          "type": "bytes32[2]"
+        }
+      ],
+      "name": "trade",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "weth",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "shares",
+          "type": "uint256"
+        }
+      ],
+      "name": "withdraw",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address[]",
+          "name": "users",
+          "type": "address[]"
+        }
+      ],
+      "name": "withdrawFromGateAndRelease",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "stateMutability": "payable",
+      "type": "receive"
+    }
+  ]

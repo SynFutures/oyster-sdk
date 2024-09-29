@@ -11,3 +11,4 @@ export * from './event';
 export * from './chart';
 export * from './common';
 export * from './abis';
+export * from './vault';
