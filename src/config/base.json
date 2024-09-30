@@ -283,7 +283,7 @@
     {
       "symbol": "pumpBTC",
       "name": "pumpBTC",
-      "decimals": 18,
+      "decimals": 8,
       "address": "0xF469fBD2abcd6B9de8E169d128226C0Fc90a012e"
     }
   ],
