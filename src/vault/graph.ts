@@ -186,10 +186,10 @@ export class VaultGraph extends Graph {
 
     async getUserDepositWithdrawHistory(account: string): Promise<DepositWithdraw[]> {
         const graphQL = `query($skip: Int, $first: Int, $lastID: String){
-            users(skip: $skip, first: $first, where:{
-                address:"${account.toLowerCase()}"
+            depositWithdraws(first: $first, where:{
+                user_: {address: "${account.toLowerCase()}"}
+                id_gt: $lastID,
             }) {
-                depositWithdraw{
                 type
                 txHash
                 vault
@@ -199,23 +199,20 @@ export class VaultGraph extends Graph {
                 timestamp
                 isNative
                 quantity
-                }
             }
         }`;
         const depositWithdraws = await this.queryAll(graphQL, GRAPH_PAGE_SIZE, true);
         const result: DepositWithdraw[] = [];
         for (const depositWithdraw of depositWithdraws) {
-            for (const d of depositWithdraw.depositWithdraw) {
-                result.push({
-                    type: d.type,
-                    txHash: d.txHash,
-                    vaultAddr: d.vault,
-                    userAddr: d.user.address,
-                    timestamp: Number(d.timestamp),
-                    isNative: d.isNative,
-                    quoteAmount: BigNumber.from(d.quantity),
-                });
-            }
+            result.push({
+                type: depositWithdraw.type,
+                txHash: depositWithdraw.txHash,
+                vaultAddr: depositWithdraw.vault,
+                userAddr: depositWithdraw.user.address,
+                timestamp: Number(depositWithdraw.timestamp),
+                isNative: depositWithdraw.isNative,
+                quoteAmount: BigNumber.from(depositWithdraw.quantity),
+            });
         }
         return result;
     }
@@ -226,6 +223,7 @@ export class VaultGraph extends Graph {
                 user_: {
                     address: "${account.toLowerCase()}"
                 }
+                id_gt: $lastID,
             }){
                 user {
                     id
