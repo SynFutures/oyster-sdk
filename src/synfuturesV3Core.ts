@@ -105,7 +105,13 @@ import {
     Side,
     signOfSide,
 } from './types/enum';
-import { AssembledInstrumentData, InstrumentInfo, InstrumentModel, InstrumentState } from './types/instrument';
+import {
+    AssembledInstrumentData,
+    InstrumentInfo,
+    InstrumentMisc,
+    InstrumentModel,
+    InstrumentState,
+} from './types/instrument';
 import {
     DEFAULT_REFERRAL_CODE,
     INT24_MAX,
@@ -475,21 +481,65 @@ export class SynFuturesV3 {
             const [rawList, rawBlockInfo] = trimObj(
                 await this.contracts.observer.getInstrumentByAddressList(queryList, overrides ?? {}),
             );
-            instrumentModels = instrumentModels.concat(await this.parseInstrumentData(rawList, rawBlockInfo));
+            const miscList = await this.fetchMiscInfo(queryList, overrides);
+
+            instrumentModels = instrumentModels.concat(await this.parseInstrumentData(rawList, rawBlockInfo, miscList));
         }
 
         return instrumentModels;
+    }
+
+    async fetchMiscInfo(instrumentAddress: string[], overrides?: CallOverrides): Promise<InstrumentMisc[]> {
+        // get misc info
+        const instrumentInterface = Instrument__factory.createInterface();
+
+        const calls = [];
+        const needFundingHour = this.ctx.chainId !== CHAIN_ID.BLAST && this.ctx.chainId !== CHAIN_ID.LOCAL;
+        for (const instrumentAddr of instrumentAddress) {
+            calls.push({
+                target: instrumentAddr,
+                callData: instrumentInterface.encodeFunctionData('placePaused'),
+            });
+            if (needFundingHour) {
+                calls.push({
+                    target: instrumentAddr,
+                    callData: instrumentInterface.encodeFunctionData('fundingHour'),
+                });
+            }
+        }
+        const rawMiscInfo = await this.ctx.getMulticall3().callStatic.aggregate(calls, overrides ?? {});
+        const miscList: InstrumentMisc[] = [];
+        for (let j = 0; j < instrumentAddress.length; j = needFundingHour ? j + 2 : j + 1) {
+            const [placePaused] = instrumentInterface.decodeFunctionResult('placePaused', rawMiscInfo.returnData[j]);
+            const [fundingHour] = needFundingHour
+                ? instrumentInterface.decodeFunctionResult('fundingHour', rawMiscInfo.returnData[j + 1])
+                : [24];
+            miscList.push({
+                placePaused: placePaused,
+                fundingHour: fundingHour === 0 ? 24 : fundingHour,
+            });
+        }
+        return miscList;
     }
 
     async fetchInstrumentBatch(params: FetchInstrumentParam[], overrides?: CallOverrides): Promise<InstrumentModel[]> {
         const [rawList, rawBlockInfo] = trimObj(
             await this.contracts.observer.getInstrumentBatch(params, overrides ?? {}),
         );
-        return this.parseInstrumentData(rawList, rawBlockInfo);
+        const miscList = await this.fetchMiscInfo(
+            params.map((p) => p.instrument),
+            overrides,
+        );
+        return this.parseInstrumentData(rawList, rawBlockInfo, miscList);
     }
 
-    async parseInstrumentData(rawList: AssembledInstrumentData[], blockInfo: BlockInfo): Promise<InstrumentModel[]> {
+    async parseInstrumentData(
+        rawList: AssembledInstrumentData[],
+        blockInfo: BlockInfo,
+        miscList?: InstrumentMisc[],
+    ): Promise<InstrumentModel[]> {
         const instrumentModels: InstrumentModel[] = [];
+        let index = 0;
         for (const rawInstrument of rawList) {
             const [baseSymbol, quoteSymbol, marketType] = rawInstrument.symbol.split('-');
             const quoteTokenInfo = await this.getQuoteTokenInfo(quoteSymbol, rawInstrument.instrumentAddr);
@@ -533,6 +583,7 @@ export class SynFuturesV3 {
                 market,
                 instrumentState,
                 rawInstrument.spotPrice,
+                miscList ? miscList[index] : undefined,
             );
             for (let i = 0; i < rawInstrument.amms.length; i++) {
                 const rawAmm = rawInstrument.amms[i];
@@ -544,6 +595,7 @@ export class SynFuturesV3 {
             this.ctx.registerAddress(instrumentInfo.addr, instrumentInfo.symbol);
             this.ctx.registerContractParser(instrumentInfo.addr, new InstrumentParser());
             instrumentModels.push(instrumentModel);
+            index++;
         }
         return instrumentModels;
     }

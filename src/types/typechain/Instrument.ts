@@ -144,6 +144,7 @@ export interface InstrumentInterface extends utils.Interface {
     "donateInsuranceFund(uint32,uint256)": FunctionFragment;
     "fill(bytes32)": FunctionFragment;
     "freeze()": FunctionFragment;
+    "fundingHour()": FunctionFragment;
     "getExpiries()": FunctionFragment;
     "init(address,bytes32[2])": FunctionFragment;
     "initialize(bytes)": FunctionFragment;
@@ -159,6 +160,7 @@ export interface InstrumentInterface extends utils.Interface {
     "recycleInsuranceFund(uint32)": FunctionFragment;
     "remove(bytes32[2])": FunctionFragment;
     "resolve(uint128)": FunctionFragment;
+    "setFundingHour(uint8)": FunctionFragment;
     "setLeverage(uint8,uint16)": FunctionFragment;
     "setPlacePaused(bool)": FunctionFragment;
     "setQuoteParam((uint128,uint16,uint16,uint64,uint8,uint128))": FunctionFragment;
@@ -181,6 +183,7 @@ export interface InstrumentInterface extends utils.Interface {
       | "donateInsuranceFund"
       | "fill"
       | "freeze"
+      | "fundingHour"
       | "getExpiries"
       | "init"
       | "initialize"
@@ -196,6 +199,7 @@ export interface InstrumentInterface extends utils.Interface {
       | "recycleInsuranceFund"
       | "remove"
       | "resolve"
+      | "setFundingHour"
       | "setLeverage"
       | "setPlacePaused"
       | "setQuoteParam"
@@ -246,6 +250,10 @@ export interface InstrumentInterface extends utils.Interface {
     values: [PromiseOrValue<BytesLike>]
   ): string;
   encodeFunctionData(functionFragment: "freeze", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "fundingHour",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "getExpiries",
     values?: undefined
@@ -322,6 +330,10 @@ export interface InstrumentInterface extends utils.Interface {
     values: [PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
+    functionFragment: "setFundingHour",
+    values: [PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(
     functionFragment: "setLeverage",
     values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
   ): string;
@@ -372,7 +384,11 @@ export interface InstrumentInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "donateInsuranceFund",
+      functionFragment: "donateInsuranceFund",
+      data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "fundingHour",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "fill", data: BytesLike): Result;
@@ -410,6 +426,10 @@ export interface InstrumentInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "remove", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "resolve", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "setFundingHour",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "setLeverage",
     data: BytesLike
@@ -451,6 +471,7 @@ export interface InstrumentInterface extends utils.Interface {
     "UpdateAmmStatus(uint32,uint8,uint160,uint256)": EventFragment;
     "UpdateCondition(uint32,uint8)": EventFragment;
     "UpdateFeeState(uint32,uint128,uint128)": EventFragment;
+    "UpdateFundingHour(uint8)": EventFragment;
     "UpdateFundingIndex(uint256)": EventFragment;
     "UpdateMarginRatio(uint16,uint16)": EventFragment;
     "UpdateParam(tuple)": EventFragment;
@@ -481,6 +502,7 @@ export interface InstrumentInterface extends utils.Interface {
   getEvent(nameOrSignatureOrTopic: "UpdateAmmStatus"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "UpdateCondition"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "UpdateFeeState"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "UpdateFundingHour"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "UpdateFundingIndex"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "UpdateMarginRatio"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "UpdateParam"): EventFragment;
@@ -788,6 +810,17 @@ export type UpdateFeeStateEvent = TypedEvent<
 
 export type UpdateFeeStateEventFilter = TypedEventFilter<UpdateFeeStateEvent>;
 
+export interface UpdateFundingHourEventObject {
+  fundingHour: number;
+}
+export type UpdateFundingHourEvent = TypedEvent<
+  [number],
+  UpdateFundingHourEventObject
+>;
+
+export type UpdateFundingHourEventFilter =
+  TypedEventFilter<UpdateFundingHourEvent>;
+
 export interface UpdateFundingIndexEventObject {
   fundingIndex: BigNumber;
 }
@@ -969,6 +1002,8 @@ export interface Instrument extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
+    fundingHour(overrides?: CallOverrides): Promise<[number]>;
+
     getExpiries(overrides?: CallOverrides): Promise<[number[]]>;
 
     init(
@@ -1045,6 +1080,11 @@ export interface Instrument extends BaseContract {
 
     resolve(
       settlementPrice: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
+    setFundingHour(
+      newFundingHour: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -1143,6 +1183,8 @@ export interface Instrument extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
+  fundingHour(overrides?: CallOverrides): Promise<number>;
+
   getExpiries(overrides?: CallOverrides): Promise<number[]>;
 
   init(
@@ -1219,6 +1261,11 @@ export interface Instrument extends BaseContract {
 
   resolve(
     settlementPrice: PromiseOrValue<BigNumberish>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  setFundingHour(
+    newFundingHour: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -1336,6 +1383,8 @@ export interface Instrument extends BaseContract {
 
     freeze(overrides?: CallOverrides): Promise<void>;
 
+    fundingHour(overrides?: CallOverrides): Promise<number>;
+
     getExpiries(overrides?: CallOverrides): Promise<number[]>;
 
     init(
@@ -1424,6 +1473,11 @@ export interface Instrument extends BaseContract {
 
     resolve(
       settlementPrice: PromiseOrValue<BigNumberish>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setFundingHour(
+      newFundingHour: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1733,6 +1787,11 @@ export interface Instrument extends BaseContract {
       protocolFee?: null
     ): UpdateFeeStateEventFilter;
 
+    "UpdateFundingHour(uint8)"(
+      fundingHour?: null
+    ): UpdateFundingHourEventFilter;
+    UpdateFundingHour(fundingHour?: null): UpdateFundingHourEventFilter;
+
     "UpdateFundingIndex(uint256)"(
       fundingIndex?: null
     ): UpdateFundingIndexEventFilter;
@@ -1867,6 +1926,8 @@ export interface Instrument extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
+    fundingHour(overrides?: CallOverrides): Promise<BigNumber>;
+
     getExpiries(overrides?: CallOverrides): Promise<BigNumber>;
 
     init(
@@ -1943,6 +2004,11 @@ export interface Instrument extends BaseContract {
 
     resolve(
       settlementPrice: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
+    setFundingHour(
+      newFundingHour: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -2042,6 +2108,8 @@ export interface Instrument extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
+    fundingHour(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     getExpiries(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     init(
@@ -2118,6 +2186,11 @@ export interface Instrument extends BaseContract {
 
     resolve(
       settlementPrice: PromiseOrValue<BigNumberish>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setFundingHour(
+      newFundingHour: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 

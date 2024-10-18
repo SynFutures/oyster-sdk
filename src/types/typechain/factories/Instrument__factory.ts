@@ -425,6 +425,19 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "fundingHour",
+    outputs: [
+      {
+        internalType: "uint8",
+        name: "",
+        type: "uint8",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "getExpiries",
     outputs: [
       {
@@ -844,6 +857,19 @@ const _abi = [
       },
     ],
     name: "resolve",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint8",
+        name: "newFundingHour",
+        type: "uint8",
+      },
+    ],
+    name: "setFundingHour",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -1787,6 +1813,19 @@ const _abi = [
     inputs: [
       {
         indexed: false,
+        internalType: "uint8",
+        name: "fundingHour",
+        type: "uint8",
+      },
+    ],
+    name: "UpdateFundingHour",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
         internalType: "uint256",
         name: "fundingIndex",
         type: "uint256",
@@ -2318,6 +2357,11 @@ const _abi = [
   {
     inputs: [],
     name: "DivUnderflow",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "ForbidNegativeAdjust",
     type: "error",
   },
   {
