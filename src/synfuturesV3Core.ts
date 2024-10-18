@@ -509,7 +509,7 @@ export class SynFuturesV3 {
         }
         const rawMiscInfo = await this.ctx.getMulticall3().callStatic.aggregate(calls, overrides ?? {});
         const miscList: InstrumentMisc[] = [];
-        for (let j = 0; j < instrumentAddress.length; j = needFundingHour ? j + 2 : j + 1) {
+        for (let j = 0; j < rawMiscInfo.returnData.length; j = needFundingHour ? j + 2 : j + 1) {
             const [placePaused] = instrumentInterface.decodeFunctionResult('placePaused', rawMiscInfo.returnData[j]);
             const [fundingHour] = needFundingHour
                 ? instrumentInterface.decodeFunctionResult('fundingHour', rawMiscInfo.returnData[j + 1])
