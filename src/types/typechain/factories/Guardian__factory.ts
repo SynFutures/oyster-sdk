@@ -51,6 +51,11 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "NotAdminOrVaultFactory",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "NotOperator",
     type: "error",
   },
@@ -228,6 +233,19 @@ const _abi = [
   {
     inputs: [],
     name: "YIELD_CLAIMER_ROLE",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "VAULT_FACTORY_ROLE",
     outputs: [
       {
         internalType: "bytes32",
@@ -1008,6 +1026,24 @@ const _abi = [
       },
     ],
     name: "setEmergingFeederFactoryAddress",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address[]",
+        name: "instruments",
+        type: "address[]",
+      },
+      {
+        internalType: "uint8[]",
+        name: "params",
+        type: "uint8[]",
+      },
+    ],
+    name: "setFundingHour",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",

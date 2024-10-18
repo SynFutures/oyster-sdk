@@ -86,6 +86,7 @@ export interface GuardianInterface extends utils.Interface {
     "GAS_CLAIMER_ROLE()": FunctionFragment;
     "OPERATOR_ROLE()": FunctionFragment;
     "YIELD_CLAIMER_ROLE()": FunctionFragment;
+    "VAULT_FACTORY_ROLE()": FunctionFragment;
     "addDexV2Factory(address)": FunctionFragment;
     "blastFeeTo()": FunctionFragment;
     "blastYieldTo()": FunctionFragment;
@@ -130,6 +131,7 @@ export interface GuardianInterface extends utils.Interface {
     "setConfigAndGateAddress(address,address)": FunctionFragment;
     "setConfigQuoteParam(address[],(uint128,uint16,uint16,uint64,uint8,uint128)[])": FunctionFragment;
     "setEmergingFeederFactoryAddress(address)": FunctionFragment;
+    "setFundingHour(address[],uint8[])": FunctionFragment;
     "setInstrumentLeverage(address[],uint8[],uint16[])": FunctionFragment;
     "setInstrumentQuoteParam(address[],(uint128,uint16,uint16,uint64,uint8,uint128)[])": FunctionFragment;
     "setLiquidatorWhitelist(address[],bool[])": FunctionFragment;
@@ -157,6 +159,7 @@ export interface GuardianInterface extends utils.Interface {
       | "GAS_CLAIMER_ROLE"
       | "OPERATOR_ROLE"
       | "YIELD_CLAIMER_ROLE"
+      | "VAULT_FACTORY_ROLE"
       | "addDexV2Factory"
       | "blastFeeTo"
       | "blastYieldTo"
@@ -201,6 +204,7 @@ export interface GuardianInterface extends utils.Interface {
       | "setConfigAndGateAddress"
       | "setConfigQuoteParam"
       | "setEmergingFeederFactoryAddress"
+      | "setFundingHour"
       | "setInstrumentLeverage"
       | "setInstrumentQuoteParam"
       | "setLiquidatorWhitelist"
@@ -418,6 +422,10 @@ export interface GuardianInterface extends utils.Interface {
     values: [PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
+    functionFragment: "setFundingHour",
+    values: [PromiseOrValue<string>[], PromiseOrValue<BigNumberish>[]]
+  ): string;
+  encodeFunctionData(
     functionFragment: "setInstrumentLeverage",
     values: [
       PromiseOrValue<string>[],
@@ -518,6 +526,10 @@ export interface GuardianInterface extends utils.Interface {
   decodeFunctionResult(
     functionFragment: "YIELD_CLAIMER_ROLE",
     data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+      functionFragment: "VAULT_FACTORY_ROLE",
+      data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "addDexV2Factory",
@@ -654,6 +666,10 @@ export interface GuardianInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "setEmergingFeederFactoryAddress",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setFundingHour",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -1084,6 +1100,12 @@ export interface Guardian extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
+    setFundingHour(
+      instruments: PromiseOrValue<string>[],
+      params: PromiseOrValue<BigNumberish>[],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
     setInstrumentLeverage(
       instruments: PromiseOrValue<string>[],
       leverages: PromiseOrValue<BigNumberish>[],
@@ -1195,6 +1217,8 @@ export interface Guardian extends BaseContract {
   OPERATOR_ROLE(overrides?: CallOverrides): Promise<string>;
 
   YIELD_CLAIMER_ROLE(overrides?: CallOverrides): Promise<string>;
+
+  VAULT_FACTORY_ROLE(overrides?: CallOverrides): Promise<string>;
 
   addDexV2Factory(
     dexV2Factory: PromiseOrValue<string>,
@@ -1423,6 +1447,12 @@ export interface Guardian extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
+  setFundingHour(
+    instruments: PromiseOrValue<string>[],
+    params: PromiseOrValue<BigNumberish>[],
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
   setInstrumentLeverage(
     instruments: PromiseOrValue<string>[],
     leverages: PromiseOrValue<BigNumberish>[],
@@ -1443,6 +1473,7 @@ export interface Guardian extends BaseContract {
   ): Promise<ContractTransaction>;
 
   setLpWhiteList(
+    quotes: PromiseOrValue<string>[],
     users: PromiseOrValue<string>[],
     flags: PromiseOrValue<boolean>[],
     overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -1533,6 +1564,8 @@ export interface Guardian extends BaseContract {
     OPERATOR_ROLE(overrides?: CallOverrides): Promise<string>;
 
     YIELD_CLAIMER_ROLE(overrides?: CallOverrides): Promise<string>;
+
+    VAULT_FACTORY_ROLE(overrides?: CallOverrides): Promise<string>;
 
     addDexV2Factory(
       dexV2Factory: PromiseOrValue<string>,
@@ -1757,6 +1790,12 @@ export interface Guardian extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    setFundingHour(
+      instruments: PromiseOrValue<string>[],
+      params: PromiseOrValue<BigNumberish>[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     setInstrumentLeverage(
       instruments: PromiseOrValue<string>[],
       leverages: PromiseOrValue<BigNumberish>[],
@@ -1920,6 +1959,8 @@ export interface Guardian extends BaseContract {
     OPERATOR_ROLE(overrides?: CallOverrides): Promise<BigNumber>;
 
     YIELD_CLAIMER_ROLE(overrides?: CallOverrides): Promise<BigNumber>;
+
+    VAULT_FACTORY_ROLE(overrides?: CallOverrides): Promise<BigNumber>;
 
     addDexV2Factory(
       dexV2Factory: PromiseOrValue<string>,
@@ -2141,6 +2182,12 @@ export interface Guardian extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
+    setFundingHour(
+      instruments: PromiseOrValue<string>[],
+      params: PromiseOrValue<BigNumberish>[],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
     setInstrumentLeverage(
       instruments: PromiseOrValue<string>[],
       leverages: PromiseOrValue<BigNumberish>[],
@@ -2256,6 +2303,10 @@ export interface Guardian extends BaseContract {
 
     YIELD_CLAIMER_ROLE(
       overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    VAULT_FACTORY_ROLE(
+        overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     addDexV2Factory(
@@ -2477,6 +2528,12 @@ export interface Guardian extends BaseContract {
 
     setEmergingFeederFactoryAddress(
       _emergingFeederFactory: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setFundingHour(
+      instruments: PromiseOrValue<string>[],
+      params: PromiseOrValue<BigNumberish>[],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 

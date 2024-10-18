@@ -391,6 +391,11 @@ export interface InstrumentMarket extends Market {
     feeder: PriceFeeder | DexV2Feeder;
 }
 
+export interface InstrumentMisc {
+    placePaused: boolean;
+    fundingHour: number;
+}
+
 export class InstrumentModel {
     info: InstrumentInfo;
     state: InstrumentState;
@@ -398,13 +403,22 @@ export class InstrumentModel {
 
     markPrices = new Map<number, BigNumber>();
 
+    misc?: InstrumentMisc;
+
     spotPrice: BigNumber;
 
-    constructor(info: InstrumentInfo, market: InstrumentMarket, state: InstrumentState, spotPrice: BigNumber) {
+    constructor(
+        info: InstrumentInfo,
+        market: InstrumentMarket,
+        state: InstrumentState,
+        spotPrice: BigNumber,
+        misc?: InstrumentMisc,
+    ) {
         this.info = info;
         this.market = market;
         this.state = state;
         this.spotPrice = spotPrice;
+        if (misc) this.misc = misc;
     }
 
     public static minimumInstrumentWithParam(param: QuoteParam): InstrumentModel {
@@ -487,7 +501,8 @@ export class InstrumentModel {
         const pairState = this.state.pairStates.get(expiry);
         if (!pairState) throw new Error('pair not found');
         const spotPriceWad = pairState.fairPriceWad;
-        return wdiv(spotPriceWad, this.spotPrice).sub(WAD);
+        const period = this.misc ? this.misc.fundingHour * 3600 : 86400;
+        return wdiv(spotPriceWad, this.spotPrice).sub(WAD).mul(86400).div(period);
     }
 
     getBenchmarkPrice(expiry: number): BigNumber {
