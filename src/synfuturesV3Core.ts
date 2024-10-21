@@ -494,7 +494,18 @@ export class SynFuturesV3 {
         const instrumentInterface = Instrument__factory.createInterface();
 
         const calls = [];
-        const needFundingHour = this.ctx.chainId !== CHAIN_ID.BLAST && this.ctx.chainId !== CHAIN_ID.LOCAL;
+
+        let needFundingHour = this.ctx.chainId !== CHAIN_ID.BLAST && this.ctx.chainId !== CHAIN_ID.LOCAL;
+        if (overrides && overrides.blockTag) {
+            const blockTag = await overrides.blockTag;
+            if (typeof blockTag === 'number' || blockTag.startsWith('0x')) {
+                const blockNumber = ethers.BigNumber.from(blockTag).toNumber();
+                if (this.ctx.chainId === CHAIN_ID.BASE && blockNumber < 21216046) {
+                    needFundingHour = false;
+                }
+            }
+        }
+
         for (const instrumentAddr of instrumentAddress) {
             calls.push({
                 target: instrumentAddr,
