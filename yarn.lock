@@ -9,10 +9,10 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@derivation-tech/web3-core@^1.0.36":
-  version "1.0.36"
-  resolved "https://registry.npmjs.org/@derivation-tech/web3-core/-/web3-core-1.0.36.tgz#5af9736e7e0d28f1f4ede02e6ab2448abc71df89"
-  integrity sha512-vrKGYfqhwiVfaLpFhIpOUnaC9nmfMQTIE9tN5cBIFpk6lO8FdpNeAiWUNtOwBzpypMaPSUPVOqdl6LQhbP9yFA==
+"@derivation-tech/web3-core@^1.0.39":
+  version "1.0.39"
+  resolved "https://registry.npmjs.org/@derivation-tech/web3-core/-/web3-core-1.0.39.tgz#882175f01f0f44375aa6becbdff0e2db312eb221"
+  integrity sha512-zjVBmYjkV2Xm8wPXPkNKmfC9lOfFRVe9CdHBsuErgtG4V7f15UdbzGbC4w8WVvR8n0+tATb5OBJcSCj91xh0Fw==
   dependencies:
     "@eth-optimism/sdk" "^3.1.5"
     async-retry "^1.3.3"
