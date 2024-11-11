@@ -1727,7 +1727,8 @@ export class SynFuturesV3 {
         const pairModel = pairAccountModel.rootPair;
         const targetPrice = TickMath.getWadAtTick(targetTick);
         const markPrice = pairModel.markPrice;
-        let margin = wdivUp(wmulUp(targetPrice, baseSize), leverageWad);
+        const bnMax = (a: BigNumber, b: BigNumber): BigNumber => (a.gt(b) ? a : b);
+        let margin = wdivUp(wmulUp(bnMax(targetPrice, markPrice), baseSize), leverageWad);
         const minMargin = wmulUp(
             r2w(pairModel.rootInstrument.setting.initialMarginRatio),
             wmulUp(
