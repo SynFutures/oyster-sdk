@@ -1056,9 +1056,9 @@ const _abi = [
         type: "address[]",
       },
       {
-        internalType: "enum Leverage[]",
-        name: "leverages",
-        type: "uint8[]",
+        internalType: "uint16[]",
+        name: "imrs",
+        type: "uint16[]",
       },
       {
         internalType: "uint16[]",

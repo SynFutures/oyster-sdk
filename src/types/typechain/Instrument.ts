@@ -161,7 +161,7 @@ export interface InstrumentInterface extends utils.Interface {
     "remove(bytes32[2])": FunctionFragment;
     "resolve(uint128)": FunctionFragment;
     "setFundingHour(uint8)": FunctionFragment;
-    "setLeverage(uint8,uint16)": FunctionFragment;
+    "setLeverage(uint16,uint16)": FunctionFragment;
     "setPlacePaused(bool)": FunctionFragment;
     "setQuoteParam((uint128,uint16,uint16,uint64,uint8,uint128))": FunctionFragment;
     "settle(uint32,address)": FunctionFragment;
@@ -1089,7 +1089,7 @@ export interface Instrument extends BaseContract {
     ): Promise<ContractTransaction>;
 
     setLeverage(
-      leverage: PromiseOrValue<BigNumberish>,
+      initialMarginRatio: PromiseOrValue<BigNumberish>,
       maintenanceMarginRatio: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
@@ -1270,7 +1270,7 @@ export interface Instrument extends BaseContract {
   ): Promise<ContractTransaction>;
 
   setLeverage(
-    leverage: PromiseOrValue<BigNumberish>,
+    initialMarginRatio: PromiseOrValue<BigNumberish>,
     maintenanceMarginRatio: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
@@ -1482,7 +1482,7 @@ export interface Instrument extends BaseContract {
     ): Promise<void>;
 
     setLeverage(
-      leverage: PromiseOrValue<BigNumberish>,
+      initialMarginRatio: PromiseOrValue<BigNumberish>,
       maintenanceMarginRatio: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
@@ -2013,7 +2013,7 @@ export interface Instrument extends BaseContract {
     ): Promise<BigNumber>;
 
     setLeverage(
-      leverage: PromiseOrValue<BigNumberish>,
+      initialMarginRatio: PromiseOrValue<BigNumberish>,
       maintenanceMarginRatio: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
@@ -2195,7 +2195,7 @@ export interface Instrument extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     setLeverage(
-      leverage: PromiseOrValue<BigNumberish>,
+      initialMarginRatio: PromiseOrValue<BigNumberish>,
       maintenanceMarginRatio: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
