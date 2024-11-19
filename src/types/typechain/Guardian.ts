@@ -132,7 +132,7 @@ export interface GuardianInterface extends utils.Interface {
     "setConfigQuoteParam(address[],(uint128,uint16,uint16,uint64,uint8,uint128)[])": FunctionFragment;
     "setEmergingFeederFactoryAddress(address)": FunctionFragment;
     "setFundingHour(address[],uint8[])": FunctionFragment;
-    "setInstrumentLeverage(address[],uint8[],uint16[])": FunctionFragment;
+    "setInstrumentLeverage(address[],uint16[],uint16[])": FunctionFragment;
     "setInstrumentQuoteParam(address[],(uint128,uint16,uint16,uint64,uint8,uint128)[])": FunctionFragment;
     "setLiquidatorWhitelist(address[],bool[])": FunctionFragment;
     "setLpWhiteList(address[],address[],bool[])": FunctionFragment;
@@ -1108,7 +1108,7 @@ export interface Guardian extends BaseContract {
 
     setInstrumentLeverage(
       instruments: PromiseOrValue<string>[],
-      leverages: PromiseOrValue<BigNumberish>[],
+      imrs: PromiseOrValue<BigNumberish>[],
       mmrs: PromiseOrValue<BigNumberish>[],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
@@ -1455,7 +1455,7 @@ export interface Guardian extends BaseContract {
 
   setInstrumentLeverage(
     instruments: PromiseOrValue<string>[],
-    leverages: PromiseOrValue<BigNumberish>[],
+    imrs: PromiseOrValue<BigNumberish>[],
     mmrs: PromiseOrValue<BigNumberish>[],
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
@@ -1798,7 +1798,7 @@ export interface Guardian extends BaseContract {
 
     setInstrumentLeverage(
       instruments: PromiseOrValue<string>[],
-      leverages: PromiseOrValue<BigNumberish>[],
+      imrs: PromiseOrValue<BigNumberish>[],
       mmrs: PromiseOrValue<BigNumberish>[],
       overrides?: CallOverrides
     ): Promise<void>;
@@ -2190,7 +2190,7 @@ export interface Guardian extends BaseContract {
 
     setInstrumentLeverage(
       instruments: PromiseOrValue<string>[],
-      leverages: PromiseOrValue<BigNumberish>[],
+      imrs: PromiseOrValue<BigNumberish>[],
       mmrs: PromiseOrValue<BigNumberish>[],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
@@ -2539,7 +2539,7 @@ export interface Guardian extends BaseContract {
 
     setInstrumentLeverage(
       instruments: PromiseOrValue<string>[],
-      leverages: PromiseOrValue<BigNumberish>[],
+      imrs: PromiseOrValue<BigNumberish>[],
       mmrs: PromiseOrValue<BigNumberish>[],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;

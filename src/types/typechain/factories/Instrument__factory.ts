@@ -877,9 +877,9 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "enum Leverage",
-        name: "leverage",
-        type: "uint8",
+        internalType: "uint16",
+        name: "initialMarginRatio",
+        type: "uint16",
       },
       {
         internalType: "uint16",
