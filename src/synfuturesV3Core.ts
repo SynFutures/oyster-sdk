@@ -94,7 +94,7 @@ import {
     SimulateTradeResult,
     SimulateOrderResult,
 } from './types';
-import { r2w, sqrtX96ToWad, TickMath, wadToTick, wdiv, wmul, wmulDown, wmulUp, ZERO, wdivUp, max } from './math';
+import { r2w, sqrtX96ToWad, TickMath, wadToTick, wdiv, wmul, wmulDown, wmulUp, ZERO, wdivUp, max, sqrt } from './math';
 import {
     BatchOrderSizeDistribution,
     cexMarket,
@@ -2216,6 +2216,7 @@ export class SynFuturesV3 {
         simulationMainPosition: PositionModel;
         sqrtStrikeLowerPX96: BigNumber;
         sqrtStrikeUpperPX96: BigNumber;
+        removedPositionEntryPrice: BigNumber;
     } {
         const amm = pairAccountModel.rootPair.amm;
         const rawPositionRemoved = rangeModel.rawPositionIfRemove(amm);
@@ -2227,6 +2228,7 @@ export class SynFuturesV3 {
             simulationMainPosition: mainPosition,
             sqrtStrikeLowerPX96: amm.sqrtPX96.sub(wmulDown(amm.sqrtPX96, r2w(slippage))),
             sqrtStrikeUpperPX96: amm.sqrtPX96.add(wmulDown(amm.sqrtPX96, r2w(slippage))),
+            removedPositionEntryPrice: sqrt(sqrtX96ToWad(amm.sqrtPX96).mul(sqrtX96ToWad(rangeModel.sqrtEntryPX96))),
         };
     }
     //////////////////////////////////////////////////////////
