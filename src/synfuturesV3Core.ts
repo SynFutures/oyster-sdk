@@ -2786,6 +2786,16 @@ export class SynFuturesV3 {
         return -2 / (alpha * (imr + 1) - Math.sqrt(alpha)) / (1 / Math.sqrt(alpha) - 1);
     }
 
+    calcAsymmetricBoost(alphaLower: number, alphaUpper: number, imr: number): number {
+        if (alphaLower === 1 && alphaUpper === 1) {
+            throw new Error('Invalid alpha and beta');
+        }
+        imr = imr / 10 ** RATIO_DECIMALS;
+        const boostLower = 2 / (1 / Math.sqrt(alphaLower) - 1) / ((1 / Math.sqrt(alphaLower)) * (1 - imr) - 1);
+        const boostUpper = this.calcBoost(alphaUpper, imr);
+        return Math.min(boostLower, boostUpper);
+    }
+
     getMaxLeverage(imr: number): number {
         return 1 / (imr / 10 ** RATIO_DECIMALS);
     }
