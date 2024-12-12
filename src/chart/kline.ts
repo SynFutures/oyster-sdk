@@ -201,7 +201,7 @@ export class KlineDataProvider implements IKlineDataProvider {
         // only consider Trade & Sweep event
         const condition = `type_in: [LIQUIDATION, MARKET], fee_gt: 0, amm: "${ammId}", timestamp_gte: ${startTs}, timestamp_lte: ${endTs}`;
         const graphQL = `query($skip: Int, $first: Int, $lastID: String){
-            virtualTrades(skip: $skip, first: $first, where: { ${condition}, id_gt: $lastID } orderBy: blockNumber, orderDirection: asc){
+            virtualTrades(first: $first, where: { ${condition}, id_gt: $lastID }){
                 id
                 price
                 size
