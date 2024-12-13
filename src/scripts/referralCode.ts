@@ -8,6 +8,7 @@ import Decimal from 'decimal.js';
 import { Instrument, DB, models } from '@synfutures/misc-db';
 import { SynFuturesV3 } from '../synfuturesV3Core';
 import { ethers } from 'ethers';
+import moment from 'moment';
 
 export function pickQuoteFromSymbol(symbol: string) {
     const from = symbol.indexOf('-');
@@ -73,12 +74,19 @@ async function main() {
     const db = new DB(process.env.DB_URL!);
     await db.init(models);
 
+    const startTs = moment.utc('2024-08-21 00:00:00').unix();
+    const endTs = moment.utc('2024-11-20 18:30:00').unix();
+
     const baseTrades = await baseSubgraph.getVirtualTrades({
         referralCode: referralCode,
+        startTs: startTs,
+        endTs: endTs,
     });
 
     const blastTrades = await blastSubgraph.getVirtualTrades({
         referralCode: referralCode,
+        startTs: startTs,
+        endTs: endTs,
     });
 
     const outputPath = path.join(__dirname, 'data', 'voulmeAndFees.csv');
@@ -99,20 +107,22 @@ async function main() {
         const formatAddress = address.replace(/^"|"$/g, '');
         const quoteName = pickQuoteFromFullSymbol(pair);
         const fee = new Decimal(0);
+        const volumeInQuote = new Decimal(0);
         const symbol = pair.replace(/-PERP$/, '');
-        return { chain, formatAddress, pair, volumeInUsd, symbol, quoteName, fee };
+        return { chain, formatAddress, pair, volumeInUsd, symbol, quoteName, fee, volumeInQuote };
     });
 
     for (const trade of baseTrades) {
         const quoteInfo = await getQuoteInfoByInstrument(trade.instrumentAddr, baseSdk);
         const symbol = quoteInfo.symbol;
-        console.log(symbol);
         const fee = ethers.utils.formatEther(trade.fee);
+        const tradeValue = ethers.utils.formatEther(trade.tradeValue);
         const record = linesWithFee.find(
             (line) => line.chain == 'base' && line.formatAddress == trade.trader && line.symbol == symbol,
         );
         if (record) {
             record.fee = record.fee.add(fee);
+            record.volumeInQuote = record.volumeInQuote.add(tradeValue);
         }
     }
 
@@ -120,16 +130,18 @@ async function main() {
         const quoteInfo = await getQuoteInfoByInstrument(trade.instrumentAddr, blastSdk);
         const symbol = quoteInfo.symbol;
         const fee = ethers.utils.formatEther(trade.fee);
+        const tradeValue = ethers.utils.formatEther(trade.tradeValue);
 
         const record = linesWithFee.find(
             (line) => line.chain === 'blast' && line.formatAddress === trade.trader && line.symbol === symbol,
         );
         if (record) {
             record.fee = record.fee.add(fee);
+            record.volumeInQuote = record.volumeInQuote.add(tradeValue);
         }
     }
 
-    write('chain', 'trader', 'pair', 'volumeInUsd', 'quoteName', 'feeInQuote');
+    write('chain', 'trader', 'pair', 'volumeInUsd', 'quoteName', 'volumeInQuote', 'feeInQuote');
 
     for (const record of linesWithFee) {
         write(
@@ -138,6 +150,7 @@ async function main() {
             record.pair,
             record.volumeInUsd,
             record.quoteName,
+            record.volumeInQuote.toFixed(),
             record.fee.toFixed(),
         );
     }
