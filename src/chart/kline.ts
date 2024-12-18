@@ -196,7 +196,11 @@ export class KlineDataProvider implements IKlineDataProvider {
         endTs: number,
         minTradeValue: BigNumber,
     ): Promise<{ [ts: number]: KlineData }> {
-        interval;
+        const _interval = getIntervalSeconds(interval);
+
+        startTs = Math.floor(startTs / _interval) * _interval;
+        endTs = Math.ceil(endTs / _interval) * _interval;
+
         const ammId = concatId(instrumentAddr, expiry).toLowerCase();
         // only consider Trade & Sweep event
         const condition = `type_in: [LIQUIDATION, MARKET], fee_gt: 0, amm: "${ammId}", timestamp_gte: ${startTs}, timestamp_lte: ${endTs}`;
