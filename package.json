@@ -1,6 +1,6 @@
 {
     "name": "@synfutures/oyster-sdk",
-    "version": "0.2.29",
+    "version": "0.2.29-monad-dev-6",
     "description": "SynFutures V3 SDK",
     "author": "SynFutures",
     "license": "MIT",
@@ -18,7 +18,7 @@
         "url": "https://github.com/SynFutures/oyster-sdk"
     },
     "dependencies": {
-        "@derivation-tech/web3-core": "^1.0.42",
+        "@derivation-tech/web3-core": "1.0.42-monad-dev-2",
         "lodash": "^4.17.21"
     },
     "devDependencies": {
