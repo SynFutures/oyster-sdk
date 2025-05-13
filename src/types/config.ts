@@ -9,10 +9,8 @@ import { MarketInfo } from './market';
 import { EMPTY_QUOTE_PARAM, QuoteParam } from './params';
 import {
     DisableLiquidatorWhitelistEventObject,
-    DisableLpWhitelistEventObject,
     EnableLpWhitelistForQuoteEventObject,
     SetLiquidatorWhitelistEventObject,
-    SetLpWhitelistEventObject,
     SetLpWhitelistForQuoteEventObject,
     SetMarketInfoEventObject,
     SetQuoteParamEventObject,
@@ -211,12 +209,6 @@ export class ConfigState extends EventHandler {
         });
     }
 
-    handleDisableLpWhitelist(event: ParsedEvent<DisableLpWhitelistEventObject>, log: ethers.providers.Log): void {
-        void event;
-        void log;
-        this.openLp = true;
-    }
-
     handleEnableLpWhitelistForQuote(
         event: ParsedEvent<EnableLpWhitelistForQuoteEventObject>,
         log: ethers.providers.Log,
@@ -232,11 +224,6 @@ export class ConfigState extends EventHandler {
         void event;
         void log;
         this.openLiquidator = true;
-    }
-
-    handleSetLpWhitelist(event: ParsedEvent<SetLpWhitelistEventObject>, log: ethers.providers.Log): void {
-        void log;
-        this.lpWhitelist.set(event.args.user, event.args.authorized);
     }
 
     handleSetLpWhitelistForQuote(

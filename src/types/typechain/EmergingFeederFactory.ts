@@ -46,7 +46,6 @@ export interface EmergingFeederFactoryInterface extends utils.Interface {
     "getPrice(bytes32)": FunctionFragment;
     "getRoleAdmin(bytes32)": FunctionFragment;
     "grantRole(bytes32,address)": FunctionFragment;
-    "guardian()": FunctionFragment;
     "hasRole(bytes32,address)": FunctionFragment;
     "initialize(address,address[])": FunctionFragment;
     "renounceRole(bytes32,address)": FunctionFragment;
@@ -74,7 +73,6 @@ export interface EmergingFeederFactoryInterface extends utils.Interface {
       | "getPrice"
       | "getRoleAdmin"
       | "grantRole"
-      | "guardian"
       | "hasRole"
       | "initialize"
       | "renounceRole"
@@ -148,7 +146,6 @@ export interface EmergingFeederFactoryInterface extends utils.Interface {
     functionFragment: "grantRole",
     values: [PromiseOrValue<BytesLike>, PromiseOrValue<string>]
   ): string;
-  encodeFunctionData(functionFragment: "guardian", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "hasRole",
     values: [PromiseOrValue<BytesLike>, PromiseOrValue<string>]
@@ -230,7 +227,6 @@ export interface EmergingFeederFactoryInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "grantRole", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "guardian", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "hasRole", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
   decodeFunctionResult(
@@ -417,8 +413,6 @@ export interface EmergingFeederFactory extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    guardian(overrides?: CallOverrides): Promise<[string]>;
-
     hasRole(
       role: PromiseOrValue<BytesLike>,
       account: PromiseOrValue<string>,
@@ -528,8 +522,6 @@ export interface EmergingFeederFactory extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  guardian(overrides?: CallOverrides): Promise<string>;
-
   hasRole(
     role: PromiseOrValue<BytesLike>,
     account: PromiseOrValue<string>,
@@ -638,8 +630,6 @@ export interface EmergingFeederFactory extends BaseContract {
       account: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<void>;
-
-    guardian(overrides?: CallOverrides): Promise<string>;
 
     hasRole(
       role: PromiseOrValue<BytesLike>,
@@ -796,8 +786,6 @@ export interface EmergingFeederFactory extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    guardian(overrides?: CallOverrides): Promise<BigNumber>;
-
     hasRole(
       role: PromiseOrValue<BytesLike>,
       account: PromiseOrValue<string>,
@@ -909,8 +897,6 @@ export interface EmergingFeederFactory extends BaseContract {
       account: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
-
-    guardian(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     hasRole(
       role: PromiseOrValue<BytesLike>,

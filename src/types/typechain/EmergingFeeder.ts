@@ -32,7 +32,7 @@ export interface EmergingFeederInterface extends utils.Interface {
     "currentPrice()": FunctionFragment;
     "decimals()": FunctionFragment;
     "factory()": FunctionFragment;
-    "initialize(uint8,uint128,address)": FunctionFragment;
+    "initialize(uint8,uint128)": FunctionFragment;
     "lastUpdatedTimestamp()": FunctionFragment;
     "latestRoundData()": FunctionFragment;
     "setRawPrice(uint128)": FunctionFragment;
@@ -57,11 +57,7 @@ export interface EmergingFeederInterface extends utils.Interface {
   encodeFunctionData(functionFragment: "factory", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "initialize",
-    values: [
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<string>
-    ]
+    values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
     functionFragment: "lastUpdatedTimestamp",
@@ -146,7 +142,6 @@ export interface EmergingFeeder extends BaseContract {
     initialize(
       _decimals: PromiseOrValue<BigNumberish>,
       priceE8: PromiseOrValue<BigNumberish>,
-      guardian: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -171,7 +166,6 @@ export interface EmergingFeeder extends BaseContract {
   initialize(
     _decimals: PromiseOrValue<BigNumberish>,
     priceE8: PromiseOrValue<BigNumberish>,
-    guardian: PromiseOrValue<string>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -196,7 +190,6 @@ export interface EmergingFeeder extends BaseContract {
     initialize(
       _decimals: PromiseOrValue<BigNumberish>,
       priceE8: PromiseOrValue<BigNumberish>,
-      guardian: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -227,7 +220,6 @@ export interface EmergingFeeder extends BaseContract {
     initialize(
       _decimals: PromiseOrValue<BigNumberish>,
       priceE8: PromiseOrValue<BigNumberish>,
-      guardian: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -251,7 +243,6 @@ export interface EmergingFeeder extends BaseContract {
     initialize(
       _decimals: PromiseOrValue<BigNumberish>,
       priceE8: PromiseOrValue<BigNumberish>,
-      guardian: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 

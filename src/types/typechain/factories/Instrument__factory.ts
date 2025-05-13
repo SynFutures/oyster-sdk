@@ -29,6 +29,11 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "BadAmmTiming",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "BadInstrumentCondition",
     type: "error",
   },
@@ -50,11 +55,6 @@ const _abi = [
   {
     inputs: [],
     name: "BadTradingFeeRatio",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "DivByZero",
     type: "error",
   },
   {
@@ -116,22 +116,12 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "RoundHalfUpBadParam",
-    type: "error",
-  },
-  {
-    inputs: [],
     name: "PlacePaused",
     type: "error",
   },
   {
     inputs: [],
     name: "SelfLiquidation",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "TickOutOfBound",
     type: "error",
   },
   {
@@ -143,19 +133,6 @@ const _abi = [
     inputs: [],
     name: "ZeroAddress",
     type: "error",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "uint8",
-        name: "version",
-        type: "uint8",
-      },
-    ],
-    name: "Initialized",
-    type: "event",
   },
   {
     inputs: [
@@ -309,19 +286,6 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "to",
-        type: "address",
-      },
-    ],
-    name: "claimYield",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
     inputs: [],
     name: "condition",
     outputs: [
@@ -332,19 +296,6 @@ const _abi = [
       },
     ],
     stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "enum YieldMode",
-        name: "yieldMode",
-        type: "uint8",
-      },
-    ],
-    name: "configureYieldMode",
-    outputs: [],
-    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -987,13 +938,6 @@ const _abi = [
       },
     ],
     name: "sweep",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "syncPointsOperator",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -1985,71 +1929,6 @@ const _abi = [
     anonymous: false,
     inputs: [
       {
-        indexed: true,
-        internalType: "uint32",
-        name: "expiry",
-        type: "uint32",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "trader",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint48",
-        name: "rid",
-        type: "uint48",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "fee",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "address",
-        name: "operator",
-        type: "address",
-      },
-      {
-        components: [
-          {
-            internalType: "uint128",
-            name: "liquidity",
-            type: "uint128",
-          },
-          {
-            internalType: "uint128",
-            name: "entryFeeIndex",
-            type: "uint128",
-          },
-          {
-            internalType: "uint96",
-            name: "balance",
-            type: "uint96",
-          },
-          {
-            internalType: "uint160",
-            name: "sqrtEntryPX96",
-            type: "uint160",
-          },
-        ],
-        indexed: false,
-        internalType: "struct Range",
-        name: "range",
-        type: "tuple",
-      },
-    ],
-    name: "WithdrawRangeFee",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
         indexed: false,
         internalType: "address",
         name: "previousAdmin",
@@ -2103,7 +1982,7 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "BadAmmTiming",
+    name: "BadInitialMarginRatio",
     type: "error",
   },
   {
@@ -2125,6 +2004,11 @@ const _abi = [
       },
     ],
     name: "BadTargetSize",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "DivByZero",
     type: "error",
   },
   {
@@ -2247,7 +2131,17 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "RoundHalfUpBadParam",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "TargetSafe",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "TickOutOfBound",
     type: "error",
   },
   {
@@ -2387,22 +2281,6 @@ const _abi = [
   {
     inputs: [],
     name: "TradeSlippage",
-    type: "error",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint16",
-        name: "stabilityFeeRatio",
-        type: "uint16",
-      },
-      {
-        internalType: "uint16",
-        name: "limitStabilityFeeRatio",
-        type: "uint16",
-      },
-    ],
-    name: "TradeStabilityFeeLimit",
     type: "error",
   },
   {

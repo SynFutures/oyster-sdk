@@ -159,7 +159,6 @@ export interface SimulateTradeResult {
     estimatedTradeValue: BigNumber;
     minTradeValue: BigNumber;
     tradingFee: BigNumber;
-    stabilityFee: BigNumber;
     margin: BigNumber;
     leverageWad: BigNumber;
     priceImpactWad: BigNumber;

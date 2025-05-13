@@ -11,13 +11,7 @@ import type {
 
 const _abi = [
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_guardian",
-        type: "address",
-      },
-    ],
+    inputs: [],
     stateMutability: "nonpayable",
     type: "constructor",
   },
@@ -456,19 +450,6 @@ const _abi = [
     name: "grantRole",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "guardian",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
     type: "function",
   },
   {

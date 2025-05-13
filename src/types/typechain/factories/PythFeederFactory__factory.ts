@@ -17,11 +17,6 @@ const _abi = [
         name: "_pyth",
         type: "address",
       },
-      {
-        internalType: "address",
-        name: "_guardian",
-        type: "address",
-      },
     ],
     stateMutability: "nonpayable",
     type: "constructor",
@@ -442,19 +437,6 @@ const _abi = [
     name: "grantRole",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "guardian",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
     type: "function",
   },
   {
