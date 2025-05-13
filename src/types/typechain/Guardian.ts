@@ -83,22 +83,12 @@ export type QuoteParamStructOutput = [
 export interface GuardianInterface extends utils.Interface {
   functions: {
     "DEFAULT_ADMIN_ROLE()": FunctionFragment;
-    "GAS_CLAIMER_ROLE()": FunctionFragment;
     "OPERATOR_ROLE()": FunctionFragment;
-    "YIELD_CLAIMER_ROLE()": FunctionFragment;
     "VAULT_FACTORY_ROLE()": FunctionFragment;
     "addDexV2Factory(address)": FunctionFragment;
-    "blastFeeTo()": FunctionFragment;
-    "blastYieldTo()": FunctionFragment;
-    "claimAllGas(address[])": FunctionFragment;
-    "claimGasAtMinClaimRate(address[],uint256)": FunctionFragment;
-    "claimMaxGas(address[])": FunctionFragment;
     "claimProtocolFee(address[],uint32[])": FunctionFragment;
-    "claimYield(address)": FunctionFragment;
     "config()": FunctionFragment;
-    "configureYieldMode(address,uint8)": FunctionFragment;
     "disableLiquidatorWhitelist()": FunctionFragment;
-    "disableLpWhitelist()": FunctionFragment;
     "emergingFeederFactory()": FunctionFragment;
     "enableLpWhitelistForQuote(address,bool)": FunctionFragment;
     "freeze(address[])": FunctionFragment;
@@ -112,8 +102,6 @@ export interface GuardianInterface extends utils.Interface {
     "multicall(bytes[])": FunctionFragment;
     "normalize(address[])": FunctionFragment;
     "pythFeederFactory()": FunctionFragment;
-    "readGasParams(address[])": FunctionFragment;
-    "readYieldClaimableAmount(address[],address)": FunctionFragment;
     "recycleInsuranceFund(address[],uint32[])": FunctionFragment;
     "release(address[],address[])": FunctionFragment;
     "renounceRole(bytes32,address)": FunctionFragment;
@@ -122,10 +110,6 @@ export interface GuardianInterface extends utils.Interface {
     "revokePythFeederFactoryOperator(address[])": FunctionFragment;
     "revokeRole(bytes32,address)": FunctionFragment;
     "setBlacklist(address[],bool[])": FunctionFragment;
-    "setBlastFeeToAddress(address)": FunctionFragment;
-    "setBlastPointsAddress(address)": FunctionFragment;
-    "setBlastPointsOperator(address)": FunctionFragment;
-    "setBlastYieldToAddress(address)": FunctionFragment;
     "setCexMarketPriceFeeder(string,address[],(uint8,uint64,address,uint24,uint64,address,uint24)[])": FunctionFragment;
     "setCompactEmaParam(string,uint256)": FunctionFragment;
     "setConfigAndGateAddress(address,address)": FunctionFragment;
@@ -145,7 +129,6 @@ export interface GuardianInterface extends utils.Interface {
     "setThreshold(address[],uint256[])": FunctionFragment;
     "setToAddress(address)": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
-    "syncPointsOperator()": FunctionFragment;
     "to()": FunctionFragment;
     "transferEmergingFeederFactoryAdmin(address)": FunctionFragment;
     "transferPythFeederFactoryAdmin(address)": FunctionFragment;
@@ -156,22 +139,12 @@ export interface GuardianInterface extends utils.Interface {
   getFunction(
     nameOrSignatureOrTopic:
       | "DEFAULT_ADMIN_ROLE"
-      | "GAS_CLAIMER_ROLE"
       | "OPERATOR_ROLE"
-      | "YIELD_CLAIMER_ROLE"
       | "VAULT_FACTORY_ROLE"
       | "addDexV2Factory"
-      | "blastFeeTo"
-      | "blastYieldTo"
-      | "claimAllGas"
-      | "claimGasAtMinClaimRate"
-      | "claimMaxGas"
       | "claimProtocolFee"
-      | "claimYield"
       | "config"
-      | "configureYieldMode"
       | "disableLiquidatorWhitelist"
-      | "disableLpWhitelist"
       | "emergingFeederFactory"
       | "enableLpWhitelistForQuote"
       | "freeze"
@@ -185,8 +158,6 @@ export interface GuardianInterface extends utils.Interface {
       | "multicall"
       | "normalize"
       | "pythFeederFactory"
-      | "readGasParams"
-      | "readYieldClaimableAmount"
       | "recycleInsuranceFund"
       | "release"
       | "renounceRole"
@@ -195,10 +166,6 @@ export interface GuardianInterface extends utils.Interface {
       | "revokePythFeederFactoryOperator"
       | "revokeRole"
       | "setBlacklist"
-      | "setBlastFeeToAddress"
-      | "setBlastPointsAddress"
-      | "setBlastPointsOperator"
-      | "setBlastYieldToAddress"
       | "setCexMarketPriceFeeder"
       | "setCompactEmaParam"
       | "setConfigAndGateAddress"
@@ -218,7 +185,6 @@ export interface GuardianInterface extends utils.Interface {
       | "setThreshold"
       | "setToAddress"
       | "supportsInterface"
-      | "syncPointsOperator"
       | "to"
       | "transferEmergingFeederFactoryAdmin"
       | "transferPythFeederFactoryAdmin"
@@ -231,15 +197,11 @@ export interface GuardianInterface extends utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "GAS_CLAIMER_ROLE",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "OPERATOR_ROLE",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "YIELD_CLAIMER_ROLE",
+    functionFragment: "VAULT_FACTORY_ROLE",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -247,51 +209,18 @@ export interface GuardianInterface extends utils.Interface {
     values: [PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
-    functionFragment: "blastFeeTo",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "blastYieldTo",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "claimAllGas",
-    values: [PromiseOrValue<string>[]]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "claimGasAtMinClaimRate",
-    values: [PromiseOrValue<string>[], PromiseOrValue<BigNumberish>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "claimMaxGas",
-    values: [PromiseOrValue<string>[]]
-  ): string;
-  encodeFunctionData(
     functionFragment: "claimProtocolFee",
     values: [PromiseOrValue<string>[], PromiseOrValue<BigNumberish>[]]
   ): string;
-  encodeFunctionData(
-    functionFragment: "claimYield",
-    values: [PromiseOrValue<string>]
-  ): string;
   encodeFunctionData(functionFragment: "config", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "configureYieldMode",
-    values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
-  ): string;
-  encodeFunctionData(
     functionFragment: "disableLiquidatorWhitelist",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "disableLpWhitelist",
     values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "emergingFeederFactory",
     values?: undefined
   ): string;
-
   encodeFunctionData(
     functionFragment: "enableLpWhitelistForQuote",
     values: [PromiseOrValue<string>, PromiseOrValue<boolean>]
@@ -342,14 +271,6 @@ export interface GuardianInterface extends utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "readGasParams",
-    values: [PromiseOrValue<string>[]]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "readYieldClaimableAmount",
-    values: [PromiseOrValue<string>[], PromiseOrValue<string>]
-  ): string;
-  encodeFunctionData(
     functionFragment: "recycleInsuranceFund",
     values: [PromiseOrValue<string>[], PromiseOrValue<BigNumberish>[]]
   ): string;
@@ -380,22 +301,6 @@ export interface GuardianInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "setBlacklist",
     values: [PromiseOrValue<string>[], PromiseOrValue<boolean>[]]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "setBlastFeeToAddress",
-    values: [PromiseOrValue<string>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "setBlastPointsAddress",
-    values: [PromiseOrValue<string>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "setBlastPointsOperator",
-    values: [PromiseOrValue<string>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "setBlastYieldToAddress",
-    values: [PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
     functionFragment: "setCexMarketPriceFeeder",
@@ -489,10 +394,6 @@ export interface GuardianInterface extends utils.Interface {
     functionFragment: "supportsInterface",
     values: [PromiseOrValue<BytesLike>]
   ): string;
-  encodeFunctionData(
-    functionFragment: "syncPointsOperator",
-    values?: undefined
-  ): string;
   encodeFunctionData(functionFragment: "to", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "transferEmergingFeederFactoryAdmin",
@@ -516,58 +417,24 @@ export interface GuardianInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "GAS_CLAIMER_ROLE",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "OPERATOR_ROLE",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "YIELD_CLAIMER_ROLE",
+    functionFragment: "VAULT_FACTORY_ROLE",
     data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-      functionFragment: "VAULT_FACTORY_ROLE",
-      data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "addDexV2Factory",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "blastFeeTo", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "blastYieldTo",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "claimAllGas",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "claimGasAtMinClaimRate",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "claimMaxGas",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "claimProtocolFee",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "claimYield", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "config", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "configureYieldMode",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "disableLiquidatorWhitelist",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "disableLpWhitelist",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -602,14 +469,6 @@ export interface GuardianInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "readGasParams",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "readYieldClaimableAmount",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "recycleInsuranceFund",
     data: BytesLike
   ): Result;
@@ -630,22 +489,6 @@ export interface GuardianInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "revokeRole", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "setBlacklist",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "setBlastFeeToAddress",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "setBlastPointsAddress",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "setBlastPointsOperator",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "setBlastYieldToAddress",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -724,10 +567,6 @@ export interface GuardianInterface extends utils.Interface {
     functionFragment: "supportsInterface",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(
-    functionFragment: "syncPointsOperator",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "to", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "transferEmergingFeederFactoryAdmin",
@@ -747,23 +586,33 @@ export interface GuardianInterface extends utils.Interface {
   ): Result;
 
   events: {
+    "FreezeInstrumentFailed(address,bytes)": EventFragment;
     "Initialized(uint8)": EventFragment;
     "RoleAdminChanged(bytes32,bytes32,bytes32)": EventFragment;
     "RoleGranted(bytes32,address,address)": EventFragment;
     "RoleRevoked(bytes32,address,address)": EventFragment;
-    "SetBlastFeeToAddress(address)": EventFragment;
-    "SetBlastYieldToAddress(address)": EventFragment;
     "SetToAddress(address)": EventFragment;
   };
 
+  getEvent(nameOrSignatureOrTopic: "FreezeInstrumentFailed"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Initialized"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RoleAdminChanged"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RoleGranted"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RoleRevoked"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SetBlastFeeToAddress"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SetBlastYieldToAddress"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "SetToAddress"): EventFragment;
 }
+
+export interface FreezeInstrumentFailedEventObject {
+  instrument: string;
+  lowLevelData: string;
+}
+export type FreezeInstrumentFailedEvent = TypedEvent<
+  [string, string],
+  FreezeInstrumentFailedEventObject
+>;
+
+export type FreezeInstrumentFailedEventFilter =
+  TypedEventFilter<FreezeInstrumentFailedEvent>;
 
 export interface InitializedEventObject {
   version: number;
@@ -809,28 +658,6 @@ export type RoleRevokedEvent = TypedEvent<
 
 export type RoleRevokedEventFilter = TypedEventFilter<RoleRevokedEvent>;
 
-export interface SetBlastFeeToAddressEventObject {
-  blastFeeTo: string;
-}
-export type SetBlastFeeToAddressEvent = TypedEvent<
-  [string],
-  SetBlastFeeToAddressEventObject
->;
-
-export type SetBlastFeeToAddressEventFilter =
-  TypedEventFilter<SetBlastFeeToAddressEvent>;
-
-export interface SetBlastYieldToAddressEventObject {
-  blastYieldTo: string;
-}
-export type SetBlastYieldToAddressEvent = TypedEvent<
-  [string],
-  SetBlastYieldToAddressEventObject
->;
-
-export type SetBlastYieldToAddressEventFilter =
-  TypedEventFilter<SetBlastYieldToAddressEvent>;
-
 export interface SetToAddressEventObject {
   to: string;
 }
@@ -867,34 +694,12 @@ export interface Guardian extends BaseContract {
   functions: {
     DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<[string]>;
 
-    GAS_CLAIMER_ROLE(overrides?: CallOverrides): Promise<[string]>;
-
     OPERATOR_ROLE(overrides?: CallOverrides): Promise<[string]>;
 
-    YIELD_CLAIMER_ROLE(overrides?: CallOverrides): Promise<[string]>;
+    VAULT_FACTORY_ROLE(overrides?: CallOverrides): Promise<[string]>;
 
     addDexV2Factory(
       dexV2Factory: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    blastFeeTo(overrides?: CallOverrides): Promise<[string]>;
-
-    blastYieldTo(overrides?: CallOverrides): Promise<[string]>;
-
-    claimAllGas(
-      contractAddresses: PromiseOrValue<string>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    claimGasAtMinClaimRate(
-      contractAddresses: PromiseOrValue<string>[],
-      minClaimRateBips: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    claimMaxGas(
-      contractAddresses: PromiseOrValue<string>[],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -904,24 +709,9 @@ export interface Guardian extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    claimYield(
-      quote: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
     config(overrides?: CallOverrides): Promise<[string]>;
 
-    configureYieldMode(
-      quote: PromiseOrValue<string>,
-      yieldMode: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
     disableLiquidatorWhitelist(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    disableLpWhitelist(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -986,24 +776,6 @@ export interface Guardian extends BaseContract {
 
     pythFeederFactory(overrides?: CallOverrides): Promise<[string]>;
 
-    readGasParams(
-      contractAddresses: PromiseOrValue<string>[],
-      overrides?: CallOverrides
-    ): Promise<
-      [BigNumber[], BigNumber[], BigNumber[], number[]] & {
-        etherSeconds: BigNumber[];
-        etherBalance: BigNumber[];
-        lastUpdated: BigNumber[];
-        gasModes: number[];
-      }
-    >;
-
-    readYieldClaimableAmount(
-      contractAddresses: PromiseOrValue<string>[],
-      quote: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber[]] & { claimable: BigNumber[] }>;
-
     recycleInsuranceFund(
       instruments: PromiseOrValue<string>[],
       expiries: PromiseOrValue<BigNumberish>[],
@@ -1047,26 +819,6 @@ export interface Guardian extends BaseContract {
     setBlacklist(
       traders: PromiseOrValue<string>[],
       banned: PromiseOrValue<boolean>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    setBlastFeeToAddress(
-      _blastFeeTo: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    setBlastPointsAddress(
-      pointsAddress: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    setBlastPointsOperator(
-      operator: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    setBlastYieldToAddress(
-      _blastYieldTo: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -1182,10 +934,6 @@ export interface Guardian extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[boolean]>;
 
-    syncPointsOperator(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
     to(overrides?: CallOverrides): Promise<[string]>;
 
     transferEmergingFeederFactoryAdmin(
@@ -1212,36 +960,12 @@ export interface Guardian extends BaseContract {
 
   DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<string>;
 
-  GAS_CLAIMER_ROLE(overrides?: CallOverrides): Promise<string>;
-
   OPERATOR_ROLE(overrides?: CallOverrides): Promise<string>;
-
-  YIELD_CLAIMER_ROLE(overrides?: CallOverrides): Promise<string>;
 
   VAULT_FACTORY_ROLE(overrides?: CallOverrides): Promise<string>;
 
   addDexV2Factory(
     dexV2Factory: PromiseOrValue<string>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  blastFeeTo(overrides?: CallOverrides): Promise<string>;
-
-  blastYieldTo(overrides?: CallOverrides): Promise<string>;
-
-  claimAllGas(
-    contractAddresses: PromiseOrValue<string>[],
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  claimGasAtMinClaimRate(
-    contractAddresses: PromiseOrValue<string>[],
-    minClaimRateBips: PromiseOrValue<BigNumberish>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  claimMaxGas(
-    contractAddresses: PromiseOrValue<string>[],
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -1251,24 +975,9 @@ export interface Guardian extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  claimYield(
-    quote: PromiseOrValue<string>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
   config(overrides?: CallOverrides): Promise<string>;
 
-  configureYieldMode(
-    quote: PromiseOrValue<string>,
-    yieldMode: PromiseOrValue<BigNumberish>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
   disableLiquidatorWhitelist(
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  disableLpWhitelist(
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -1333,24 +1042,6 @@ export interface Guardian extends BaseContract {
 
   pythFeederFactory(overrides?: CallOverrides): Promise<string>;
 
-  readGasParams(
-    contractAddresses: PromiseOrValue<string>[],
-    overrides?: CallOverrides
-  ): Promise<
-    [BigNumber[], BigNumber[], BigNumber[], number[]] & {
-      etherSeconds: BigNumber[];
-      etherBalance: BigNumber[];
-      lastUpdated: BigNumber[];
-      gasModes: number[];
-    }
-  >;
-
-  readYieldClaimableAmount(
-    contractAddresses: PromiseOrValue<string>[],
-    quote: PromiseOrValue<string>,
-    overrides?: CallOverrides
-  ): Promise<BigNumber[]>;
-
   recycleInsuranceFund(
     instruments: PromiseOrValue<string>[],
     expiries: PromiseOrValue<BigNumberish>[],
@@ -1394,26 +1085,6 @@ export interface Guardian extends BaseContract {
   setBlacklist(
     traders: PromiseOrValue<string>[],
     banned: PromiseOrValue<boolean>[],
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  setBlastFeeToAddress(
-    _blastFeeTo: PromiseOrValue<string>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  setBlastPointsAddress(
-    pointsAddress: PromiseOrValue<string>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  setBlastPointsOperator(
-    operator: PromiseOrValue<string>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  setBlastYieldToAddress(
-    _blastYieldTo: PromiseOrValue<string>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -1529,10 +1200,6 @@ export interface Guardian extends BaseContract {
     overrides?: CallOverrides
   ): Promise<boolean>;
 
-  syncPointsOperator(
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
   to(overrides?: CallOverrides): Promise<string>;
 
   transferEmergingFeederFactoryAdmin(
@@ -1559,36 +1226,12 @@ export interface Guardian extends BaseContract {
   callStatic: {
     DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<string>;
 
-    GAS_CLAIMER_ROLE(overrides?: CallOverrides): Promise<string>;
-
     OPERATOR_ROLE(overrides?: CallOverrides): Promise<string>;
-
-    YIELD_CLAIMER_ROLE(overrides?: CallOverrides): Promise<string>;
 
     VAULT_FACTORY_ROLE(overrides?: CallOverrides): Promise<string>;
 
     addDexV2Factory(
       dexV2Factory: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    blastFeeTo(overrides?: CallOverrides): Promise<string>;
-
-    blastYieldTo(overrides?: CallOverrides): Promise<string>;
-
-    claimAllGas(
-      contractAddresses: PromiseOrValue<string>[],
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    claimGasAtMinClaimRate(
-      contractAddresses: PromiseOrValue<string>[],
-      minClaimRateBips: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    claimMaxGas(
-      contractAddresses: PromiseOrValue<string>[],
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1598,22 +1241,9 @@ export interface Guardian extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    claimYield(
-      quote: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     config(overrides?: CallOverrides): Promise<string>;
 
-    configureYieldMode(
-      quote: PromiseOrValue<string>,
-      yieldMode: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     disableLiquidatorWhitelist(overrides?: CallOverrides): Promise<void>;
-
-    disableLpWhitelist(overrides?: CallOverrides): Promise<void>;
 
     emergingFeederFactory(overrides?: CallOverrides): Promise<string>;
 
@@ -1676,24 +1306,6 @@ export interface Guardian extends BaseContract {
 
     pythFeederFactory(overrides?: CallOverrides): Promise<string>;
 
-    readGasParams(
-      contractAddresses: PromiseOrValue<string>[],
-      overrides?: CallOverrides
-    ): Promise<
-      [BigNumber[], BigNumber[], BigNumber[], number[]] & {
-        etherSeconds: BigNumber[];
-        etherBalance: BigNumber[];
-        lastUpdated: BigNumber[];
-        gasModes: number[];
-      }
-    >;
-
-    readYieldClaimableAmount(
-      contractAddresses: PromiseOrValue<string>[],
-      quote: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber[]>;
-
     recycleInsuranceFund(
       instruments: PromiseOrValue<string>[],
       expiries: PromiseOrValue<BigNumberish>[],
@@ -1737,26 +1349,6 @@ export interface Guardian extends BaseContract {
     setBlacklist(
       traders: PromiseOrValue<string>[],
       banned: PromiseOrValue<boolean>[],
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    setBlastFeeToAddress(
-      _blastFeeTo: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    setBlastPointsAddress(
-      pointsAddress: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    setBlastPointsOperator(
-      operator: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    setBlastYieldToAddress(
-      _blastYieldTo: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1872,8 +1464,6 @@ export interface Guardian extends BaseContract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
-    syncPointsOperator(overrides?: CallOverrides): Promise<void>;
-
     to(overrides?: CallOverrides): Promise<string>;
 
     transferEmergingFeederFactoryAdmin(
@@ -1899,6 +1489,15 @@ export interface Guardian extends BaseContract {
   };
 
   filters: {
+    "FreezeInstrumentFailed(address,bytes)"(
+      instrument?: PromiseOrValue<string> | null,
+      lowLevelData?: null
+    ): FreezeInstrumentFailedEventFilter;
+    FreezeInstrumentFailed(
+      instrument?: PromiseOrValue<string> | null,
+      lowLevelData?: null
+    ): FreezeInstrumentFailedEventFilter;
+
     "Initialized(uint8)"(version?: null): InitializedEventFilter;
     Initialized(version?: null): InitializedEventFilter;
 
@@ -1935,18 +1534,6 @@ export interface Guardian extends BaseContract {
       sender?: PromiseOrValue<string> | null
     ): RoleRevokedEventFilter;
 
-    "SetBlastFeeToAddress(address)"(
-      blastFeeTo?: null
-    ): SetBlastFeeToAddressEventFilter;
-    SetBlastFeeToAddress(blastFeeTo?: null): SetBlastFeeToAddressEventFilter;
-
-    "SetBlastYieldToAddress(address)"(
-      blastYieldTo?: null
-    ): SetBlastYieldToAddressEventFilter;
-    SetBlastYieldToAddress(
-      blastYieldTo?: null
-    ): SetBlastYieldToAddressEventFilter;
-
     "SetToAddress(address)"(to?: null): SetToAddressEventFilter;
     SetToAddress(to?: null): SetToAddressEventFilter;
   };
@@ -1954,36 +1541,12 @@ export interface Guardian extends BaseContract {
   estimateGas: {
     DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<BigNumber>;
 
-    GAS_CLAIMER_ROLE(overrides?: CallOverrides): Promise<BigNumber>;
-
     OPERATOR_ROLE(overrides?: CallOverrides): Promise<BigNumber>;
-
-    YIELD_CLAIMER_ROLE(overrides?: CallOverrides): Promise<BigNumber>;
 
     VAULT_FACTORY_ROLE(overrides?: CallOverrides): Promise<BigNumber>;
 
     addDexV2Factory(
       dexV2Factory: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    blastFeeTo(overrides?: CallOverrides): Promise<BigNumber>;
-
-    blastYieldTo(overrides?: CallOverrides): Promise<BigNumber>;
-
-    claimAllGas(
-      contractAddresses: PromiseOrValue<string>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    claimGasAtMinClaimRate(
-      contractAddresses: PromiseOrValue<string>[],
-      minClaimRateBips: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    claimMaxGas(
-      contractAddresses: PromiseOrValue<string>[],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -1993,24 +1556,9 @@ export interface Guardian extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    claimYield(
-      quote: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
     config(overrides?: CallOverrides): Promise<BigNumber>;
 
-    configureYieldMode(
-      quote: PromiseOrValue<string>,
-      yieldMode: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
     disableLiquidatorWhitelist(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    disableLpWhitelist(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -2075,17 +1623,6 @@ export interface Guardian extends BaseContract {
 
     pythFeederFactory(overrides?: CallOverrides): Promise<BigNumber>;
 
-    readGasParams(
-      contractAddresses: PromiseOrValue<string>[],
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    readYieldClaimableAmount(
-      contractAddresses: PromiseOrValue<string>[],
-      quote: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     recycleInsuranceFund(
       instruments: PromiseOrValue<string>[],
       expiries: PromiseOrValue<BigNumberish>[],
@@ -2129,26 +1666,6 @@ export interface Guardian extends BaseContract {
     setBlacklist(
       traders: PromiseOrValue<string>[],
       banned: PromiseOrValue<boolean>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    setBlastFeeToAddress(
-      _blastFeeTo: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    setBlastPointsAddress(
-      pointsAddress: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    setBlastPointsOperator(
-      operator: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    setBlastYieldToAddress(
-      _blastYieldTo: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -2264,10 +1781,6 @@ export interface Guardian extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    syncPointsOperator(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
     to(overrides?: CallOverrides): Promise<BigNumber>;
 
     transferEmergingFeederFactoryAdmin(
@@ -2297,40 +1810,14 @@ export interface Guardian extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    GAS_CLAIMER_ROLE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     OPERATOR_ROLE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    YIELD_CLAIMER_ROLE(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     VAULT_FACTORY_ROLE(
-        overrides?: CallOverrides
+      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     addDexV2Factory(
       dexV2Factory: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    blastFeeTo(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    blastYieldTo(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    claimAllGas(
-      contractAddresses: PromiseOrValue<string>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    claimGasAtMinClaimRate(
-      contractAddresses: PromiseOrValue<string>[],
-      minClaimRateBips: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    claimMaxGas(
-      contractAddresses: PromiseOrValue<string>[],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -2340,24 +1827,9 @@ export interface Guardian extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    claimYield(
-      quote: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
     config(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    configureYieldMode(
-      quote: PromiseOrValue<string>,
-      yieldMode: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
     disableLiquidatorWhitelist(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    disableLpWhitelist(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -2424,17 +1896,6 @@ export interface Guardian extends BaseContract {
 
     pythFeederFactory(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    readGasParams(
-      contractAddresses: PromiseOrValue<string>[],
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    readYieldClaimableAmount(
-      contractAddresses: PromiseOrValue<string>[],
-      quote: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     recycleInsuranceFund(
       instruments: PromiseOrValue<string>[],
       expiries: PromiseOrValue<BigNumberish>[],
@@ -2478,26 +1939,6 @@ export interface Guardian extends BaseContract {
     setBlacklist(
       traders: PromiseOrValue<string>[],
       banned: PromiseOrValue<boolean>[],
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    setBlastFeeToAddress(
-      _blastFeeTo: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    setBlastPointsAddress(
-      pointsAddress: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    setBlastPointsOperator(
-      operator: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    setBlastYieldToAddress(
-      _blastYieldTo: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -2611,10 +2052,6 @@ export interface Guardian extends BaseContract {
     supportsInterface(
       interfaceId: PromiseOrValue<BytesLike>,
       overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    syncPointsOperator(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
     to(overrides?: CallOverrides): Promise<PopulatedTransaction>;

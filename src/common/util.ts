@@ -3,7 +3,6 @@ import { BigNumber, BigNumberish, ethers } from 'ethers';
 import {
     INT24_MAX,
     MAX_CANCEL_ORDER_COUNT,
-    MAX_STABILITY_FEE_RATIO,
     MAX_TICK,
     MIN_TICK,
     PERP_EXPIRY,
@@ -18,10 +17,10 @@ import {
     wadToTick,
     WAD,
     MAX_INT_24,
-    MAX_UINT_16,
     wdiv,
-    s2w,
     EMPTY_TICK,
+    s2w,
+    MAX_UINT_16,
 } from '../math';
 import { sqrt, sqrtX96ToWad, wmulDown, r2w } from '../math';
 import {
@@ -62,7 +61,6 @@ const amountLength = 128;
 const quantityLength = 96;
 const addressLength = 160;
 const deadlineLength = 32;
-const limitStabilityFeeRatioLength = 16;
 const ratioLength = 16;
 const leverageLength = 128;
 
@@ -108,26 +106,6 @@ export function encodeTradeParam(
     deadline: number,
 ): [string, string] {
     return encodeParamForTradeAndPlace(expiry, size, amount, limitTick, deadline);
-}
-
-export function encodeTradeWithRiskParam(
-    expiry: number,
-    size: BigNumber,
-    amount: BigNumber,
-    limitTick: number,
-    deadline: number,
-    maxStabilityFeeRatio: number,
-    referral: string,
-): [string, string] {
-    const [page0, page1] = encodeParamForTradeAndPlaceWithReferral(expiry, size, amount, limitTick, deadline, referral);
-    if (maxStabilityFeeRatio < 0 || maxStabilityFeeRatio > MAX_STABILITY_FEE_RATIO) {
-        throw new Error('maxStabilityFeeRatio out of range');
-    }
-    const page0WithStabilityFee = hexZeroPad(
-        BigNumber.from(maxStabilityFeeRatio).shl(88).add(BigNumber.from(page0)).toHexString(),
-        32,
-    );
-    return [page0WithStabilityFee, page1];
 }
 
 export function encodeTradeWithReferralParam(
@@ -396,14 +374,6 @@ export function getLeverageFromImr(imr: number): Leverage {
 
 export function decodeTradeParam(args: string[]): TradeParam {
     return decodeParamForTradeAndPlace(args);
-}
-
-export function decodeTradeWithStabilityFeeParam(args: string[]): TradeParam & { limitStabilityFeeRatio: number } {
-    const tradeParam = decodeTradeParam(args);
-    const value1 = bytes32ToBigNumber(args[0]);
-    const offset = expiryLength + tickLength + deadlineLength;
-    const limitStabilityFeeRatio = pickNumber(value1, offset, offset + limitStabilityFeeRatioLength);
-    return { ...tradeParam, limitStabilityFeeRatio };
 }
 
 function decodeParamForTradeAndPlace(args: string[]): TradeParam {

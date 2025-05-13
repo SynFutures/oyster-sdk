@@ -138,9 +138,7 @@ export interface InstrumentInterface extends utils.Interface {
     "batchPlace(bytes32[3])": FunctionFragment;
     "cancel(bytes32)": FunctionFragment;
     "claimProtocolFee(uint32)": FunctionFragment;
-    "claimYield(address)": FunctionFragment;
     "condition()": FunctionFragment;
-    "configureYieldMode(uint8)": FunctionFragment;
     "donateInsuranceFund(uint32,uint256)": FunctionFragment;
     "fill(bytes32)": FunctionFragment;
     "freeze()": FunctionFragment;
@@ -166,7 +164,6 @@ export interface InstrumentInterface extends utils.Interface {
     "setQuoteParam((uint128,uint16,uint16,uint64,uint8,uint128))": FunctionFragment;
     "settle(uint32,address)": FunctionFragment;
     "sweep(uint32,address,int256)": FunctionFragment;
-    "syncPointsOperator()": FunctionFragment;
     "trade(bytes32[2])": FunctionFragment;
     "update(uint32)": FunctionFragment;
   };
@@ -177,9 +174,7 @@ export interface InstrumentInterface extends utils.Interface {
       | "batchPlace"
       | "cancel"
       | "claimProtocolFee"
-      | "claimYield"
       | "condition"
-      | "configureYieldMode"
       | "donateInsuranceFund"
       | "fill"
       | "freeze"
@@ -205,7 +200,6 @@ export interface InstrumentInterface extends utils.Interface {
       | "setQuoteParam"
       | "settle"
       | "sweep"
-      | "syncPointsOperator"
       | "trade"
       | "update"
   ): FunctionFragment;
@@ -232,15 +226,7 @@ export interface InstrumentInterface extends utils.Interface {
     functionFragment: "claimProtocolFee",
     values: [PromiseOrValue<BigNumberish>]
   ): string;
-  encodeFunctionData(
-    functionFragment: "claimYield",
-    values: [PromiseOrValue<string>]
-  ): string;
   encodeFunctionData(functionFragment: "condition", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "configureYieldMode",
-    values: [PromiseOrValue<BigNumberish>]
-  ): string;
   encodeFunctionData(
     functionFragment: "donateInsuranceFund",
     values: [PromiseOrValue<BigNumberish>, PromiseOrValue<BigNumberish>]
@@ -358,10 +344,6 @@ export interface InstrumentInterface extends utils.Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "syncPointsOperator",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "trade",
     values: [[PromiseOrValue<BytesLike>, PromiseOrValue<BytesLike>]]
   ): string;
@@ -377,22 +359,17 @@ export interface InstrumentInterface extends utils.Interface {
     functionFragment: "claimProtocolFee",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "claimYield", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "condition", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "configureYieldMode",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-      functionFragment: "donateInsuranceFund",
-      data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "fundingHour",
+    functionFragment: "donateInsuranceFund",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "fill", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "freeze", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "fundingHour",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "getExpiries",
     data: BytesLike
@@ -444,15 +421,10 @@ export interface InstrumentInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "settle", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "sweep", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "syncPointsOperator",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "trade", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "update", data: BytesLike): Result;
 
   events: {
-    "Initialized(uint8)": EventFragment;
     "Add(uint32,address,int24,int24,tuple)": EventFragment;
     "Adjust(uint32,address,int256)": EventFragment;
     "Cancel(uint32,address,int24,uint32,uint256,tuple)": EventFragment;
@@ -477,13 +449,11 @@ export interface InstrumentInterface extends utils.Interface {
     "UpdateParam(tuple)": EventFragment;
     "UpdatePosition(uint32,address,tuple)": EventFragment;
     "UpdateSocialLossInsuranceFund(uint32,uint128,uint128,uint128)": EventFragment;
-    "WithdrawRangeFee(uint32,address,uint48,uint256,address,tuple)": EventFragment;
     "AdminChanged(address,address)": EventFragment;
     "BeaconUpgraded(address)": EventFragment;
     "Upgraded(address)": EventFragment;
   };
 
-  getEvent(nameOrSignatureOrTopic: "Initialized"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Add"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Adjust"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Cancel"): EventFragment;
@@ -510,18 +480,10 @@ export interface InstrumentInterface extends utils.Interface {
   getEvent(
     nameOrSignatureOrTopic: "UpdateSocialLossInsuranceFund"
   ): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "WithdrawRangeFee"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "AdminChanged"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "BeaconUpgraded"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Upgraded"): EventFragment;
 }
-
-export interface InitializedEventObject {
-  version: number;
-}
-export type InitializedEvent = TypedEvent<[number], InitializedEventObject>;
-
-export type InitializedEventFilter = TypedEventFilter<InitializedEvent>;
 
 export interface AddEventObject {
   expiry: number;
@@ -880,22 +842,6 @@ export type UpdateSocialLossInsuranceFundEvent = TypedEvent<
 export type UpdateSocialLossInsuranceFundEventFilter =
   TypedEventFilter<UpdateSocialLossInsuranceFundEvent>;
 
-export interface WithdrawRangeFeeEventObject {
-  expiry: number;
-  trader: string;
-  rid: number;
-  fee: BigNumber;
-  operator: string;
-  range: RangeStructOutput;
-}
-export type WithdrawRangeFeeEvent = TypedEvent<
-  [number, string, number, BigNumber, string, RangeStructOutput],
-  WithdrawRangeFeeEventObject
->;
-
-export type WithdrawRangeFeeEventFilter =
-  TypedEventFilter<WithdrawRangeFeeEvent>;
-
 export interface AdminChangedEventObject {
   previousAdmin: string;
   newAdmin: string;
@@ -975,17 +921,7 @@ export interface Instrument extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    claimYield(
-      to: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
     condition(overrides?: CallOverrides): Promise<[number]>;
-
-    configureYieldMode(
-      yieldMode: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
 
     donateInsuranceFund(
       expiry: PromiseOrValue<BigNumberish>,
@@ -1117,10 +1053,6 @@ export interface Instrument extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    syncPointsOperator(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
     trade(
       args: [PromiseOrValue<BytesLike>, PromiseOrValue<BytesLike>],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -1156,17 +1088,7 @@ export interface Instrument extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  claimYield(
-    to: PromiseOrValue<string>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
   condition(overrides?: CallOverrides): Promise<number>;
-
-  configureYieldMode(
-    yieldMode: PromiseOrValue<BigNumberish>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
 
   donateInsuranceFund(
     expiry: PromiseOrValue<BigNumberish>,
@@ -1298,10 +1220,6 @@ export interface Instrument extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  syncPointsOperator(
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
   trade(
     args: [PromiseOrValue<BytesLike>, PromiseOrValue<BytesLike>],
     overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -1353,17 +1271,7 @@ export interface Instrument extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    claimYield(
-      to: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     condition(overrides?: CallOverrides): Promise<number>;
-
-    configureYieldMode(
-      yieldMode: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<void>;
 
     donateInsuranceFund(
       expiry: PromiseOrValue<BigNumberish>,
@@ -1510,8 +1418,6 @@ export interface Instrument extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    syncPointsOperator(overrides?: CallOverrides): Promise<void>;
-
     trade(
       args: [PromiseOrValue<BytesLike>, PromiseOrValue<BytesLike>],
       overrides?: CallOverrides
@@ -1524,9 +1430,6 @@ export interface Instrument extends BaseContract {
   };
 
   filters: {
-    "Initialized(uint8)"(version?: null): InitializedEventFilter;
-    Initialized(version?: null): InitializedEventFilter;
-
     "Add(uint32,address,int24,int24,tuple)"(
       expiry?: PromiseOrValue<BigNumberish> | null,
       trader?: PromiseOrValue<string> | null,
@@ -1833,23 +1736,6 @@ export interface Instrument extends BaseContract {
       insuranceFund?: null
     ): UpdateSocialLossInsuranceFundEventFilter;
 
-    "WithdrawRangeFee(uint32,address,uint48,uint256,address,tuple)"(
-      expiry?: PromiseOrValue<BigNumberish> | null,
-      trader?: PromiseOrValue<string> | null,
-      rid?: null,
-      fee?: null,
-      operator?: null,
-      range?: null
-    ): WithdrawRangeFeeEventFilter;
-    WithdrawRangeFee(
-      expiry?: PromiseOrValue<BigNumberish> | null,
-      trader?: PromiseOrValue<string> | null,
-      rid?: null,
-      fee?: null,
-      operator?: null,
-      range?: null
-    ): WithdrawRangeFeeEventFilter;
-
     "AdminChanged(address,address)"(
       previousAdmin?: null,
       newAdmin?: null
@@ -1899,17 +1785,7 @@ export interface Instrument extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    claimYield(
-      to: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
     condition(overrides?: CallOverrides): Promise<BigNumber>;
-
-    configureYieldMode(
-      yieldMode: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
 
     donateInsuranceFund(
       expiry: PromiseOrValue<BigNumberish>,
@@ -2041,10 +1917,6 @@ export interface Instrument extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    syncPointsOperator(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
     trade(
       args: [PromiseOrValue<BytesLike>, PromiseOrValue<BytesLike>],
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -2081,17 +1953,7 @@ export interface Instrument extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    claimYield(
-      to: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
     condition(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    configureYieldMode(
-      yieldMode: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
 
     donateInsuranceFund(
       expiry: PromiseOrValue<BigNumberish>,
@@ -2220,10 +2082,6 @@ export interface Instrument extends BaseContract {
       expiry: PromiseOrValue<BigNumberish>,
       target: PromiseOrValue<string>,
       size: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    syncPointsOperator(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 

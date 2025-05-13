@@ -136,14 +136,6 @@ export class SynFuturesV3Ext {
         return await this.syncCexFeederWithConfig(signer, MarketType.EMG, pairs, overrides);
     }
 
-    async disableLpWhitelist(
-        signer: Signer,
-        overrides?: Overrides,
-    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const unsignedTx = await this.core.contracts.config.populateTransaction.disableLpWhitelist(overrides ?? {});
-        return await this.ctx.sendTx(signer, unsignedTx);
-    }
-
     async setLpWhiteList(
         signer: Signer,
         quotes: string[],
