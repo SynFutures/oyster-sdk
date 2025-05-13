@@ -31,7 +31,7 @@ export interface PythFeederInterface extends utils.Interface {
     "decimals()": FunctionFragment;
     "factory()": FunctionFragment;
     "id()": FunctionFragment;
-    "initialize(bytes32,address)": FunctionFragment;
+    "initialize(bytes32)": FunctionFragment;
     "latestRoundData()": FunctionFragment;
     "setPythFeederId(bytes32)": FunctionFragment;
   };
@@ -51,7 +51,7 @@ export interface PythFeederInterface extends utils.Interface {
   encodeFunctionData(functionFragment: "id", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "initialize",
-    values: [PromiseOrValue<BytesLike>, PromiseOrValue<string>]
+    values: [PromiseOrValue<BytesLike>]
   ): string;
   encodeFunctionData(
     functionFragment: "latestRoundData",
@@ -136,7 +136,6 @@ export interface PythFeeder extends BaseContract {
 
     initialize(
       _id: PromiseOrValue<BytesLike>,
-      guardian: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -166,7 +165,6 @@ export interface PythFeeder extends BaseContract {
 
   initialize(
     _id: PromiseOrValue<BytesLike>,
-    guardian: PromiseOrValue<string>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -196,7 +194,6 @@ export interface PythFeeder extends BaseContract {
 
     initialize(
       _id: PromiseOrValue<BytesLike>,
-      guardian: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -235,7 +232,6 @@ export interface PythFeeder extends BaseContract {
 
     initialize(
       _id: PromiseOrValue<BytesLike>,
-      guardian: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -256,7 +252,6 @@ export interface PythFeeder extends BaseContract {
 
     initialize(
       _id: PromiseOrValue<BytesLike>,
-      guardian: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 

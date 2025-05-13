@@ -70,9 +70,7 @@ export interface GateInterface extends utils.Interface {
   functions: {
     "allInstruments(uint256)": FunctionFragment;
     "allInstrumentsLength()": FunctionFragment;
-    "claimYield(address,address)": FunctionFragment;
     "config()": FunctionFragment;
-    "configureYieldMode(address,uint8)": FunctionFragment;
     "deposit(bytes32)": FunctionFragment;
     "fundFlowOf(address,address)": FunctionFragment;
     "gather(address,address,uint32,uint256)": FunctionFragment;
@@ -89,7 +87,6 @@ export interface GateInterface extends utils.Interface {
     "setBlacklist(address,bool)": FunctionFragment;
     "setPendingDuration(uint256)": FunctionFragment;
     "setThreshold(address,uint256)": FunctionFragment;
-    "syncPointsOperator()": FunctionFragment;
     "thresholdOf(address)": FunctionFragment;
     "weth()": FunctionFragment;
     "withdraw(bytes32)": FunctionFragment;
@@ -99,9 +96,7 @@ export interface GateInterface extends utils.Interface {
     nameOrSignatureOrTopic:
       | "allInstruments"
       | "allInstrumentsLength"
-      | "claimYield"
       | "config"
-      | "configureYieldMode"
       | "deposit"
       | "fundFlowOf"
       | "gather"
@@ -118,7 +113,6 @@ export interface GateInterface extends utils.Interface {
       | "setBlacklist"
       | "setPendingDuration"
       | "setThreshold"
-      | "syncPointsOperator"
       | "thresholdOf"
       | "weth"
       | "withdraw"
@@ -132,15 +126,7 @@ export interface GateInterface extends utils.Interface {
     functionFragment: "allInstrumentsLength",
     values?: undefined
   ): string;
-  encodeFunctionData(
-    functionFragment: "claimYield",
-    values: [PromiseOrValue<string>, PromiseOrValue<string>]
-  ): string;
   encodeFunctionData(functionFragment: "config", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "configureYieldMode",
-    values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
-  ): string;
   encodeFunctionData(
     functionFragment: "deposit",
     values: [PromiseOrValue<BytesLike>]
@@ -221,10 +207,6 @@ export interface GateInterface extends utils.Interface {
     values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
-    functionFragment: "syncPointsOperator",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "thresholdOf",
     values: [PromiseOrValue<string>]
   ): string;
@@ -242,12 +224,7 @@ export interface GateInterface extends utils.Interface {
     functionFragment: "allInstrumentsLength",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "claimYield", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "config", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "configureYieldMode",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "fundFlowOf", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "gather", data: BytesLike): Result;
@@ -286,10 +263,6 @@ export interface GateInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "syncPointsOperator",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "thresholdOf",
     data: BytesLike
   ): Result;
@@ -300,7 +273,6 @@ export interface GateInterface extends utils.Interface {
     "Blacklist(address,bool)": EventFragment;
     "Deposit(address,address,uint256)": EventFragment;
     "Gather(address,address,address,uint32,uint256)": EventFragment;
-    "Initialized(uint8)": EventFragment;
     "NewInstrument(bytes32,address,address,address,string,uint256)": EventFragment;
     "Scatter(address,address,address,uint32,uint256)": EventFragment;
     "SetPendingDuration(uint256)": EventFragment;
@@ -312,7 +284,6 @@ export interface GateInterface extends utils.Interface {
   getEvent(nameOrSignatureOrTopic: "Blacklist"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Deposit"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Gather"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Initialized"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "NewInstrument"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Scatter"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "SetPendingDuration"): EventFragment;
@@ -357,13 +328,6 @@ export type GatherEvent = TypedEvent<
 >;
 
 export type GatherEventFilter = TypedEventFilter<GatherEvent>;
-
-export interface InitializedEventObject {
-  version: number;
-}
-export type InitializedEvent = TypedEvent<[number], InitializedEventObject>;
-
-export type InitializedEventFilter = TypedEventFilter<InitializedEvent>;
 
 export interface NewInstrumentEventObject {
   index: string;
@@ -474,19 +438,7 @@ export interface Gate extends BaseContract {
 
     allInstrumentsLength(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    claimYield(
-      quote: PromiseOrValue<string>,
-      to: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
     config(overrides?: CallOverrides): Promise<[string]>;
-
-    configureYieldMode(
-      quote: PromiseOrValue<string>,
-      yieldMode: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
 
     deposit(
       arg: PromiseOrValue<BytesLike>,
@@ -574,10 +526,6 @@ export interface Gate extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    syncPointsOperator(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
     thresholdOf(
       quote: PromiseOrValue<string>,
       overrides?: CallOverrides
@@ -598,19 +546,7 @@ export interface Gate extends BaseContract {
 
   allInstrumentsLength(overrides?: CallOverrides): Promise<BigNumber>;
 
-  claimYield(
-    quote: PromiseOrValue<string>,
-    to: PromiseOrValue<string>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
   config(overrides?: CallOverrides): Promise<string>;
-
-  configureYieldMode(
-    quote: PromiseOrValue<string>,
-    yieldMode: PromiseOrValue<BigNumberish>,
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
 
   deposit(
     arg: PromiseOrValue<BytesLike>,
@@ -698,10 +634,6 @@ export interface Gate extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  syncPointsOperator(
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
   thresholdOf(
     quote: PromiseOrValue<string>,
     overrides?: CallOverrides
@@ -722,19 +654,7 @@ export interface Gate extends BaseContract {
 
     allInstrumentsLength(overrides?: CallOverrides): Promise<BigNumber>;
 
-    claimYield(
-      quote: PromiseOrValue<string>,
-      to: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     config(overrides?: CallOverrides): Promise<string>;
-
-    configureYieldMode(
-      quote: PromiseOrValue<string>,
-      yieldMode: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<void>;
 
     deposit(
       arg: PromiseOrValue<BytesLike>,
@@ -828,8 +748,6 @@ export interface Gate extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    syncPointsOperator(overrides?: CallOverrides): Promise<void>;
-
     thresholdOf(
       quote: PromiseOrValue<string>,
       overrides?: CallOverrides
@@ -878,9 +796,6 @@ export interface Gate extends BaseContract {
       expiry?: null,
       quantity?: null
     ): GatherEventFilter;
-
-    "Initialized(uint8)"(version?: null): InitializedEventFilter;
-    Initialized(version?: null): InitializedEventFilter;
 
     "NewInstrument(bytes32,address,address,address,string,uint256)"(
       index?: null,
@@ -959,19 +874,7 @@ export interface Gate extends BaseContract {
 
     allInstrumentsLength(overrides?: CallOverrides): Promise<BigNumber>;
 
-    claimYield(
-      quote: PromiseOrValue<string>,
-      to: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
     config(overrides?: CallOverrides): Promise<BigNumber>;
-
-    configureYieldMode(
-      quote: PromiseOrValue<string>,
-      yieldMode: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
 
     deposit(
       arg: PromiseOrValue<BytesLike>,
@@ -1059,10 +962,6 @@ export interface Gate extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    syncPointsOperator(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
     thresholdOf(
       quote: PromiseOrValue<string>,
       overrides?: CallOverrides
@@ -1086,19 +985,7 @@ export interface Gate extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    claimYield(
-      quote: PromiseOrValue<string>,
-      to: PromiseOrValue<string>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
     config(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    configureYieldMode(
-      quote: PromiseOrValue<string>,
-      yieldMode: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
 
     deposit(
       arg: PromiseOrValue<BytesLike>,
@@ -1185,10 +1072,6 @@ export interface Gate extends BaseContract {
     setThreshold(
       quote: PromiseOrValue<string>,
       threshold: PromiseOrValue<BigNumberish>,
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    syncPointsOperator(
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 

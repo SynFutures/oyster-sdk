@@ -100,11 +100,6 @@ const _abi = [
         name: "_id",
         type: "bytes32",
       },
-      {
-        internalType: "address",
-        name: "guardian",
-        type: "address",
-      },
     ],
     name: "initialize",
     outputs: [],

@@ -77,12 +77,6 @@ const _abi = [
   },
   {
     anonymous: false,
-    inputs: [],
-    name: "DisableLpWhitelist",
-    type: "event",
-  },
-  {
-    anonymous: false,
     inputs: [
       {
         indexed: false,
@@ -125,32 +119,6 @@ const _abi = [
       {
         indexed: false,
         internalType: "address",
-        name: "blastPointsAddress",
-        type: "address",
-      },
-    ],
-    name: "SetBlastPointsAddress",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "address",
-        name: "blastPointsOperator",
-        type: "address",
-      },
-    ],
-    name: "SetBlastPointsOperator",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "address",
         name: "user",
         type: "address",
       },
@@ -162,25 +130,6 @@ const _abi = [
       },
     ],
     name: "SetLiquidatorWhitelist",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "address",
-        name: "user",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "bool",
-        name: "authorized",
-        type: "bool",
-      },
-    ],
-    name: "SetLpWhitelist",
     type: "event",
   },
   {
@@ -260,11 +209,6 @@ const _abi = [
             type: "uint16",
           },
           {
-            internalType: "uint64",
-            name: "stabilityFeeRatioParam",
-            type: "uint64",
-          },
-          {
             internalType: "enum QuoteType",
             name: "qtype",
             type: "uint8",
@@ -286,40 +230,7 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "blastPointsAddress",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "blastPointsOperator",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
     name: "disableLiquidatorWhitelist",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-    {
-    inputs: [],
-    name: "disableLpWhitelist",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -417,11 +328,6 @@ const _abi = [
             internalType: "uint16",
             name: "protocolFeeRatio",
             type: "uint16",
-          },
-          {
-            internalType: "uint64",
-            name: "stabilityFeeRatioParam",
-            type: "uint64",
           },
           {
             internalType: "enum QuoteType",
@@ -575,19 +481,6 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "openLp",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
     name: "owner",
     outputs: [
       {
@@ -597,32 +490,6 @@ const _abi = [
       },
     ],
     stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_blastPointsAddress",
-        type: "address",
-      },
-    ],
-    name: "setBlastPointsAddress",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_blastPointsOperator",
-        type: "address",
-      },
-    ],
-    name: "setBlastPointsOperator",
-    outputs: [],
-    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -731,11 +598,6 @@ const _abi = [
             internalType: "uint16",
             name: "protocolFeeRatio",
             type: "uint16",
-          },
-          {
-            internalType: "uint64",
-            name: "stabilityFeeRatioParam",
-            type: "uint64",
           },
           {
             internalType: "enum QuoteType",
