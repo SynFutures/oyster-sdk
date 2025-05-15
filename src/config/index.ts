@@ -59,7 +59,6 @@ export interface SynfConfig {
 
 export interface QuoteParamJson {
     tradingFeeRatio: number;
-    stabilityFeeRatioParam: string;
     protocolFeeRatio: number;
     qtype: number;
     minMarginAmount: string; // numeric string
@@ -146,7 +145,6 @@ export class ConfigManager {
             const item: QuoteParamJson = quotesParams[symbol]!;
             result[symbol] = {
                 tradingFeeRatio: item.tradingFeeRatio,
-                stabilityFeeRatioParam: BigNumber.from(item.stabilityFeeRatioParam),
                 protocolFeeRatio: item.protocolFeeRatio,
                 qtype: Number(item.qtype) as QuoteType,
                 minMarginAmount: BigNumber.from(item.minMarginAmount),

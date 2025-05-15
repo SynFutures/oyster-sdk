@@ -308,8 +308,7 @@ async function main() {
         tradePrice, // average trade price in quote token
         estimatedTradeValue, // traded value in quote token, i.e. entryNotional
         minTradeValue, // if no existing position, return a minimum trade value related to instrument imr
-        tradingFee, // trading fee in quote token, excluding stability fee
-        stabilityFee, // stability fee in quote token for pushing the fair price away from mark
+        tradingFee, // trading fee in quote token
         margin, // required margin in quote token
         leverageWad, // leverage in WAD format
         priceImpactWad, // price impact = (postFair - preFair) / preFair, represented in WAD format
@@ -1929,7 +1928,7 @@ export async function demoQueryWithReferralCode(): Promise<void> {
     const addEvents = await synfV3.subgraph.query(
         `query($skip: Int, $first: Int, $lastID: String){
             addEvents(
-                skip: $skip, first: $first, 
+                skip: $skip, first: $first,
                 where: {
                 referralCode_contains: "${getReferralCode('8test8')}"
                 id_gt: $lastID
@@ -1959,7 +1958,7 @@ export async function demoQueryWithReferralCode(): Promise<void> {
     const tradeEvents = await synfV3.subgraph.query(
         `query($skip: Int, $first: Int, $lastID: String){
             tradeEvents(
-                skip: $skip, first: $first, 
+                skip: $skip, first: $first,
                 where: {
                 referralCode_contains: "${getReferralCode('8test8')}"
                 id_gt: $lastID
@@ -1993,7 +1992,7 @@ export async function demoQueryWithReferralCode(): Promise<void> {
     const placeEvents = await synfV3.subgraph.query(
         `query($skip: Int, $first: Int, $lastID: String){
             placeEvents(
-                skip: $skip, first: $first, 
+                skip: $skip, first: $first,
                 where: {
                 referralCode_contains: "${getReferralCode('8test8')}"
                 id_gt: $lastID
