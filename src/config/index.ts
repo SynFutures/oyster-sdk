@@ -10,6 +10,7 @@ import * as blastsepoliaConfig from './blastsepolia.json';
 import * as blastConfig from './blast.json';
 import * as baseConfig from './base.json';
 import * as monadtestConfig from './monadtest.json';
+import * as basesepoliaConfig from './basesepolia.json';
 
 import { CHAIN_ID, TokenInfo } from '@derivation-tech/web3-core';
 import { MarketType, QuoteType } from '../types/enum';
@@ -128,6 +129,9 @@ export class ConfigManager {
             }
             case CHAIN_ID.MONADTEST: {
                 return ConfigManager.mapSynfConfig(monadtestConfig);
+            }
+            case CHAIN_ID.BASESEPOLIA: {
+                return ConfigManager.mapSynfConfig(basesepoliaConfig);
             }
             default: {
                 throw new Error('Unsupported Network.');
