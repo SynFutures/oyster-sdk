@@ -57,7 +57,6 @@
     "0x507e5ff8": "PositionNotExist()",
     "0x2955742d": "PositionBankrupt()",
     "0x3e5cfd77": "TradeSlippage()",
-    "0x0de6a853": "TradeStabilityFeeLimit(uint16 stabilityFeeRatio, uint16 limitStabilityFeeRatio)",
     "0x0345c1b6": "TradeTrivial()",
     "0xbd261db9": "TradeZeroSize()",
     "0xde4607ee": "TradeImrUnsafe()",

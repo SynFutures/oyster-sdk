@@ -208,19 +208,6 @@ const _abi = [
     inputs: [
       {
         indexed: false,
-        internalType: "uint8",
-        name: "version",
-        type: "uint8",
-      },
-    ],
-    name: "Initialized",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
         internalType: "bytes32",
         name: "index",
         type: "bytes32",
@@ -433,24 +420,6 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "quote",
-        type: "address",
-      },
-      {
-        internalType: "address",
-        name: "to",
-        type: "address",
-      },
-    ],
-    name: "claimYield",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
     inputs: [],
     name: "config",
     outputs: [
@@ -461,24 +430,6 @@ const _abi = [
       },
     ],
     stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "quote",
-        type: "address",
-      },
-      {
-        internalType: "enum YieldMode",
-        name: "yieldMode",
-        type: "uint8",
-      },
-    ],
-    name: "configureYieldMode",
-    outputs: [],
-    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -862,13 +813,6 @@ const _abi = [
       },
     ],
     name: "setThreshold",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "syncPointsOperator",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
