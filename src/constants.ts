@@ -15,7 +15,7 @@ export const MIN_TICK = -322517;
 export const INT24_MIN = -8388608;
 export const INT24_MAX = 8388607;
 
-export const PEARL_SPACING = 5;
+export const PEARL_SPACING = 1;
 export const ORDER_SPACING = PEARL_SPACING * 1;
 export const RANGE_SPACING = PEARL_SPACING * 10;
 

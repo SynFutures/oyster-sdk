@@ -228,7 +228,6 @@ export class Subgraph extends Graph {
                   minMarginAmount
                   protocolFeeRatio
                   qtype
-                  stabilityFeeRatioParam
                   tip
                   tradingFeeRatio
                 }
@@ -323,7 +322,6 @@ export class Subgraph extends Graph {
                     minMarginAmount: BigNumber.from(inst.setting.minMarginAmount),
                     tradingFeeRatio: Number(inst.setting.tradingFeeRatio),
                     protocolFeeRatio: Number(inst.setting.protocolFeeRatio),
-                    stabilityFeeRatioParam: BigNumber.from(inst.setting.stabilityFeeRatioParam),
                     qtype: QuoteType[inst.setting.qtype as keyof typeof QuoteType],
                     tip: BigNumber.from(inst.setting.tip),
                 },
