@@ -156,7 +156,6 @@ export type QuoteParamStruct = {
   minMarginAmount: PromiseOrValue<BigNumberish>;
   tradingFeeRatio: PromiseOrValue<BigNumberish>;
   protocolFeeRatio: PromiseOrValue<BigNumberish>;
-  stabilityFeeRatioParam: PromiseOrValue<BigNumberish>;
   qtype: PromiseOrValue<BigNumberish>;
   tip: PromiseOrValue<BigNumberish>;
 };
@@ -165,14 +164,12 @@ export type QuoteParamStructOutput = [
   BigNumber,
   number,
   number,
-  BigNumber,
   number,
   BigNumber
 ] & {
   minMarginAmount: BigNumber;
   tradingFeeRatio: number;
   protocolFeeRatio: number;
-  stabilityFeeRatioParam: BigNumber;
   qtype: number;
   tip: BigNumber;
 };

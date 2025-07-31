@@ -23,7 +23,6 @@ import {
     decodeParamForDepositAndWithdraw,
     decodePlaceParam,
     decodeRemoveParam,
-    extractFeeRatioParams,
     decodeTradeParam,
     formatCompactEmaParam,
     formatExpiry,
@@ -396,10 +395,6 @@ export class ConfigParser extends ContractParser {
             case 'tradingFeeRatio':
             case 'protocolFeeRatio':
                 return formatRatio(data);
-            case 'stabilityFeeRatioParam':
-                return extractFeeRatioParams(BigNumber.from(data))
-                    .map((p) => formatWad(p))
-                    .toString();
             case 'tip':
             case 'minMarginAmount':
                 return formatWad(data);
@@ -427,10 +422,7 @@ export class GuardianParser extends ContractParser {
             case 'tradingFeeRatio':
             case 'protocolFeeRatio':
                 return formatRatio(data);
-            case 'stabilityFeeRatioParam':
-                return extractFeeRatioParams(BigNumber.from(data))
-                    .map((p) => formatWad(p))
-                    .toString();
+
             case 'tip':
             case 'minMarginAmount':
                 return formatWad(data);

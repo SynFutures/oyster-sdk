@@ -9,19 +9,7 @@ import {
     RATIO_BASE,
     RATIO_DECIMALS,
 } from '../constants';
-import {
-    MAX_UINT_128,
-    ONE,
-    ZERO,
-    TickMath,
-    wadToTick,
-    WAD,
-    MAX_INT_24,
-    wdiv,
-    EMPTY_TICK,
-    s2w,
-    MAX_UINT_16,
-} from '../math';
+import { MAX_UINT_128, ONE, ZERO, TickMath, wadToTick, WAD, MAX_INT_24, wdiv, EMPTY_TICK } from '../math';
 import { sqrt, sqrtX96ToWad, wmulDown, r2w } from '../math';
 import {
     ADDR_BATCH_SIZE,
@@ -859,25 +847,11 @@ export function calcMinTickDelta(initialMarginRatio: number): number {
     return wadToTick(r2w(initialMarginRatio).add(WAD));
 }
 
-export function extractFeeRatioParams(stabilityFeeRatioParam: BigNumber): BigNumber[] {
-    const ret: BigNumber[] = [];
-    ret.push(s2w(stabilityFeeRatioParam.and(MAX_UINT_24)));
-    ret.push(s2w(stabilityFeeRatioParam.shr(24).and(MAX_UINT_16)));
-    ret.push(s2w(stabilityFeeRatioParam.shr(40).and(MAX_UINT_16)));
-    ret.push(s2w(stabilityFeeRatioParam.shr(56)));
-    return ret;
-}
-
 export function formatQuoteParam(param: QuoteParam): string {
     return Object.entries(param)
         .map(([k, v]) => {
             if (k === 'minMarginAmount' || k === 'tip') {
                 return ` ${k}: ${formatWad(BigNumber.from(v))}`;
-            } else if (k === 'stabilityFeeRatioParam') {
-                const feeRatioParams = extractFeeRatioParams(v);
-                return ` ${k}: (${Array.from(feeRatioParams.values()).map(
-                    (v, i) => String.fromCharCode(97 + i) + `: ${formatWad(v)}`,
-                )})`;
             } else if (k === 'tradingFeeRatio' || k === 'protocolFeeRatio') {
                 return ` ${k}: ${formatRatio(BigNumber.from(v))}`;
             } else {

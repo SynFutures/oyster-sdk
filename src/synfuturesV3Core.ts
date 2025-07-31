@@ -2088,7 +2088,6 @@ export class SynFuturesV3 {
                     minMarginAmount: quoteParamOpt.minMarginAmount,
                     tradingFeeRatio: quoteParamOpt.tradingFeeRatio,
                     protocolFeeRatio: quoteParamOpt.protocolFeeRatio,
-                    stabilityFeeRatioParam: quoteParamOpt.stabilityFeeRatioParam,
                     tip: quoteParamOpt.tip,
                     qtype: quoteParamOpt.qtype,
                 };

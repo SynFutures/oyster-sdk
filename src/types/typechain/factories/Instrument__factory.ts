@@ -876,11 +876,6 @@ const _abi = [
             type: "uint16",
           },
           {
-            internalType: "uint64",
-            name: "stabilityFeeRatioParam",
-            type: "uint64",
-          },
-          {
             internalType: "enum QuoteType",
             name: "qtype",
             type: "uint8",
@@ -1816,11 +1811,6 @@ const _abi = [
             internalType: "uint16",
             name: "protocolFeeRatio",
             type: "uint16",
-          },
-          {
-            internalType: "uint64",
-            name: "stabilityFeeRatioParam",
-            type: "uint64",
           },
           {
             internalType: "enum QuoteType",
