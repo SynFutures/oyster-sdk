@@ -10,6 +10,8 @@ import * as blastsepoliaConfig from './blastsepolia.json';
 import * as blastConfig from './blast.json';
 import * as baseConfig from './base.json';
 import * as mychainConfig from './mychain.json';
+import * as conduitConfig from './conduit.json';
+import * as altlayerConfig from './altlayer.json';
 
 import { CHAIN_ID, TokenInfo } from '@derivation-tech/web3-core';
 import { MarketType, QuoteType } from '../types/enum';
@@ -127,6 +129,12 @@ export class ConfigManager {
             }
             case CHAIN_ID.MYCHAIN: {
                 return ConfigManager.mapSynfConfig(mychainConfig);
+            }
+            case CHAIN_ID.CONDUIT: {
+                return ConfigManager.mapSynfConfig(conduitConfig);
+            }
+            case CHAIN_ID.ALTLAYER: {
+                return ConfigManager.mapSynfConfig(altlayerConfig);
             }
             default: {
                 throw new Error('Unsupported Network.');
