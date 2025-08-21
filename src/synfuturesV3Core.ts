@@ -2565,17 +2565,17 @@ export class SynFuturesV3 {
         return benchmarkPrice;
     }
 
-    async getRawSpotPrice(identifier: InstrumentIdentifier): Promise<BigNumber> {
+    async getSpotPrice(identifier: InstrumentIdentifier): Promise<BigNumber> {
         if (identifier.marketType === MarketType.DEXV2) {
-            return this.getDexV2RawSpotPrice(identifier);
+            return this.getDexV2SpotPrice(identifier);
         } else if (cexMarket(identifier.marketType)) {
-            return this.getCexRawSpotPrice(identifier);
+            return this.getCexSpotPrice(identifier);
         } else {
             throw new Error('Unsupported market type');
         }
     }
 
-    async getDexV2RawSpotPrice(identifier: InstrumentIdentifier): Promise<BigNumber> {
+    async getDexV2SpotPrice(identifier: InstrumentIdentifier): Promise<BigNumber> {
         const { baseTokenInfo, quoteTokenInfo } = await this.getTokenInfo(identifier);
 
         const baseScaler = BigNumber.from(10).pow(18 - baseTokenInfo.decimals);
@@ -2601,7 +2601,7 @@ export class SynFuturesV3 {
             : wdiv(dexV2PairInfo.reserve1.mul(quoteScaler), dexV2PairInfo.reserve0.mul(baseScaler));
     }
 
-    async getCexRawSpotPrice(instrumentIdentifier: InstrumentIdentifier): Promise<BigNumber> {
+    async getCexSpotPrice(instrumentIdentifier: InstrumentIdentifier): Promise<BigNumber> {
         const instrumentAddress = await this.computeInstrumentAddress(
             instrumentIdentifier.marketType,
             instrumentIdentifier.baseSymbol,
@@ -2610,7 +2610,7 @@ export class SynFuturesV3 {
         const market = this.contracts.marketContracts[instrumentIdentifier.marketType]?.market as CexMarket;
         let rawSpotPrice;
         try {
-            rawSpotPrice = await market.getRawPrice(instrumentAddress);
+            rawSpotPrice = await market.getSpotPrice(instrumentAddress);
         } catch (e) {
             console.error('fetch chainlink spot price error', e);
             rawSpotPrice = ZERO;

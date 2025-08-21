@@ -58,7 +58,7 @@
 - [getOrderMarginByLeverage](SynFuturesV3.md#getordermarginbyleverage)
 - [getPairLevelAccount](SynFuturesV3.md#getpairlevelaccount)
 - [getPositionIfSettle](SynFuturesV3.md#getpositionifsettle)
-- [getRawSpotPrice](SynFuturesV3.md#getrawspotprice)
+- [getSpotPrice](SynFuturesV3.md#getspotprice)
 - [getSizeToTargetTick](SynFuturesV3.md#getsizetotargettick)
 - [getSqrtFairPX96](SynFuturesV3.md#getsqrtfairpx96)
 - [getTick](SynFuturesV3.md#gettick)
@@ -815,9 +815,9 @@ ___
 
 ___
 
-### getRawSpotPrice
+### getSpotPrice
 
-▸ **getRawSpotPrice**(`identifier`): `Promise`<`BigNumber`\>
+▸ **getSpotPrice**(`identifier`): `Promise`<`BigNumber`\>
 
 #### Parameters
 
