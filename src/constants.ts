@@ -17,7 +17,7 @@ export const INT24_MAX = 8388607;
 
 export const PEARL_SPACING = 1;
 export const ORDER_SPACING = PEARL_SPACING * 1;
-export const RANGE_SPACING = PEARL_SPACING * 10;
+export const RANGE_SPACING = PEARL_SPACING * 50;
 
 export const RATIO_BASE = 10000;
 export const STABILITY_FEE_RATIO_BASE = 100;

@@ -2540,7 +2540,7 @@ export class SynFuturesV3 {
 
         const feederType: FeederType = ((baseStable ? 2 : 0) + (quoteStable ? 1 : 0)) as FeederType;
 
-        const rawSpotPrice = await this.getDexV2RawSpotPrice(instrumentIdentifier);
+        const rawSpotPrice = await this.getDexV2SpotPrice(instrumentIdentifier);
 
         return calcBenchmarkPrice(expiry, rawSpotPrice, feederType, this.config.marketConfig.DEXV2!.dailyInterestRate);
     }
