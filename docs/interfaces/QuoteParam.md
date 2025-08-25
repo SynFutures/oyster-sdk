@@ -9,7 +9,6 @@
 - [minMarginAmount](QuoteParam.md#minmarginamount)
 - [protocolFeeRatio](QuoteParam.md#protocolfeeratio)
 - [qtype](QuoteParam.md#qtype)
-- [stabilityFeeRatioParam](QuoteParam.md#stabilityfeeratioparam)
 - [tip](QuoteParam.md#tip)
 - [tradingFeeRatio](QuoteParam.md#tradingfeeratio)
 
@@ -30,12 +29,6 @@ ___
 ### qtype
 
 • **qtype**: [`QuoteType`](../enums/QuoteType.md)
-
-___
-
-### stabilityFeeRatioParam
-
-• **stabilityFeeRatioParam**: `BigNumber`
 
 ___
 

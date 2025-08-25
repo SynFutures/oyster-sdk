@@ -45,7 +45,6 @@ import {
     encodeAddWithReferralParam,
     encodePlaceWithReferralParam,
     encodeAdjustWithReferralParam,
-    encodeTradeWithRiskParam,
     encodeBatchPlaceWithReferralParam,
     alignTick,
     withinDeviationLimit,
@@ -425,13 +424,6 @@ export class SynFuturesV3 {
 
     async updateConfigState(): Promise<void> {
         this.configState.openLp = true;
-        if (this.ctx.chainId !== CHAIN_ID.BASE) {
-            try {
-                this.configState.openLp = await this.contracts.config.openLp();
-            } catch (e) {
-                // ignore error since the contract on some network may not have this function
-            }
-        }
         this.configState.openLiquidator = await this.contracts.config.openLiquidator();
         for (const [symbol, param] of Object.entries(this.config.quotesParam)) {
             const quoteInfo = await this.ctx.getTokenInfo(symbol);
@@ -817,18 +809,6 @@ export class SynFuturesV3 {
         return trimObj(await instrument.callStatic.inquire(expiry, size));
     }
 
-    async openLp(quoteAddr?: string, overrides?: CallOverrides): Promise<boolean> {
-        if ((this.ctx.chainId === CHAIN_ID.BASE || this.ctx.chainId === CHAIN_ID.LOCAL) && quoteAddr) {
-            try {
-                const restricted = await this.contracts.config.restrictLp(quoteAddr, overrides ?? {});
-                return !restricted;
-            } catch (e) {
-                // ignore error since the contract on some network may not have this function
-            }
-        }
-        return this.contracts.config.openLp(overrides ?? {});
-    }
-
     async inWhiteListLps(quoteAddr: string, traders: string[], overrides?: CallOverrides): Promise<boolean[]> {
         let calls = [];
         let results: boolean[] = [];
@@ -955,31 +935,6 @@ export class SynFuturesV3 {
                 param.amount,
                 param.limitTick,
                 param.deadline,
-                referralCode,
-            ),
-            overrides ?? {},
-        );
-        return this.ctx.sendTx(signer, unsignedTx);
-    }
-
-    // WARNING: this function is not recommended to use, because it may cause penalty fee during trade
-    async tradeWithRisk(
-        signer: Signer,
-        instrumentAddr: string,
-        param: TradeParam,
-        limitStabilityFeeRatio: number,
-        overrides?: Overrides,
-        referralCode = DEFAULT_REFERRAL_CODE,
-    ): Promise<ethers.ContractTransaction | ethers.providers.TransactionReceipt> {
-        const instrument = this.getInstrumentContract(instrumentAddr, signer);
-        const unsignedTx = await instrument.populateTransaction.trade(
-            encodeTradeWithRiskParam(
-                param.expiry,
-                param.size,
-                param.amount,
-                param.limitTick,
-                param.deadline,
-                limitStabilityFeeRatio,
                 referralCode,
             ),
             overrides ?? {},
@@ -1647,16 +1602,11 @@ export class SynFuturesV3 {
             sqrtX96ToWad(quotation.sqrtFairPX96),
         );
 
-        const stabilityFee = this.getStabilityFee(
-            quotation,
-            pairAccountModel.rootPair.rootInstrument.setting.quoteParam,
-        );
         return {
             tradePrice: tradePrice,
             estimatedTradeValue: quotation.entryNotional,
             minTradeValue: minTradeValue,
-            tradingFee: quotation.fee.sub(stabilityFee),
-            stabilityFee: stabilityFee,
+            tradingFee: quotation.fee,
             margin:
                 simulationMainPosition.size.eq(ZERO) && simulationMainPosition.balance.gt(ZERO)
                     ? simulationMainPosition.balance.mul(-1)
@@ -2138,7 +2088,6 @@ export class SynFuturesV3 {
                     minMarginAmount: quoteParamOpt.minMarginAmount,
                     tradingFeeRatio: quoteParamOpt.tradingFeeRatio,
                     protocolFeeRatio: quoteParamOpt.protocolFeeRatio,
-                    stabilityFeeRatioParam: quoteParamOpt.stabilityFeeRatioParam,
                     tip: quoteParamOpt.tip,
                     qtype: quoteParamOpt.qtype,
                 };
@@ -2557,7 +2506,6 @@ export class SynFuturesV3 {
     //     param: QuoteParam,
     // ): {
     //     basicFee: BigNumber;
-    //     stabilityFee: BigNumber;
     //     protocolFee: BigNumber;
     // } {
     //     const entryNotional = wmul(quotation.strikePrice, size.abs());
@@ -2573,31 +2521,8 @@ export class SynFuturesV3 {
 
     //     const basicFee = wmulUp(entryNotional, basicFeeRatioWad);
 
-    //     const stabilityFee = quotation.fee.sub(protocolFee).sub(basicFee);
-
-    //     return { basicFee, stabilityFee, protocolFee };
+    //     return { basicFee, protocolFee };
     // }
-    // return stability fee ratio in 4 decimal form
-    getStabilityFeeRatio(quotation: Quotation, param: QuoteParam, maintenanceMarginRatio: number): number {
-        // maintenanceMarginRatio is no more needed
-        maintenanceMarginRatio;
-        const stabilityFee = this.getStabilityFee(quotation, param);
-        const ratioTemp = wdiv(stabilityFee, quotation.entryNotional);
-        const scaler = BigNumber.from(10).pow(14);
-        const ratio = ratioTemp.add(scaler.sub(1)).div(scaler);
-
-        return ratio.toNumber();
-    }
-
-    getStabilityFee(quotation: Quotation, param: QuoteParam): BigNumber {
-        const feePaid = quotation.fee;
-        const protocolFeePaid = wmulUp(quotation.entryNotional, r2w(param.protocolFeeRatio));
-        const baseFeePaid = wmulUp(quotation.entryNotional, r2w(param.tradingFeeRatio));
-
-        let stabilityFee = feePaid.sub(protocolFeePaid).sub(baseFeePaid);
-        if (stabilityFee.lt(0)) stabilityFee = ZERO;
-        return stabilityFee;
-    }
 
     private async inspectDexV2MarketBenchmarkPrice(
         instrumentIdentifier: InstrumentIdentifier,
@@ -2615,7 +2540,7 @@ export class SynFuturesV3 {
 
         const feederType: FeederType = ((baseStable ? 2 : 0) + (quoteStable ? 1 : 0)) as FeederType;
 
-        const rawSpotPrice = await this.getDexV2RawSpotPrice(instrumentIdentifier);
+        const rawSpotPrice = await this.getDexV2SpotPrice(instrumentIdentifier);
 
         return calcBenchmarkPrice(expiry, rawSpotPrice, feederType, this.config.marketConfig.DEXV2!.dailyInterestRate);
     }
@@ -2640,17 +2565,17 @@ export class SynFuturesV3 {
         return benchmarkPrice;
     }
 
-    async getRawSpotPrice(identifier: InstrumentIdentifier): Promise<BigNumber> {
+    async getSpotPrice(identifier: InstrumentIdentifier): Promise<BigNumber> {
         if (identifier.marketType === MarketType.DEXV2) {
-            return this.getDexV2RawSpotPrice(identifier);
+            return this.getDexV2SpotPrice(identifier);
         } else if (cexMarket(identifier.marketType)) {
-            return this.getCexRawSpotPrice(identifier);
+            return this.getCexSpotPrice(identifier);
         } else {
             throw new Error('Unsupported market type');
         }
     }
 
-    async getDexV2RawSpotPrice(identifier: InstrumentIdentifier): Promise<BigNumber> {
+    async getDexV2SpotPrice(identifier: InstrumentIdentifier): Promise<BigNumber> {
         const { baseTokenInfo, quoteTokenInfo } = await this.getTokenInfo(identifier);
 
         const baseScaler = BigNumber.from(10).pow(18 - baseTokenInfo.decimals);
@@ -2676,7 +2601,7 @@ export class SynFuturesV3 {
             : wdiv(dexV2PairInfo.reserve1.mul(quoteScaler), dexV2PairInfo.reserve0.mul(baseScaler));
     }
 
-    async getCexRawSpotPrice(instrumentIdentifier: InstrumentIdentifier): Promise<BigNumber> {
+    async getCexSpotPrice(instrumentIdentifier: InstrumentIdentifier): Promise<BigNumber> {
         const instrumentAddress = await this.computeInstrumentAddress(
             instrumentIdentifier.marketType,
             instrumentIdentifier.baseSymbol,
@@ -2685,7 +2610,7 @@ export class SynFuturesV3 {
         const market = this.contracts.marketContracts[instrumentIdentifier.marketType]?.market as CexMarket;
         let rawSpotPrice;
         try {
-            rawSpotPrice = await market.getRawPrice(instrumentAddress);
+            rawSpotPrice = await market.getSpotPrice(instrumentAddress);
         } catch (e) {
             console.error('fetch chainlink spot price error', e);
             rawSpotPrice = ZERO;

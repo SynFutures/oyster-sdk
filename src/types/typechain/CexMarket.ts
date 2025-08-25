@@ -116,7 +116,6 @@ export interface CexMarketInterface extends utils.Interface {
     "getEmaParam(address)": FunctionFragment;
     "getMarkPrice(address,uint32,uint8)": FunctionFragment;
     "getMarketType()": FunctionFragment;
-    "getRawPrice(address)": FunctionFragment;
     "getSpotPrice(address)": FunctionFragment;
     "getSpotState(address)": FunctionFragment;
     "initialize(uint256)": FunctionFragment;
@@ -142,7 +141,6 @@ export interface CexMarketInterface extends utils.Interface {
       | "getEmaParam"
       | "getMarkPrice"
       | "getMarketType"
-      | "getRawPrice"
       | "getSpotPrice"
       | "getSpotState"
       | "initialize"
@@ -196,10 +194,6 @@ export interface CexMarketInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "getMarketType",
     values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getRawPrice",
-    values: [PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
     functionFragment: "getSpotPrice",
@@ -275,10 +269,6 @@ export interface CexMarketInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "getMarketType",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getRawPrice",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -487,11 +477,6 @@ export interface CexMarket extends BaseContract {
 
     getMarketType(overrides?: CallOverrides): Promise<[string]>;
 
-    getRawPrice(
-      instrument: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { raw: BigNumber }>;
-
     getSpotPrice(
       instrument: PromiseOrValue<string>,
       overrides?: CallOverrides
@@ -597,11 +582,6 @@ export interface CexMarket extends BaseContract {
 
   getMarketType(overrides?: CallOverrides): Promise<string>;
 
-  getRawPrice(
-    instrument: PromiseOrValue<string>,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
   getSpotPrice(
     instrument: PromiseOrValue<string>,
     overrides?: CallOverrides
@@ -706,11 +686,6 @@ export interface CexMarket extends BaseContract {
     ): Promise<BigNumber>;
 
     getMarketType(overrides?: CallOverrides): Promise<string>;
-
-    getRawPrice(
-      instrument: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
 
     getSpotPrice(
       instrument: PromiseOrValue<string>,
@@ -871,11 +846,6 @@ export interface CexMarket extends BaseContract {
 
     getMarketType(overrides?: CallOverrides): Promise<BigNumber>;
 
-    getRawPrice(
-      instrument: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     getSpotPrice(
       instrument: PromiseOrValue<string>,
       overrides?: CallOverrides
@@ -973,11 +943,6 @@ export interface CexMarket extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     getMarketType(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    getRawPrice(
-      instrument: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
 
     getSpotPrice(
       instrument: PromiseOrValue<string>,

@@ -23,8 +23,7 @@ import {
     decodeParamForDepositAndWithdraw,
     decodePlaceParam,
     decodeRemoveParam,
-    decodeTradeWithStabilityFeeParam,
-    extractFeeRatioParams,
+    decodeTradeParam,
     formatCompactEmaParam,
     formatExpiry,
     formatRatio,
@@ -92,7 +91,7 @@ export class InstrumentParser extends ContractParser {
         } else if (description.name === 'remove' && param.name === 'args') {
             return this.formatEncodedFundctionArgs(decodeRemoveParam(value));
         } else if (description.name === 'trade' && param.name === 'args') {
-            return this.formatEncodedFundctionArgs(decodeTradeWithStabilityFeeParam(value));
+            return this.formatEncodedFundctionArgs(decodeTradeParam(value));
         } else if (description.name === 'place' && param.name === 'args') {
             return this.formatEncodedFundctionArgs(decodePlaceParam(value));
         } else if (description.name === 'batchPlace' && param.name === 'args') {
@@ -396,10 +395,6 @@ export class ConfigParser extends ContractParser {
             case 'tradingFeeRatio':
             case 'protocolFeeRatio':
                 return formatRatio(data);
-            case 'stabilityFeeRatioParam':
-                return extractFeeRatioParams(BigNumber.from(data))
-                    .map((p) => formatWad(p))
-                    .toString();
             case 'tip':
             case 'minMarginAmount':
                 return formatWad(data);
@@ -427,10 +422,7 @@ export class GuardianParser extends ContractParser {
             case 'tradingFeeRatio':
             case 'protocolFeeRatio':
                 return formatRatio(data);
-            case 'stabilityFeeRatioParam':
-                return extractFeeRatioParams(BigNumber.from(data))
-                    .map((p) => formatWad(p))
-                    .toString();
+
             case 'tip':
             case 'minMarginAmount':
                 return formatWad(data);

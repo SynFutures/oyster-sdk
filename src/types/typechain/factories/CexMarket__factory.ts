@@ -610,25 +610,6 @@ const _abi = [
         type: "address",
       },
     ],
-    name: "getRawPrice",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "raw",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "instrument",
-        type: "address",
-      },
-    ],
     name: "getSpotPrice",
     outputs: [
       {

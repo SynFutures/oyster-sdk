@@ -58,10 +58,9 @@
 - [getOrderMarginByLeverage](SynFuturesV3.md#getordermarginbyleverage)
 - [getPairLevelAccount](SynFuturesV3.md#getpairlevelaccount)
 - [getPositionIfSettle](SynFuturesV3.md#getpositionifsettle)
-- [getRawSpotPrice](SynFuturesV3.md#getrawspotprice)
+- [getSpotPrice](SynFuturesV3.md#getspotprice)
 - [getSizeToTargetTick](SynFuturesV3.md#getsizetotargettick)
 - [getSqrtFairPX96](SynFuturesV3.md#getsqrtfairpx96)
-- [getStabilityFeeRatio](SynFuturesV3.md#getstabilityfeeratio)
 - [getTick](SynFuturesV3.md#gettick)
 - [getTickBitMaps](SynFuturesV3.md#gettickbitmaps)
 - [inWhiteListLps](SynFuturesV3.md#inwhitelistlps)
@@ -540,22 +539,6 @@ ___
 
 ___
 
-### extractFeeRatioParams
-
-▸ **extractFeeRatioParams**(`stabilityFeeRatioParam`): `BigNumber`[]
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `stabilityFeeRatioParam` | `BigNumber` |
-
-#### Returns
-
-`BigNumber`[]
-
-___
-
 ### fetchInstrumentBatch
 
 ▸ **fetchInstrumentBatch**(`params`, `overrides?`): `Promise`<[`InstrumentModel`](InstrumentModel.md)[]\>
@@ -832,9 +815,9 @@ ___
 
 ___
 
-### getRawSpotPrice
+### getSpotPrice
 
-▸ **getRawSpotPrice**(`identifier`): `Promise`<`BigNumber`\>
+▸ **getSpotPrice**(`identifier`): `Promise`<`BigNumber`\>
 
 #### Parameters
 
@@ -880,24 +863,6 @@ ___
 #### Returns
 
 `Promise`<`BigNumber`\>
-
-___
-
-### getStabilityFeeRatio
-
-▸ **getStabilityFeeRatio**(`quotation`, `param`, `maintenanceMarginRatio`): `number`
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `quotation` | [`Quotation`](../interfaces/Quotation.md) |
-| `param` | [`QuoteParam`](../interfaces/QuoteParam.md) |
-| `maintenanceMarginRatio` | `number` |
-
-#### Returns
-
-`number`
 
 ___
 
@@ -1541,7 +1506,6 @@ ___
 | `minTradeValue` | `BigNumber` |
 | `priceImpactWad` | `BigNumber` |
 | `simulationMainPosition` | [`PositionModel`](PositionModel.md) |
-| `stabilityFee` | `BigNumber` |
 | `tradePrice` | `BigNumber` |
 | `tradingFee` | `BigNumber` |
 
