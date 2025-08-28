@@ -364,6 +364,8 @@ export type SettingStruct = {
   decimals: PromiseOrValue<BigNumberish>;
   initialMarginRatio: PromiseOrValue<BigNumberish>;
   maintenanceMarginRatio: PromiseOrValue<BigNumberish>;
+  placePaused: PromiseOrValue<boolean>;
+  fundingHour: PromiseOrValue<BigNumberish>;
   param: QuoteParamStruct;
 };
 
@@ -376,6 +378,8 @@ export type SettingStructOutput = [
   number,
   number,
   number,
+  boolean,
+  number,
   QuoteParamStructOutput
 ] & {
   symbol: string;
@@ -386,6 +390,8 @@ export type SettingStructOutput = [
   decimals: number;
   initialMarginRatio: number;
   maintenanceMarginRatio: number;
+  placePaused: boolean;
+  fundingHour: number;
   param: QuoteParamStructOutput;
 };
 

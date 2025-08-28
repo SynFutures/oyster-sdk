@@ -328,7 +328,10 @@ export class Subgraph extends Graph {
                 blockInfo,
             );
 
-            const instrument = new InstrumentModel(info, instrumentMarket, state, ZERO);
+            const instrument = new InstrumentModel(info, instrumentMarket, state, ZERO, {
+                placePaused: false,
+                fundingHour: 24,
+            });
             inst.ammList.forEach((amm: any) => {
                 const ammModel = {
                     expiry: Number(amm.expiry),

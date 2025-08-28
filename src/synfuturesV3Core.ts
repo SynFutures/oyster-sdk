@@ -482,46 +482,62 @@ export class SynFuturesV3 {
     }
 
     async fetchMiscInfo(instrumentAddress: string[], overrides?: CallOverrides): Promise<InstrumentMisc[]> {
-        // get misc info
-        const instrumentInterface = Instrument__factory.createInterface();
+        const miscList: InstrumentMisc[] = [];
 
-        const calls = [];
+        // For BASE, BLAST chains: use old way with Instrument getters
+        if (this.ctx.chainId === CHAIN_ID.BASE || this.ctx.chainId === CHAIN_ID.BLAST) {
+            const instrumentInterface = Instrument__factory.createInterface();
+            const calls = [];
 
-        let needFundingHour = this.ctx.chainId !== CHAIN_ID.BLAST && this.ctx.chainId !== CHAIN_ID.LOCAL;
-        if (overrides && overrides.blockTag) {
-            const blockTag = await overrides.blockTag;
-            if (typeof blockTag === 'number' || blockTag.startsWith('0x')) {
-                const blockNumber = ethers.BigNumber.from(blockTag).toNumber();
-                if (this.ctx.chainId === CHAIN_ID.BASE && blockNumber < 21216046) {
-                    needFundingHour = false;
+            let needFundingHour = this.ctx.chainId !== CHAIN_ID.BLAST;
+            if (overrides && overrides.blockTag) {
+                const blockTag = await overrides.blockTag;
+                if (typeof blockTag === 'number' || blockTag.startsWith('0x')) {
+                    const blockNumber = ethers.BigNumber.from(blockTag).toNumber();
+                    if (this.ctx.chainId === CHAIN_ID.BASE && blockNumber < 21216046) {
+                        needFundingHour = false;
+                    }
                 }
             }
-        }
 
-        for (const instrumentAddr of instrumentAddress) {
-            calls.push({
-                target: instrumentAddr,
-                callData: instrumentInterface.encodeFunctionData('placePaused'),
-            });
-            if (needFundingHour) {
+            for (const instrumentAddr of instrumentAddress) {
                 calls.push({
                     target: instrumentAddr,
-                    callData: instrumentInterface.encodeFunctionData('fundingHour'),
+                    callData: instrumentInterface.encodeFunctionData('placePaused'),
+                });
+                if (needFundingHour) {
+                    calls.push({
+                        target: instrumentAddr,
+                        callData: instrumentInterface.encodeFunctionData('fundingHour'),
+                    });
+                }
+            }
+            const rawMiscInfo = await this.ctx.getMulticall3().callStatic.aggregate(calls, overrides ?? {});
+            for (let j = 0; j < rawMiscInfo.returnData.length; j = needFundingHour ? j + 2 : j + 1) {
+                const [placePaused] = instrumentInterface.decodeFunctionResult(
+                    'placePaused',
+                    rawMiscInfo.returnData[j],
+                );
+                const [fundingHour] = needFundingHour
+                    ? instrumentInterface.decodeFunctionResult('fundingHour', rawMiscInfo.returnData[j + 1])
+                    : [24];
+                miscList.push({
+                    placePaused: placePaused,
+                    fundingHour: fundingHour === 0 ? 24 : fundingHour,
+                });
+            }
+        } else {
+            // For new chains: fetch from Observer's getSetting
+            for (const instrumentAddr of instrumentAddress) {
+                const setting = await this.contracts.observer.getSetting(instrumentAddr, overrides ?? {});
+                const fundingHour = setting.fundingHour === 0 ? 24 : setting.fundingHour;
+                miscList.push({
+                    placePaused: setting.placePaused,
+                    fundingHour: fundingHour,
                 });
             }
         }
-        const rawMiscInfo = await this.ctx.getMulticall3().callStatic.aggregate(calls, overrides ?? {});
-        const miscList: InstrumentMisc[] = [];
-        for (let j = 0; j < rawMiscInfo.returnData.length; j = needFundingHour ? j + 2 : j + 1) {
-            const [placePaused] = instrumentInterface.decodeFunctionResult('placePaused', rawMiscInfo.returnData[j]);
-            const [fundingHour] = needFundingHour
-                ? instrumentInterface.decodeFunctionResult('fundingHour', rawMiscInfo.returnData[j + 1])
-                : [24];
-            miscList.push({
-                placePaused: placePaused,
-                fundingHour: fundingHour === 0 ? 24 : fundingHour,
-            });
-        }
+
         return miscList;
     }
 
@@ -573,6 +589,7 @@ export class SynFuturesV3 {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             const market: InstrumentMarket = { info: marketInfo, config: marketConfig, feeder: feeder };
             const param: QuoteParam = rawInstrument.param;
+
             const instrumentState: InstrumentState = new InstrumentState(
                 rawInstrument.condition as InstrumentCondition,
                 rawInstrument.initialMarginRatio,
