@@ -366,6 +366,7 @@ export type SettingStruct = {
   maintenanceMarginRatio: PromiseOrValue<BigNumberish>;
   placePaused: PromiseOrValue<boolean>;
   fundingHour: PromiseOrValue<BigNumberish>;
+  disableOrderRebate: PromiseOrValue<boolean>;
   param: QuoteParamStruct;
 };
 
@@ -380,6 +381,7 @@ export type SettingStructOutput = [
   number,
   boolean,
   number,
+  boolean,
   QuoteParamStructOutput
 ] & {
   symbol: string;
@@ -392,6 +394,7 @@ export type SettingStructOutput = [
   maintenanceMarginRatio: number;
   placePaused: boolean;
   fundingHour: number;
+  disableOrderRebate: boolean;
   param: QuoteParamStructOutput;
 };
 

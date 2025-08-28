@@ -524,6 +524,7 @@ export class SynFuturesV3 {
                 miscList.push({
                     placePaused: placePaused,
                     fundingHour: fundingHour === 0 ? 24 : fundingHour,
+                    disableOrderRebate: false, // default false for old chains
                 });
             }
         } else {
@@ -534,6 +535,7 @@ export class SynFuturesV3 {
                 miscList.push({
                     placePaused: setting.placePaused,
                     fundingHour: fundingHour,
+                    disableOrderRebate: setting.disableOrderRebate,
                 });
             }
         }

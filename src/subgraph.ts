@@ -331,6 +331,7 @@ export class Subgraph extends Graph {
             const instrument = new InstrumentModel(info, instrumentMarket, state, ZERO, {
                 placePaused: false,
                 fundingHour: 24,
+                disableOrderRebate: false
             });
             inst.ammList.forEach((amm: any) => {
                 const ammModel = {
