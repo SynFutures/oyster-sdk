@@ -12,6 +12,7 @@ import * as baseConfig from './base.json';
 import * as mychainConfig from './mychain.json';
 import * as conduitConfig from './conduit.json';
 import * as altlayerConfig from './altlayer.json';
+import * as abcConfig from './abc.json';
 
 import { CHAIN_ID, TokenInfo } from '@derivation-tech/web3-core';
 import { MarketType, QuoteType } from '../types/enum';
@@ -135,6 +136,9 @@ export class ConfigManager {
             }
             case CHAIN_ID.ALTLAYER: {
                 return ConfigManager.mapSynfConfig(altlayerConfig);
+            }
+            case CHAIN_ID.ABC: {
+                return ConfigManager.mapSynfConfig(abcConfig);
             }
             default: {
                 throw new Error('Unsupported Network.');
