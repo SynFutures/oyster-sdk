@@ -56,6 +56,7 @@ export enum MarketType {
     DEXV2 = 'DEXV2',
     EMG = 'EMG',
     PYTH = 'PYTH',
+    STORK = 'STORK',
 }
 
 export enum BatchOrderSizeDistribution {
@@ -66,7 +67,7 @@ export enum BatchOrderSizeDistribution {
 }
 
 export function cexMarket(marketType: MarketType): boolean {
-    return marketType === MarketType.LINK || marketType === MarketType.EMG || marketType === MarketType.PYTH;
+    return marketType === MarketType.LINK || marketType === MarketType.EMG || marketType === MarketType.PYTH || marketType === MarketType.STORK;
 }
 
 export function signOfSide(side: Side): number {

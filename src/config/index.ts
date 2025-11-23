@@ -9,6 +9,7 @@ import * as arbitrumConfig from './arbitrum.json';
 import * as blastsepoliaConfig from './blastsepolia.json';
 import * as blastConfig from './blast.json';
 import * as baseConfig from './base.json';
+import * as monadConfig from './monad.json';
 
 import { CHAIN_ID, TokenInfo } from '@derivation-tech/web3-core';
 import { MarketType, QuoteType } from '../types/enum';
@@ -123,6 +124,9 @@ export class ConfigManager {
             }
             case CHAIN_ID.BASE: {
                 return ConfigManager.mapSynfConfig(baseConfig);
+            }
+            case CHAIN_ID.MONAD: {
+                return ConfigManager.mapSynfConfig(monadConfig);
             }
             default: {
                 throw new Error('Unsupported Network.');
