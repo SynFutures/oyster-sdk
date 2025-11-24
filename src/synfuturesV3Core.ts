@@ -233,7 +233,7 @@ export class SynFuturesV3 {
                         feederFactoryAddress.factory,
                         new ContractParser(PythFeederFactory__factory.createInterface()),
                     );
-                } else if (marketType === MarketType.EMG) {
+                } else if (marketType === MarketType.EMG || marketType === MarketType.STORK) {
                     this.ctx.registerContractParser(
                         feederFactoryAddress.factory,
                         new ContractParser(EmergingFeederFactory__factory.createInterface()),
@@ -271,7 +271,7 @@ export class SynFuturesV3 {
                         factory: PythFeederFactory__factory.connect(feederFactoryAddress.factory, provider),
                         beacon: Beacon__factory.connect(feederFactoryAddress.beacon, provider),
                     };
-                } else if (mType === MarketType.EMG) {
+                } else if (mType === MarketType.EMG || mType === MarketType.STORK) {
                     feederFactoryContracts[mType] = {
                         factory: EmergingFeederFactory__factory.connect(feederFactoryAddress.factory, provider),
                         beacon: Beacon__factory.connect(feederFactoryAddress.beacon, provider),
