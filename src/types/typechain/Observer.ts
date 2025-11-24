@@ -156,7 +156,6 @@ export type QuoteParamStruct = {
   minMarginAmount: PromiseOrValue<BigNumberish>;
   tradingFeeRatio: PromiseOrValue<BigNumberish>;
   protocolFeeRatio: PromiseOrValue<BigNumberish>;
-  stabilityFeeRatioParam: PromiseOrValue<BigNumberish>;
   qtype: PromiseOrValue<BigNumberish>;
   tip: PromiseOrValue<BigNumberish>;
 };
@@ -165,14 +164,12 @@ export type QuoteParamStructOutput = [
   BigNumber,
   number,
   number,
-  BigNumber,
   number,
   BigNumber
 ] & {
   minMarginAmount: BigNumber;
   tradingFeeRatio: number;
   protocolFeeRatio: number;
-  stabilityFeeRatioParam: BigNumber;
   qtype: number;
   tip: BigNumber;
 };
@@ -367,6 +364,9 @@ export type SettingStruct = {
   decimals: PromiseOrValue<BigNumberish>;
   initialMarginRatio: PromiseOrValue<BigNumberish>;
   maintenanceMarginRatio: PromiseOrValue<BigNumberish>;
+  placePaused: PromiseOrValue<boolean>;
+  fundingHour: PromiseOrValue<BigNumberish>;
+  disableOrderRebate: PromiseOrValue<boolean>;
   param: QuoteParamStruct;
 };
 
@@ -379,6 +379,9 @@ export type SettingStructOutput = [
   number,
   number,
   number,
+  boolean,
+  number,
+  boolean,
   QuoteParamStructOutput
 ] & {
   symbol: string;
@@ -389,6 +392,9 @@ export type SettingStructOutput = [
   decimals: number;
   initialMarginRatio: number;
   maintenanceMarginRatio: number;
+  placePaused: boolean;
+  fundingHour: number;
+  disableOrderRebate: boolean;
   param: QuoteParamStructOutput;
 };
 

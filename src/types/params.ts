@@ -26,7 +26,6 @@ export interface QuoteParam {
 
     tradingFeeRatio: number;
     protocolFeeRatio: number;
-    stabilityFeeRatioParam: BigNumber;
 
     tip: BigNumber;
     qtype: QuoteType;
@@ -34,7 +33,6 @@ export interface QuoteParam {
 
 export const EMPTY_QUOTE_PARAM: QuoteParam = {
     tradingFeeRatio: 0,
-    stabilityFeeRatioParam: ZERO,
     protocolFeeRatio: 0,
     qtype: QuoteType.INVALID,
     minMarginAmount: ZERO,
@@ -159,7 +157,6 @@ export interface SimulateTradeResult {
     estimatedTradeValue: BigNumber;
     minTradeValue: BigNumber;
     tradingFee: BigNumber;
-    stabilityFee: BigNumber;
     margin: BigNumber;
     leverageWad: BigNumber;
     priceImpactWad: BigNumber;

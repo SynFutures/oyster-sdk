@@ -9,7 +9,6 @@
 - [minMarginAmount](QuoteParamJson.md#minmarginamount)
 - [protocolFeeRatio](QuoteParamJson.md#protocolfeeratio)
 - [qtype](QuoteParamJson.md#qtype)
-- [stabilityFeeRatioParam](QuoteParamJson.md#stabilityfeeratioparam)
 - [tip](QuoteParamJson.md#tip)
 - [tradingFeeRatio](QuoteParamJson.md#tradingfeeratio)
 
@@ -30,12 +29,6 @@ ___
 ### qtype
 
 • **qtype**: `number`
-
-___
-
-### stabilityFeeRatioParam
-
-• **stabilityFeeRatioParam**: `string`
 
 ___
 

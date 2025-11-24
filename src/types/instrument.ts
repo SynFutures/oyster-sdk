@@ -394,6 +394,7 @@ export interface InstrumentMarket extends Market {
 export interface InstrumentMisc {
     placePaused: boolean;
     fundingHour: number;
+    disableOrderRebate: boolean;
 }
 
 export class InstrumentModel {

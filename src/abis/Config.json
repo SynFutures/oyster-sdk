@@ -208,11 +208,6 @@
             "type": "uint16"
           },
           {
-            "internalType": "uint64",
-            "name": "stabilityFeeRatioParam",
-            "type": "uint64"
-          },
-          {
             "internalType": "enum QuoteType",
             "name": "qtype",
             "type": "uint8"
@@ -347,11 +342,6 @@
             "internalType": "uint16",
             "name": "protocolFeeRatio",
             "type": "uint16"
-          },
-          {
-            "internalType": "uint64",
-            "name": "stabilityFeeRatioParam",
-            "type": "uint64"
           },
           {
             "internalType": "enum QuoteType",
@@ -627,11 +617,6 @@
             "internalType": "uint16",
             "name": "protocolFeeRatio",
             "type": "uint16"
-          },
-          {
-            "internalType": "uint64",
-            "name": "stabilityFeeRatioParam",
-            "type": "uint64"
           },
           {
             "internalType": "enum QuoteType",

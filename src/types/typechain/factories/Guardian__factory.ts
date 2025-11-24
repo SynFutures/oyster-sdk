@@ -46,11 +46,6 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "NotGasClaimer",
-    type: "error",
-  },
-  {
-    inputs: [],
     name: "NotAdminOrVaultFactory",
     type: "error",
   },
@@ -61,8 +56,27 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "NotYieldClaimer",
+    name: "SameAdminAddress",
     type: "error",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "instrument",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "bytes",
+        name: "lowLevelData",
+        type: "bytes",
+      },
+    ],
+    name: "FreezeInstrumentFailed",
+    type: "event",
   },
   {
     anonymous: false,
@@ -158,32 +172,6 @@ const _abi = [
       {
         indexed: false,
         internalType: "address",
-        name: "blastFeeTo",
-        type: "address",
-      },
-    ],
-    name: "SetBlastFeeToAddress",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "address",
-        name: "blastYieldTo",
-        type: "address",
-      },
-    ],
-    name: "SetBlastYieldToAddress",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "address",
         name: "to",
         type: "address",
       },
@@ -206,33 +194,7 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "GAS_CLAIMER_ROLE",
-    outputs: [
-      {
-        internalType: "bytes32",
-        name: "",
-        type: "bytes32",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
     name: "OPERATOR_ROLE",
-    outputs: [
-      {
-        internalType: "bytes32",
-        name: "",
-        type: "bytes32",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "YIELD_CLAIMER_ROLE",
     outputs: [
       {
         internalType: "bytes32",
@@ -270,76 +232,6 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [],
-    name: "blastFeeTo",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "blastYieldTo",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address[]",
-        name: "contractAddresses",
-        type: "address[]",
-      },
-    ],
-    name: "claimAllGas",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address[]",
-        name: "contractAddresses",
-        type: "address[]",
-      },
-      {
-        internalType: "uint256",
-        name: "minClaimRateBips",
-        type: "uint256",
-      },
-    ],
-    name: "claimGasAtMinClaimRate",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address[]",
-        name: "contractAddresses",
-        type: "address[]",
-      },
-    ],
-    name: "claimMaxGas",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
     inputs: [
       {
         internalType: "address[]",
@@ -358,19 +250,6 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "quote",
-        type: "address",
-      },
-    ],
-    name: "claimYield",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
     inputs: [],
     name: "config",
     outputs: [
@@ -384,33 +263,8 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "quote",
-        type: "address",
-      },
-      {
-        internalType: "enum YieldMode",
-        name: "yieldMode",
-        type: "uint8",
-      },
-    ],
-    name: "configureYieldMode",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
     inputs: [],
     name: "disableLiquidatorWhitelist",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "disableLpWhitelist",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -631,64 +485,6 @@ const _abi = [
     inputs: [
       {
         internalType: "address[]",
-        name: "contractAddresses",
-        type: "address[]",
-      },
-    ],
-    name: "readGasParams",
-    outputs: [
-      {
-        internalType: "uint256[]",
-        name: "etherSeconds",
-        type: "uint256[]",
-      },
-      {
-        internalType: "uint256[]",
-        name: "etherBalance",
-        type: "uint256[]",
-      },
-      {
-        internalType: "uint256[]",
-        name: "lastUpdated",
-        type: "uint256[]",
-      },
-      {
-        internalType: "enum GasMode[]",
-        name: "gasModes",
-        type: "uint8[]",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address[]",
-        name: "contractAddresses",
-        type: "address[]",
-      },
-      {
-        internalType: "address",
-        name: "quote",
-        type: "address",
-      },
-    ],
-    name: "readYieldClaimableAmount",
-    outputs: [
-      {
-        internalType: "uint256[]",
-        name: "claimable",
-        type: "uint256[]",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address[]",
         name: "instruments",
         type: "address[]",
       },
@@ -822,58 +618,6 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "address",
-        name: "_blastFeeTo",
-        type: "address",
-      },
-    ],
-    name: "setBlastFeeToAddress",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "pointsAddress",
-        type: "address",
-      },
-    ],
-    name: "setBlastPointsAddress",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "operator",
-        type: "address",
-      },
-    ],
-    name: "setBlastPointsOperator",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_blastYieldTo",
-        type: "address",
-      },
-    ],
-    name: "setBlastYieldToAddress",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
         internalType: "string",
         name: "marketType",
         type: "string",
@@ -992,11 +736,6 @@ const _abi = [
             type: "uint16",
           },
           {
-            internalType: "uint64",
-            name: "stabilityFeeRatioParam",
-            type: "uint64",
-          },
-          {
             internalType: "enum QuoteType",
             name: "qtype",
             type: "uint8",
@@ -1094,11 +833,6 @@ const _abi = [
             internalType: "uint16",
             name: "protocolFeeRatio",
             type: "uint16",
-          },
-          {
-            internalType: "uint64",
-            name: "stabilityFeeRatioParam",
-            type: "uint64",
           },
           {
             internalType: "enum QuoteType",
@@ -1308,13 +1042,6 @@ const _abi = [
       },
     ],
     stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "syncPointsOperator",
-    outputs: [],
-    stateMutability: "nonpayable",
     type: "function",
   },
   {

@@ -3,26 +3,13 @@ import { BigNumber, BigNumberish, ethers } from 'ethers';
 import {
     INT24_MAX,
     MAX_CANCEL_ORDER_COUNT,
-    MAX_STABILITY_FEE_RATIO,
     MAX_TICK,
     MIN_TICK,
     PERP_EXPIRY,
     RATIO_BASE,
     RATIO_DECIMALS,
 } from '../constants';
-import {
-    MAX_UINT_128,
-    ONE,
-    ZERO,
-    TickMath,
-    wadToTick,
-    WAD,
-    MAX_INT_24,
-    MAX_UINT_16,
-    wdiv,
-    s2w,
-    EMPTY_TICK,
-} from '../math';
+import { MAX_UINT_128, ONE, ZERO, TickMath, wadToTick, WAD, MAX_INT_24, wdiv, EMPTY_TICK } from '../math';
 import { sqrt, sqrtX96ToWad, wmulDown, r2w } from '../math';
 import {
     ADDR_BATCH_SIZE,
@@ -62,7 +49,6 @@ const amountLength = 128;
 const quantityLength = 96;
 const addressLength = 160;
 const deadlineLength = 32;
-const limitStabilityFeeRatioLength = 16;
 const ratioLength = 16;
 const leverageLength = 128;
 
@@ -108,26 +94,6 @@ export function encodeTradeParam(
     deadline: number,
 ): [string, string] {
     return encodeParamForTradeAndPlace(expiry, size, amount, limitTick, deadline);
-}
-
-export function encodeTradeWithRiskParam(
-    expiry: number,
-    size: BigNumber,
-    amount: BigNumber,
-    limitTick: number,
-    deadline: number,
-    maxStabilityFeeRatio: number,
-    referral: string,
-): [string, string] {
-    const [page0, page1] = encodeParamForTradeAndPlaceWithReferral(expiry, size, amount, limitTick, deadline, referral);
-    if (maxStabilityFeeRatio < 0 || maxStabilityFeeRatio > MAX_STABILITY_FEE_RATIO) {
-        throw new Error('maxStabilityFeeRatio out of range');
-    }
-    const page0WithStabilityFee = hexZeroPad(
-        BigNumber.from(maxStabilityFeeRatio).shl(88).add(BigNumber.from(page0)).toHexString(),
-        32,
-    );
-    return [page0WithStabilityFee, page1];
 }
 
 export function encodeTradeWithReferralParam(
@@ -396,14 +362,6 @@ export function getLeverageFromImr(imr: number): Leverage {
 
 export function decodeTradeParam(args: string[]): TradeParam {
     return decodeParamForTradeAndPlace(args);
-}
-
-export function decodeTradeWithStabilityFeeParam(args: string[]): TradeParam & { limitStabilityFeeRatio: number } {
-    const tradeParam = decodeTradeParam(args);
-    const value1 = bytes32ToBigNumber(args[0]);
-    const offset = expiryLength + tickLength + deadlineLength;
-    const limitStabilityFeeRatio = pickNumber(value1, offset, offset + limitStabilityFeeRatioLength);
-    return { ...tradeParam, limitStabilityFeeRatio };
 }
 
 function decodeParamForTradeAndPlace(args: string[]): TradeParam {
@@ -889,25 +847,11 @@ export function calcMinTickDelta(initialMarginRatio: number): number {
     return wadToTick(r2w(initialMarginRatio).add(WAD));
 }
 
-export function extractFeeRatioParams(stabilityFeeRatioParam: BigNumber): BigNumber[] {
-    const ret: BigNumber[] = [];
-    ret.push(s2w(stabilityFeeRatioParam.and(MAX_UINT_24)));
-    ret.push(s2w(stabilityFeeRatioParam.shr(24).and(MAX_UINT_16)));
-    ret.push(s2w(stabilityFeeRatioParam.shr(40).and(MAX_UINT_16)));
-    ret.push(s2w(stabilityFeeRatioParam.shr(56)));
-    return ret;
-}
-
 export function formatQuoteParam(param: QuoteParam): string {
     return Object.entries(param)
         .map(([k, v]) => {
             if (k === 'minMarginAmount' || k === 'tip') {
                 return ` ${k}: ${formatWad(BigNumber.from(v))}`;
-            } else if (k === 'stabilityFeeRatioParam') {
-                const feeRatioParams = extractFeeRatioParams(v);
-                return ` ${k}: (${Array.from(feeRatioParams.values()).map(
-                    (v, i) => String.fromCharCode(97 + i) + `: ${formatWad(v)}`,
-                )})`;
             } else if (k === 'tradingFeeRatio' || k === 'protocolFeeRatio') {
                 return ` ${k}: ${formatRatio(BigNumber.from(v))}`;
             } else {

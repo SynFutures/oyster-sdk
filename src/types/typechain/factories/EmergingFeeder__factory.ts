@@ -90,11 +90,6 @@ const _abi = [
         name: "priceE8",
         type: "uint128",
       },
-      {
-        internalType: "address",
-        name: "guardian",
-        type: "address",
-      },
     ],
     name: "initialize",
     outputs: [],
